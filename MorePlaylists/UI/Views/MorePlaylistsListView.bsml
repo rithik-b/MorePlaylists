@@ -1,0 +1,12 @@
+﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+	<vertical>
+		<horizontal horizontal-fit='PreferredSize' vertical-fit='PreferredSize' spacing='2' anchor-min-x='0' anchor-max-x='0.5'>
+			<button pad='0' pref-height='8' pref-width='20' text='Source' />
+			<button pad='0' pref-height='8' pref-width='20' text='Search' />
+			<button pad='0' pref-height='8' pref-width='20' text='Sort' />
+		</horizontal>
+		<page-button event-click='list#PageUp' direction='Up' />
+		<list id='list' expand-cell='true' select-cell='listSelect' />
+		<page-button event-click='list#PageDown' direction='Down' />
+	</vertical>
+</bg>
