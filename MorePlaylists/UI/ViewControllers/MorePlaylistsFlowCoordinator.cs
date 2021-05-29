@@ -2,23 +2,34 @@
 using Zenject;
 using BeatSaberMarkupLanguage;
 using System;
-using UnityEngine;
-using System.Runtime.CompilerServices;
+using BeatSaberPlaylistsLib.Legacy;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsFlowCoordinator : FlowCoordinator
+    public class MorePlaylistsFlowCoordinator : FlowCoordinator, IInitializable, IDisposable
     {
         private MainFlowCoordinator mainFlowCoordinator;
-        private MorePlaylistsNavigationController navigationController;
+        private MorePlaylistsNavigationController morePlaylistsNavigationController;
         private MorePlaylistsListViewController morePlaylistsListViewController;
+        private MorePlaylistsDetailViewController morePlaylistsDetailViewController;
 
         [Inject]
-        public void Construct(MainFlowCoordinator mainFlowCoordinator, MorePlaylistsNavigationController navigationController, MorePlaylistsListViewController morePlaylistsListViewController)
+        public void Construct(MainFlowCoordinator mainFlowCoordinator, MorePlaylistsNavigationController navigationController, MorePlaylistsListViewController morePlaylistsListViewController, MorePlaylistsDetailViewController morePlaylistsDetailViewController)
         {
             this.mainFlowCoordinator = mainFlowCoordinator;
-            this.navigationController = navigationController;
+            this.morePlaylistsNavigationController = navigationController;
             this.morePlaylistsListViewController = morePlaylistsListViewController;
+            this.morePlaylistsDetailViewController = morePlaylistsDetailViewController;
+        }
+
+        public void Initialize()
+        {
+            morePlaylistsListViewController.didSelectPlaylist += MorePlaylistsListViewController_DidSelectPlaylist;
+        }
+
+        public void Dispose()
+        {
+            morePlaylistsListViewController.didSelectPlaylist -= MorePlaylistsListViewController_DidSelectPlaylist;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -26,8 +37,17 @@ namespace MorePlaylists.UI
             SetTitle("Download Playlists");
             showBackButton = true;
 
-            SetViewControllersToNavigationController(navigationController, morePlaylistsListViewController);
-            ProvideInitialViewControllers(navigationController);
+            SetViewControllersToNavigationController(morePlaylistsNavigationController, morePlaylistsListViewController);
+            ProvideInitialViewControllers(morePlaylistsNavigationController);
+        }
+
+        private void MorePlaylistsListViewController_DidSelectPlaylist(LegacyPlaylist selectedPlaylist)
+        {
+            if (!morePlaylistsDetailViewController.isInViewControllerHierarchy)
+            {
+                PushViewControllerToNavigationController(morePlaylistsNavigationController, morePlaylistsDetailViewController);
+            }
+            morePlaylistsDetailViewController.ShowDetail(selectedPlaylist);
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)

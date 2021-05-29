@@ -133,6 +133,7 @@
     <Compile Include="MorePlaylistsController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UI\MenuButtonUI.cs" />
+    <Compile Include="UI\ViewControllers\MorePlaylistsDetailViewController.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsFlowCoordinator.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsListViewController.cs" />
     <Compile Include="Utilities\BSaberUtils.cs" />
@@ -147,6 +148,7 @@
     <None Include="MorePlaylists.csproj.user" Condition="Exists('MorePlaylists.csproj.user')" />
     <EmbeddedResource Include="UI\Views\MorePlaylistsListView.bsml" />
     <EmbeddedResource Include="UI\Views\PopupModalsView.bsml" />
+    <EmbeddedResource Include="UI\Views\MorePlaylistsDetailView.bsml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BeatSaberModdingTools.Tasks">

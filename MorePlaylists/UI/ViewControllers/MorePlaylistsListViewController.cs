@@ -2,7 +2,7 @@
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
 using BeatSaberPlaylistsLib.Legacy;
-using BeatSaberPlaylistsLib.Types;
+using HMUI;
 using MorePlaylists.Utilities;
 using System;
 using System.Collections.Generic;
@@ -13,10 +13,13 @@ namespace MorePlaylists.UI
 {
     public class MorePlaylistsListViewController : BSMLResourceViewController
     {
+        private List<LegacyPlaylist> currentPlaylists;
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsListView.bsml";
 
+        public Action<LegacyPlaylist> didSelectPlaylist;
+
         [UIComponent("list")]
-        public CustomListTableData customListTableData;
+        private CustomListTableData customListTableData;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -28,20 +31,27 @@ namespace MorePlaylists.UI
         }
 
         [UIAction("#post-parse")]
-        internal void SetupList()
+        internal void PostParse()
         {
             InitPlaylistList();
         }
 
+        [UIAction("list-select")]
+        internal void Select(TableView tableView, int row)
+        {
+            didSelectPlaylist?.Invoke(currentPlaylists[row]);
+        }
+
         private async void InitPlaylistList()
         {
+            customListTableData.tableView.ClearSelection();
             customListTableData.data.Clear();
             CancellationTokenSource tokenSource = new CancellationTokenSource();
-            List<LegacyPlaylist> playlists = await BSaberUtils.GetEndpointResultTask(false, tokenSource.Token);
+            currentPlaylists = await BSaberUtils.GetEndpointResultTask(false, tokenSource.Token);
 
-            if (playlists != null)
+            if (currentPlaylists != null)
             {
-                foreach (LegacyPlaylist playlist in playlists)
+                foreach (LegacyPlaylist playlist in currentPlaylists)
                 {
                     if (!playlist.SpriteWasLoaded)
                     {

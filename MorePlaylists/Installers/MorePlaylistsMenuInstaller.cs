@@ -1,5 +1,4 @@
-﻿using HMUI;
-using MorePlaylists.UI;
+﻿using MorePlaylists.UI;
 using SiraUtil;
 using Zenject;
 
@@ -11,7 +10,8 @@ namespace MorePlaylists.Installers
         {
             Container.Bind<MorePlaylistsListViewController>().FromNewComponentAsViewController().AsSingle();
             Container.Bind<MorePlaylistsNavigationController>().FromNewComponentAsViewController().AsSingle();
-            Container.Bind<MorePlaylistsFlowCoordinator>().FromNewComponentOnNewGameObject().AsSingle();
+            Container.BindInterfacesAndSelfTo<MorePlaylistsDetailViewController>().FromNewComponentAsViewController().AsSingle();
+            Container.BindInterfacesAndSelfTo<MorePlaylistsFlowCoordinator>().FromNewComponentOnNewGameObject().AsSingle();
             Container.BindInterfacesTo<MenuButtonUI>().AsSingle();
         }
     }
