@@ -9,8 +9,9 @@ namespace MorePlaylists.Installers
         public override void InstallBindings()
         {
             Container.Bind<MorePlaylistsListViewController>().FromNewComponentAsViewController().AsSingle();
-            Container.Bind<MorePlaylistsNavigationController>().FromNewComponentAsViewController().AsSingle();
+            Container.Bind<MorePlaylistsSongListViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsDetailViewController>().FromNewComponentAsViewController().AsSingle();
+            Container.Bind<MorePlaylistsNavigationController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsFlowCoordinator>().FromNewComponentOnNewGameObject().AsSingle();
             Container.BindInterfacesTo<MenuButtonUI>().AsSingle();
         }

@@ -1,54 +1,28 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
 using BeatSaberPlaylistsLib.Legacy;
 using HMUI;
+using MorePlaylists.Types;
+using MorePlaylists.Utilities;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace MorePlaylists.UI
 {
     public class MorePlaylistsDetailViewController : BSMLResourceViewController, INotifyPropertyChanged
     {
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml";
-        private LegacyPlaylist selectedPlaylist;
-
-        private bool _downloadInteractable = false;
-        private bool _previewInteractable = false;
+        private IGenericEntry selectedPlaylist;
 
         [UIComponent("playlist-cover")]
-        private readonly Image playlistCoverView;
+        private readonly ImageView playlistCoverView;
 
         [UIComponent("text-page")]
         private readonly TextPageScrollView descriptionTextPage;
-
-        [UIValue("downloadInteractable")]
-        public bool DownloadInteractable
-        {
-            get => _downloadInteractable;
-            set
-            {
-                _downloadInteractable = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        [UIValue("previewInteractable")]
-        public bool PreviewInteractible
-        {
-            get => _previewInteractable;
-            set
-            {
-                _previewInteractable = value;
-                NotifyPropertyChanged();
-            }
-        }
 
         [UIValue("playlist-name")]
         public string PlaylistName => selectedPlaylist == null || selectedPlaylist.Title == null ? " " : selectedPlaylist.Title;
@@ -67,7 +41,27 @@ namespace MorePlaylists.UI
             (transform as RectTransform).anchorMax = new Vector2(0.5f, 1);
         }
 
-        internal void ShowDetail(LegacyPlaylist selectedPlaylist)
+        [UIAction("download-click")]
+        private async Task DownloadPlaylistAsync()
+        {
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            try
+            {
+                Stream playlistStream = new MemoryStream(await DownloaderUtils.instance.DownloadFileToBytesAsync(selectedPlaylist.PlaylistURL, tokenSource.Token));
+                BeatSaberPlaylistsLib.Types.IPlaylist playlist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
+                PlaylistLibUtils.SavePlaylist(playlist);
+            }
+            catch (Exception e)
+            {
+            }
+        }
+
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+        {
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+        }
+
+        internal void ShowDetail(IGenericEntry selectedPlaylist)
         {
             this.selectedPlaylist = selectedPlaylist;
             NotifyPropertyChanged(nameof(PlaylistName));

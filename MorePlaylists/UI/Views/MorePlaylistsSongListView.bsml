@@ -1,0 +1,6 @@
+﻿
+<vertical vertical-fit='PreferredSize' anchor-pos-y='2'>
+	<horizontal anchor-min-y='1'  bg='panel-top' pad-left='10' pad-right='10' horizontal-fit='PreferredSize'>
+		<text text='Songs' align='Center' font-size='8'></text>
+	</horizontal>
+</vertical>

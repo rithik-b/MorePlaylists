@@ -1,10 +1,11 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
-using BeatSaberPlaylistsLib.Legacy;
 using HMUI;
+using MorePlaylists.Types;
 using MorePlaylists.Utilities;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
 using static BeatSaberMarkupLanguage.Components.CustomListTableData;
@@ -13,10 +14,10 @@ namespace MorePlaylists.UI
 {
     public class MorePlaylistsListViewController : BSMLResourceViewController
     {
-        private List<LegacyPlaylist> currentPlaylists;
+        private List<GenericEntry> currentPlaylists;
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsListView.bsml";
 
-        public Action<LegacyPlaylist> didSelectPlaylist;
+        public Action<GenericEntry> didSelectPlaylist;
 
         [UIComponent("list")]
         private CustomListTableData customListTableData;
@@ -47,11 +48,11 @@ namespace MorePlaylists.UI
             customListTableData.tableView.ClearSelection();
             customListTableData.data.Clear();
             CancellationTokenSource tokenSource = new CancellationTokenSource();
-            currentPlaylists = await BSaberUtils.GetEndpointResultTask(false, tokenSource.Token);
+            currentPlaylists = (await BSaberUtils.GetEndpointResultTask(false, tokenSource.Token)).Cast<GenericEntry>().ToList();
 
             if (currentPlaylists != null)
             {
-                foreach (LegacyPlaylist playlist in currentPlaylists)
+                foreach (GenericEntry playlist in currentPlaylists)
                 {
                     if (!playlist.SpriteWasLoaded)
                     {
@@ -70,7 +71,7 @@ namespace MorePlaylists.UI
 
         private void DeferredSpriteLoadPlaylist_SpriteLoaded(object sender, EventArgs e)
         {
-            if (sender is LegacyPlaylist playlist)
+            if (sender is GenericEntry playlist)
             {
                 ShowPlaylist(playlist);
                 customListTableData.tableView.ReloadData();
@@ -78,7 +79,7 @@ namespace MorePlaylists.UI
             }
         }
 
-        private void ShowPlaylist(LegacyPlaylist playlist)
+        private void ShowPlaylist(GenericEntry playlist)
         {
             customListTableData.data.Add(new CustomCellInfo(playlist.Title, playlist.Author, playlist.Sprite));
         }
