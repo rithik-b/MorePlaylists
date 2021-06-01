@@ -80,6 +80,7 @@ namespace MorePlaylists.UI
             tokenSource = new CancellationTokenSource();
             SetLoading(true);
             currentPlaylists = (await BSaberUtils.GetEndpointResultTask(refreshRequested, tokenSource.Token)).Cast<GenericEntry>().ToList();
+            PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IGenericEntry>().ToList());
             SetLoading(true, 100);
 
             if (currentPlaylists != null)
@@ -116,7 +117,14 @@ namespace MorePlaylists.UI
 
         private void ShowPlaylist(GenericEntry playlist)
         {
-            customListTableData.data.Add(new CustomCellInfo(playlist.Title, playlist.Author, playlist.Sprite));
+            if (playlist.Owned)
+            {
+                customListTableData.data.Add(new CustomCellInfo($"<#7F7F7F>{playlist.Title}", playlist.Author, playlist.Sprite));
+            }
+            else
+            {
+                customListTableData.data.Add(new CustomCellInfo(playlist.Title, playlist.Author, playlist.Sprite));
+            }
         }
 
         public void SetLoading(bool value, double progress = 0, string details = "")

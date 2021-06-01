@@ -14,9 +14,6 @@ namespace MorePlaylists.Types
     public abstract class GenericEntry : IGenericEntry, IDeferredSpriteLoad
     {
         private Sprite _sprite;
-        private string _title;
-        private string _author;
-        private string _description;
 
         protected static readonly Queue<Action> SpriteQueue = new Queue<Action>();
         protected bool SpriteLoadQueued;
@@ -46,6 +43,7 @@ namespace MorePlaylists.Types
         public abstract string Author { get; protected set; }
         public abstract string Description { get; protected set; }
         public abstract string PlaylistURL { get; protected set; }
+        public bool Owned { get; set; }
 
         public abstract Stream GetCoverStream();
 

@@ -9,6 +9,7 @@ namespace MorePlaylists.Types
         string Author { get; }
         string Description { get; }
         string PlaylistURL { get; }
+        bool Owned { get; set; }
         Sprite Sprite { get; }
         Stream GetCoverStream();
     }

@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using MorePlaylists.Types;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace MorePlaylists.Utilities
 {
@@ -25,11 +28,34 @@ namespace MorePlaylists.Utilities
             {
                 dupNum++;
                 playlistPath = originalPlaylistPath + string.Format("({0}).{1}", dupNum, extension);
-                playlistFileName = playlistFileName + string.Format("({0})", dupNum);
             }
-
+            if (dupNum != 0)
+            {
+                playlistFileName += string.Format("({0})", dupNum);
+            }
             playlist.Filename = playlistFileName;
             playlistManager.StorePlaylist(playlist);
+        }
+
+        internal static void UpdatePlaylistsOwned(List<IGenericEntry> genericEntries)
+        {
+            List<BeatSaberPlaylistsLib.Types.IPlaylist> playlists = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetAllPlaylists(true).ToList();
+            List<string> syncURLs = new List<string>();
+            foreach (var playlist in playlists)
+            {
+                if (playlist.TryGetCustomData("syncURL", out object url))
+                {
+                    if (url is string urlString)
+                    {
+                        syncURLs.Add(urlString);
+                    }
+                }
+            }
+
+            foreach (var genericEntry in genericEntries)
+            {
+                genericEntry.Owned = syncURLs.Contains(genericEntry.PlaylistURL);
+            }
         }
     }
 }

@@ -55,7 +55,7 @@ namespace MorePlaylists.UI
         internal void ShowDetail(IGenericEntry selectedPlaylist)
         {
             this.selectedPlaylist = selectedPlaylist;
-            DownloadInteractable = true;
+            DownloadInteractable = !selectedPlaylist.Owned;
             NotifyPropertyChanged(nameof(PlaylistName));
             NotifyPropertyChanged(nameof(PlaylistAuthor));
             NotifyPropertyChanged(nameof(PlaylistDescription));

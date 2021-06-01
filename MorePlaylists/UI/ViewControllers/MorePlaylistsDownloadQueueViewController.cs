@@ -94,7 +94,7 @@ namespace MorePlaylists.UI
 
     internal class DownloadQueueItem : INotifyPropertyChanged
     {
-        public IGenericEntry playlistToDownload;
+        public IGenericEntry playlistEntry;
         public PlaylistQueueState queueState = PlaylistQueueState.Queued;
         private ImageView bgImage;
         public Progress<double> downloadProgress;
@@ -106,15 +106,16 @@ namespace MorePlaylists.UI
         private readonly ImageView playlistCoverView;
 
         [UIValue("playlist-name")]
-        public string PlaylistName => playlistToDownload == null || playlistToDownload.Title == null ? " " : playlistToDownload.Title;
+        public string PlaylistName => playlistEntry == null || playlistEntry.Title == null ? " " : playlistEntry.Title;
 
         [UIValue("playlist-author")]
-        public string PlaylistAuthor => playlistToDownload == null || playlistToDownload.Author == null ? " " : playlistToDownload.Author;
+        public string PlaylistAuthor => playlistEntry == null || playlistEntry.Author == null ? " " : playlistEntry.Author;
 
         [UIAction("abort-clicked")]
         public void AbortDownload()
         {
             tokenSource.Cancel();
+            playlistEntry.Owned = false;
             MorePlaylistsDownloadQueueViewController.didAbortDownload?.Invoke(this);
         }
 
@@ -122,9 +123,10 @@ namespace MorePlaylists.UI
         {
         }
 
-        public DownloadQueueItem(IGenericEntry playlistToDownload)
+        public DownloadQueueItem(IGenericEntry playlistEntry)
         {
-            this.playlistToDownload = playlistToDownload;
+            this.playlistEntry = playlistEntry;
+            playlistEntry.Owned = true;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PlaylistName)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PlaylistAuthor)));
         }
@@ -140,7 +142,7 @@ namespace MorePlaylists.UI
             var filter = playlistCoverView.gameObject.AddComponent<UnityEngine.UI.AspectRatioFitter>();
             filter.aspectRatio = 1f;
             filter.aspectMode = UnityEngine.UI.AspectRatioFitter.AspectMode.HeightControlsWidth;
-            playlistCoverView.sprite = playlistToDownload.Sprite;
+            playlistCoverView.sprite = playlistEntry.Sprite;
             playlistCoverView.rectTransform.sizeDelta = new Vector2(8, 0);
             downloadProgress = new Progress<double>(ProgressUpdate);
 
@@ -165,16 +167,19 @@ namespace MorePlaylists.UI
         public async void DownloadPlaylistAsync()
         {
             queueState = PlaylistQueueState.Downloading;
+            Plugin.Log.Debug("Attempting to download " + playlistEntry.PlaylistURL);
             try
             {
-                Stream playlistStream = new MemoryStream(await DownloaderUtils.instance.DownloadFileToBytesAsync(playlistToDownload.PlaylistURL, tokenSource.Token));
+                Stream playlistStream = new MemoryStream(await DownloaderUtils.instance.DownloadFileToBytesAsync(playlistEntry.PlaylistURL, tokenSource.Token));
                 BeatSaberPlaylistsLib.Types.IPlaylist playlist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
+                playlist.SetCustomData("syncURL", playlistEntry.PlaylistURL);
                 PlaylistLibUtils.SavePlaylist(playlist);
                 queueState = PlaylistQueueState.Downloaded;
                 MorePlaylistsDownloadQueueViewController.didFinishDownloadingItem?.Invoke(this);
             }
             catch (Exception e)
             {
+                playlistEntry.Owned = false;
                 queueState = PlaylistQueueState.Error;
                 MorePlaylistsDownloadQueueViewController.didFinishDownloadingItem?.Invoke(this);
             }
