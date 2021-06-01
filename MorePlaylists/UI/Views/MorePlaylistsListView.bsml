@@ -1,9 +1,13 @@
 ﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
 	<vertical>
 		<horizontal horizontal-fit='PreferredSize' vertical-fit='PreferredSize' spacing='2' anchor-min-x='0' anchor-max-x='0.5'>
+			<button pad='0' pref-height='8' pref-width='12' text='🔄' hover-hint='Refresh' on-click='refresh-click' />
 			<button pad='0' pref-height='8' pref-width='20' text='Source' />
 			<button pad='0' pref-height='8' pref-width='20' text='Search' />
 		</horizontal>
+		<modal id='loading-modal' show-event='open-loading-modal' hide-event='close-loading-modal,close-all-modals' move-to-center='true' size-delta-y='35' size-delta-x='48'>
+			<button on-click='abort-click' text='Abort' ignore-layout='true' anchor-min-x='0.5' anchor-max-x='0.5' anchor-pos-y='-30' anchor-pos-x='0' pref-height='8' pref-width='35' pad='0' />
+		</modal>
 		<page-button event-click='list#PageUp' direction='Up' />
 		<list id='list' expand-cell='true' select-cell='list-select' />
 		<page-button event-click='list#PageDown' direction='Down' />

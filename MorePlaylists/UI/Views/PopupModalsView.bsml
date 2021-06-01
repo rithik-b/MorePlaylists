@@ -7,7 +7,4 @@
 			<page-button event-click='sortList#PageDown' pref-width='14' direction='Down'></page-button>
 		</vertical>
 	</modal>
-	<modal id='loadingModal' show-event='open-loadingModal' hide-event='close-loadingModal,closeAllModals' move-to-center='true' size-delta-y='35' size-delta-x='48'>
-		<button id='abortButton' on-click='abortClicked' text='Abort' ignore-layout='true' anchor-min-x='0.5' anchor-max-x='0.5' anchor-pos-y='5' pref-height='8' pad='0' />
-	</modal>
 </bg>

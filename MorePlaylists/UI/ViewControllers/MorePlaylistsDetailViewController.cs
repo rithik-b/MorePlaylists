@@ -1,14 +1,10 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
-using BeatSaberPlaylistsLib.Legacy;
 using HMUI;
 using MorePlaylists.Types;
 using MorePlaylists.Utilities;
 using System;
 using System.ComponentModel;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace MorePlaylists.UI
@@ -17,6 +13,9 @@ namespace MorePlaylists.UI
     {
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml";
         private IGenericEntry selectedPlaylist;
+        private bool _downloadInteractable = false;
+
+        public Action<IGenericEntry> didPressDownload;
 
         [UIComponent("playlist-cover")]
         private readonly ImageView playlistCoverView;
@@ -42,18 +41,10 @@ namespace MorePlaylists.UI
         }
 
         [UIAction("download-click")]
-        private async Task DownloadPlaylistAsync()
+        private void DownloadPressed()
         {
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
-            try
-            {
-                Stream playlistStream = new MemoryStream(await DownloaderUtils.instance.DownloadFileToBytesAsync(selectedPlaylist.PlaylistURL, tokenSource.Token));
-                BeatSaberPlaylistsLib.Types.IPlaylist playlist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
-                PlaylistLibUtils.SavePlaylist(playlist);
-            }
-            catch (Exception e)
-            {
-            }
+            didPressDownload?.Invoke(selectedPlaylist);
+            DownloadInteractable = false;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -64,11 +55,23 @@ namespace MorePlaylists.UI
         internal void ShowDetail(IGenericEntry selectedPlaylist)
         {
             this.selectedPlaylist = selectedPlaylist;
+            DownloadInteractable = true;
             NotifyPropertyChanged(nameof(PlaylistName));
             NotifyPropertyChanged(nameof(PlaylistAuthor));
             NotifyPropertyChanged(nameof(PlaylistDescription));
             playlistCoverView.sprite = selectedPlaylist.Sprite;
             descriptionTextPage.ScrollTo(0, true);
+        }
+
+        [UIValue("download-interactable")]
+        public bool DownloadInteractable
+        {
+            get => _downloadInteractable;
+            set
+            {
+                _downloadInteractable = value;
+                NotifyPropertyChanged(nameof(DownloadInteractable));
+            }
         }
     }
 }

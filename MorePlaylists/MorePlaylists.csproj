@@ -65,6 +65,11 @@
       <HintPath>$(BeatSaberDir)\Plugins\SiraUtil.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="SongCore, Version=3.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <Private>False</Private>
+      <HintPath>$(BeatSaberDir)\Plugins\SongCore.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -138,6 +143,7 @@
     <Compile Include="Types\IGenericEntry.cs" />
     <Compile Include="UI\MenuButtonUI.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsDetailViewController.cs" />
+    <Compile Include="UI\ViewControllers\MorePlaylistsDownloadQueueViewController.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsFlowCoordinator.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsListViewController.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsSongListViewController.cs" />
@@ -157,6 +163,7 @@
     <EmbeddedResource Include="UI\Views\PopupModalsView.bsml" />
     <EmbeddedResource Include="UI\Views\MorePlaylistsDetailView.bsml" />
     <EmbeddedResource Include="UI\Views\MorePlaylistsSongListView.bsml" />
+    <EmbeddedResource Include="UI\Views\MorePlaylistsDownloadQueueView.bsml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BeatSaberModdingTools.Tasks">

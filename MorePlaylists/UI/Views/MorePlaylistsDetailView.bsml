@@ -15,7 +15,7 @@
 		</horizontal>
 
 		<horizontal pref-width='60' horizontal-fit='PreferredSize' vertical-fit='PreferredSize' spacing='2'>
-			<button text='💾 Playlist' on-click='download-click' pad='0' pref-height='8' pref-width='25' anchor-pos-y='25' />
+			<button text='💾 Playlist' on-click='download-click' interactable='~download-interactable' pad='0' pref-height='8' pref-width='25' anchor-pos-y='25' />
 			<button text='💾 Playlist + Songs' on-click='download-all-click' pad='0' pref-height='8' pref-width='35' anchor-pos-y='25' />
 		</horizontal>
 	</vertical>

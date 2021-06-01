@@ -9,11 +9,16 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
 using static BeatSaberMarkupLanguage.Components.CustomListTableData;
+using UnityEngine;
+using BeatSaberMarkupLanguage.Parser;
 
 namespace MorePlaylists.UI
 {
     public class MorePlaylistsListViewController : BSMLResourceViewController
     {
+        internal LoadingControl loadingSpinner;
+        private CancellationTokenSource tokenSource;
+        private static SemaphoreSlim imageLoadSemaphore = new SemaphoreSlim(1, 1);
         private List<GenericEntry> currentPlaylists;
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsListView.bsml";
 
@@ -21,6 +26,12 @@ namespace MorePlaylists.UI
 
         [UIComponent("list")]
         private CustomListTableData customListTableData;
+
+        [UIComponent("loading-modal")]
+        public RectTransform loadingModal;
+
+        [UIParams]
+        internal BSMLParserParams parserParams;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -32,23 +43,44 @@ namespace MorePlaylists.UI
         }
 
         [UIAction("#post-parse")]
-        internal void PostParse()
+        private void PostParse()
         {
             InitPlaylistList();
         }
 
         [UIAction("list-select")]
-        internal void Select(TableView tableView, int row)
+        private void Select(TableView tableView, int row)
         {
             didSelectPlaylist?.Invoke(currentPlaylists[row]);
         }
 
-        private async void InitPlaylistList()
+
+        [UIAction("refresh-click")]
+        private void RefreshList()
+        {
+            foreach (GenericEntry playlist in currentPlaylists)
+            {
+                playlist.SpriteLoaded -= DeferredSpriteLoadPlaylist_SpriteLoaded;
+            }
+            InitPlaylistList(true);
+        }
+
+        [UIAction("abort-click")]
+        private void AbortLoading()
+        {
+            tokenSource.Cancel();
+            SetLoading(false);
+        }
+
+        private async void InitPlaylistList(bool refreshRequested = false)
         {
             customListTableData.tableView.ClearSelection();
             customListTableData.data.Clear();
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
-            currentPlaylists = (await BSaberUtils.GetEndpointResultTask(false, tokenSource.Token)).Cast<GenericEntry>().ToList();
+            tokenSource?.Dispose();
+            tokenSource = new CancellationTokenSource();
+            SetLoading(true);
+            currentPlaylists = (await BSaberUtils.GetEndpointResultTask(refreshRequested, tokenSource.Token)).Cast<GenericEntry>().ToList();
+            SetLoading(true, 100);
 
             if (currentPlaylists != null)
             {
@@ -56,6 +88,7 @@ namespace MorePlaylists.UI
                 {
                     if (!playlist.SpriteWasLoaded)
                     {
+                        await imageLoadSemaphore.WaitAsync();
                         _ = playlist.Sprite;
                         playlist.SpriteLoaded -= DeferredSpriteLoadPlaylist_SpriteLoaded;
                         playlist.SpriteLoaded += DeferredSpriteLoadPlaylist_SpriteLoaded;
@@ -67,6 +100,7 @@ namespace MorePlaylists.UI
                 }
             }
             customListTableData.tableView.ReloadData();
+            SetLoading(false);
         }
 
         private void DeferredSpriteLoadPlaylist_SpriteLoaded(object sender, EventArgs e)
@@ -76,12 +110,31 @@ namespace MorePlaylists.UI
                 ShowPlaylist(playlist);
                 customListTableData.tableView.ReloadData();
                 playlist.SpriteLoaded -= DeferredSpriteLoadPlaylist_SpriteLoaded;
+                imageLoadSemaphore.Release();
             }
         }
 
         private void ShowPlaylist(GenericEntry playlist)
         {
             customListTableData.data.Add(new CustomCellInfo(playlist.Title, playlist.Author, playlist.Sprite));
+        }
+
+        public void SetLoading(bool value, double progress = 0, string details = "")
+        {
+            if (loadingSpinner == null)
+            {
+                loadingSpinner = GameObject.Instantiate(Resources.FindObjectsOfTypeAll<LoadingControl>().First(), loadingModal);
+                Destroy(loadingSpinner.GetComponent<Touchable>());
+            }
+            if (value)
+            {
+                parserParams.EmitEvent("open-loading-modal");
+                loadingSpinner.ShowDownloadingProgress("Fetching More Playlists... " + details, (float)progress);
+            }
+            else
+            {
+                parserParams.EmitEvent("close-loading-modal");
+            }
         }
     }
 }

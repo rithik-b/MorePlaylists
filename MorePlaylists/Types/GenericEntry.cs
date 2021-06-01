@@ -66,7 +66,8 @@ namespace MorePlaylists.Types
                         }
                         else
                         {
-                            spriteEntry.SpriteWasLoaded = false;
+                            spriteEntry._sprite = BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite;
+                            spriteEntry.SpriteWasLoaded = true;
                         }
                     }
                     spriteEntry.SpriteLoaded?.Invoke(spriteEntry, null);
@@ -74,7 +75,8 @@ namespace MorePlaylists.Types
                 }
                 catch (Exception e)
                 {
-                    spriteEntry.SpriteWasLoaded = false;
+                    spriteEntry._sprite = BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite;
+                    spriteEntry.SpriteWasLoaded = true;
                     spriteEntry.SpriteLoaded?.Invoke(spriteEntry, null);
                 }
             });
