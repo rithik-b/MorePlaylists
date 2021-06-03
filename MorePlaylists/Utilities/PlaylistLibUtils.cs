@@ -15,7 +15,8 @@ namespace MorePlaylists.Utilities
 
             // Generate 
             string playlistFolderPath = playlistManager.PlaylistPath;
-            string playlistFileName = string.Join("_", playlist.Title.Replace("/", "").Replace("\\", "").Replace(".", "").Split(' '));
+            string playlistFileName = string.Join("_", playlist.Title.Replace("/", "").Replace("\\", "").Replace(".", "").Replace(":", "").Replace("*", "").Replace("?", "")
+                .Replace("\"", "").Replace("<", "").Replace(">", "").Replace("|", "").Split());
             if (string.IsNullOrEmpty(playlistFileName))
             {
                 playlistFileName = "playlist";

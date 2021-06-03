@@ -7,7 +7,6 @@ using MorePlaylists.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
@@ -66,10 +65,6 @@ namespace MorePlaylists.UI
 
         internal void UpdateDownloadingState(DownloadQueueItem item)
         {
-            foreach (DownloadQueueItem inQueue in queueItems.Where(x => (x as DownloadQueueItem).queueState == DownloadQueueItem.PlaylistQueueState.Queued).ToArray())
-            {
-                inQueue.DownloadPlaylistAsync();
-            }
             foreach (DownloadQueueItem downloaded in queueItems.Where(x => (x as DownloadQueueItem).queueState == DownloadQueueItem.PlaylistQueueState.Downloaded).ToArray())
             {
                 queueItems.Remove(downloaded);
@@ -95,7 +90,7 @@ namespace MorePlaylists.UI
     internal class DownloadQueueItem : INotifyPropertyChanged
     {
         public IGenericEntry playlistEntry;
-        public PlaylistQueueState queueState = PlaylistQueueState.Queued;
+        public PlaylistQueueState queueState = PlaylistQueueState.Downloading;
         private ImageView bgImage;
         public Progress<double> downloadProgress;
         private float _downloadingProgess;
@@ -153,6 +148,41 @@ namespace MorePlaylists.UI
             bgImage.fillMethod = UnityEngine.UI.Image.FillMethod.Horizontal;
             bgImage.fillAmount = 0;
             bgImage.material = BeatSaberMarkupLanguage.Utilities.ImageResources.NoGlowMat;
+
+            if (playlistEntry.Playlist != null)
+            {
+                PlaylistEntry_FinishedDownload();
+            }
+            else
+            {
+                playlistEntry.FinishedDownload += PlaylistEntry_FinishedDownload;
+            }
+        }
+
+        private void PlaylistEntry_FinishedDownload()
+        {
+            playlistEntry.FinishedDownload -= PlaylistEntry_FinishedDownload;
+            if (playlistEntry.Playlist != null)
+            {
+                try
+                {
+                    playlistEntry.Playlist.SetCustomData("syncURL", playlistEntry.PlaylistURL);
+                    PlaylistLibUtils.SavePlaylist(playlistEntry.Playlist);
+                    queueState = PlaylistQueueState.Downloaded;
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.Critical("An exception occurred while downloading. Exception: " + e.Message);
+                    playlistEntry.Owned = false;
+                    queueState = PlaylistQueueState.Error;
+                }
+            }
+            else
+            {
+                playlistEntry.Owned = false;
+                queueState = PlaylistQueueState.Error;
+            }
+            MorePlaylistsDownloadQueueViewController.didFinishDownloadingItem?.Invoke(this);
         }
 
         public void ProgressUpdate(double progress)
@@ -164,28 +194,6 @@ namespace MorePlaylists.UI
             bgImage.fillAmount = _downloadingProgess;
         }
 
-        public async void DownloadPlaylistAsync()
-        {
-            queueState = PlaylistQueueState.Downloading;
-            Plugin.Log.Debug("Attempting to download " + playlistEntry.PlaylistURL);
-            try
-            {
-                Stream playlistStream = new MemoryStream(await DownloaderUtils.instance.DownloadFileToBytesAsync(playlistEntry.PlaylistURL, tokenSource.Token));
-                BeatSaberPlaylistsLib.Types.IPlaylist playlist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
-                playlist.SetCustomData("syncURL", playlistEntry.PlaylistURL);
-                PlaylistLibUtils.SavePlaylist(playlist);
-                queueState = PlaylistQueueState.Downloaded;
-                MorePlaylistsDownloadQueueViewController.didFinishDownloadingItem?.Invoke(this);
-            }
-            catch (Exception e)
-            {
-                playlistEntry.Owned = false;
-                queueState = PlaylistQueueState.Error;
-                MorePlaylistsDownloadQueueViewController.didFinishDownloadingItem?.Invoke(this);
-            }
-
-        }
-
-        public enum PlaylistQueueState { Queued, Downloading, Downloaded, Error };
+        public enum PlaylistQueueState { Downloading, Downloaded, Error };
     }
 }

@@ -13,6 +13,7 @@ namespace MorePlaylists.Types
 {
     public abstract class GenericEntry : IGenericEntry, IDeferredSpriteLoad
     {
+        private BeatSaberPlaylistsLib.Types.IPlaylist _playlist = null;
         private Sprite _sprite;
 
         protected static readonly Queue<Action> SpriteQueue = new Queue<Action>();
@@ -38,14 +39,29 @@ namespace MorePlaylists.Types
         }
         public bool SpriteWasLoaded { get; private set; }
         public event EventHandler SpriteLoaded;
+        public event Action FinishedDownload;
 
         public abstract string Title { get; protected set; }
         public abstract string Author { get; protected set; }
         public abstract string Description { get; protected set; }
         public abstract string PlaylistURL { get; protected set; }
+        public BeatSaberPlaylistsLib.Types.IPlaylist Playlist
+        {
+            get => _playlist;
+            set
+            {
+                _playlist = value;
+                FinishedDownload?.Invoke();
+            }
+        }
         public bool Owned { get; set; }
 
         public abstract Stream GetCoverStream();
+
+        public void InvokeFinishedDownload()
+        {
+            FinishedDownload?.Invoke();
+        }
 
         protected static void QueueLoadSprite(GenericEntry spriteEntry)
         {

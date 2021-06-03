@@ -5,6 +5,9 @@ using System;
 using BeatSaberPlaylistsLib.Legacy;
 using UnityEngine;
 using MorePlaylists.Types;
+using MorePlaylists.Utilities;
+using System.IO;
+using System.Threading;
 
 namespace MorePlaylists.UI
 {
@@ -16,6 +19,10 @@ namespace MorePlaylists.UI
         private MorePlaylistsDownloadQueueViewController morePlaylistsDownloadQueueViewController;
         private MorePlaylistsDetailViewController morePlaylistsDetailViewController;
         private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
+
+        private event Action<BeatSaberPlaylistsLib.Types.IPlaylist> selectedPlaylistDownloadedEvent;
+        private CancellationTokenSource playlistDownloadTokenSource;
+        private bool playlistDownloading = false;
 
         [Inject]
         public void Construct(MainFlowCoordinator mainFlowCoordinator, MorePlaylistsNavigationController morePlaylistsNavigationController, MorePlaylistsListViewController morePlaylistsListViewController, 
@@ -50,18 +57,46 @@ namespace MorePlaylists.UI
             ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloadQueueViewController, morePlaylistsSongListViewController);
         }
 
-        private void MorePlaylistsListViewController_DidSelectPlaylist(GenericEntry selectedPlaylist)
+        private void MorePlaylistsListViewController_DidSelectPlaylist(GenericEntry selectedPlaylistEntry)
         {
             if (!morePlaylistsDetailViewController.isInViewControllerHierarchy)
             {
                 PushViewControllerToNavigationController(morePlaylistsNavigationController, morePlaylistsDetailViewController, DetailViewPushed, true);
             }
-            morePlaylistsDetailViewController.ShowDetail(selectedPlaylist);
+            morePlaylistsDetailViewController.ShowDetail(selectedPlaylistEntry);
+
+            if (!playlistDownloading)
+            {
+                playlistDownloadTokenSource?.Cancel();
+            }
+            playlistDownloading = false;
+            playlistDownloadTokenSource?.Dispose();
+            playlistDownloadTokenSource = new CancellationTokenSource();
+            DownloadSelectedPlaylist(selectedPlaylistEntry);
         }
 
-        private void MorePlaylistsDetailViewController_DidPressDownload(IGenericEntry playlistToDownload)
+        private async void DownloadSelectedPlaylist(IGenericEntry playlistEntry)
         {
-            morePlaylistsDownloadQueueViewController.EnqueuePlaylist(playlistToDownload);
+            try
+            {
+                Stream playlistStream = new MemoryStream(await DownloaderUtils.instance.DownloadFileToBytesAsync(playlistEntry.PlaylistURL, playlistDownloadTokenSource.Token));
+                playlistEntry.Playlist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
+            }
+            catch (Exception e)
+            {
+                if (playlistDownloading)
+                {
+                    Plugin.Log.Critical("An exception occurred while downloading. Exception: " + e.Message);
+                    playlistEntry.InvokeFinishedDownload();
+                }
+            }
+        }
+
+        private void MorePlaylistsDetailViewController_DidPressDownload(IGenericEntry playlistEntry)
+        {
+            playlistDownloading = true;
+            playlistEntry.Owned = true;
+            morePlaylistsDownloadQueueViewController.EnqueuePlaylist(playlistEntry);
         }
 
         private void DetailViewPushed()
