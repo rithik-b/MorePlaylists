@@ -2,4 +2,9 @@
 	<horizontal anchor-min-y='1'  bg='panel-top' pad-left='10' pad-right='10' horizontal-fit='PreferredSize'>
 		<text text='Songs' align='Center' font-size='8'></text>
 	</horizontal>
+	<modal id='loading-modal' show-event='open-loading-modal' hide-event='close-loading-modal,close-all-modals' move-to-center='true' size-delta-y='35' size-delta-x='48'>
+	</modal>
+	<page-button event-click='list#PageUp' direction='Up' />
+	<list id='list' expand-cell='false' select-cell='list-select' list-width='80' />
+	<page-button event-click='list#PageDown' direction='Down' />
 </vertical>

@@ -64,6 +64,7 @@ namespace MorePlaylists.UI
                 PushViewControllerToNavigationController(morePlaylistsNavigationController, morePlaylistsDetailViewController, DetailViewPushed, true);
             }
             morePlaylistsDetailViewController.ShowDetail(selectedPlaylistEntry);
+            morePlaylistsSongListViewController.SetCurrentPlaylist(selectedPlaylistEntry);
 
             if (!playlistDownloading)
             {

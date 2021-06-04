@@ -16,7 +16,7 @@ namespace MorePlaylists.UI
 {
     public class MorePlaylistsListViewController : BSMLResourceViewController
     {
-        internal LoadingControl loadingSpinner;
+        private LoadingControl loadingSpinner;
         private CancellationTokenSource tokenSource;
         private static SemaphoreSlim imageLoadSemaphore = new SemaphoreSlim(1, 1);
         private List<GenericEntry> currentPlaylists;
