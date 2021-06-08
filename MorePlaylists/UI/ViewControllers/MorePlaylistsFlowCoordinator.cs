@@ -8,6 +8,7 @@ using MorePlaylists.Types;
 using MorePlaylists.Utilities;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MorePlaylists.UI
 {
@@ -69,15 +70,24 @@ namespace MorePlaylists.UI
             if (!playlistDownloading)
             {
                 playlistDownloadTokenSource?.Cancel();
+                playlistDownloadTokenSource?.Dispose();
             }
             playlistDownloading = false;
-            playlistDownloadTokenSource?.Dispose();
-            playlistDownloadTokenSource = new CancellationTokenSource();
-            DownloadSelectedPlaylist(selectedPlaylistEntry);
+
+            if (selectedPlaylistEntry.Playlist == null)
+            {
+                playlistDownloadTokenSource = new CancellationTokenSource();
+                DownloadSelectedPlaylist(selectedPlaylistEntry);
+            }
+            else
+            {
+                playlistDownloadTokenSource = null;
+            }
         }
 
         private async void DownloadSelectedPlaylist(IGenericEntry playlistEntry)
         {
+            playlistEntry.DownloadState = DownloadState.Downloading;
             try
             {
                 Stream playlistStream = new MemoryStream(await DownloaderUtils.instance.DownloadFileToBytesAsync(playlistEntry.PlaylistURL, playlistDownloadTokenSource.Token));
@@ -85,11 +95,11 @@ namespace MorePlaylists.UI
             }
             catch (Exception e)
             {
-                if (playlistDownloading)
+                if (playlistDownloading && !(e is TaskCanceledException))
                 {
                     Plugin.Log.Critical("An exception occurred while downloading. Exception: " + e.Message);
-                    playlistEntry.InvokeFinishedDownload();
                 }
+                playlistEntry.DownloadState = DownloadState.Error;
             }
         }
 
@@ -97,7 +107,7 @@ namespace MorePlaylists.UI
         {
             playlistDownloading = true;
             playlistEntry.Owned = true;
-            morePlaylistsDownloadQueueViewController.EnqueuePlaylist(playlistEntry);
+            morePlaylistsDownloadQueueViewController.EnqueuePlaylist(playlistEntry, playlistDownloadTokenSource);
         }
 
         private void DetailViewPushed()

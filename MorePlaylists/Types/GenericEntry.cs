@@ -14,6 +14,7 @@ namespace MorePlaylists.Types
     public abstract class GenericEntry : IGenericEntry, IDeferredSpriteLoad
     {
         private BeatSaberPlaylistsLib.Types.IPlaylist _playlist = null;
+        private DownloadState _downloadState = DownloadState.None;
         private Sprite _sprite;
 
         protected static readonly Queue<Action> SpriteQueue = new Queue<Action>();
@@ -51,18 +52,31 @@ namespace MorePlaylists.Types
             set
             {
                 _playlist = value;
-                FinishedDownload?.Invoke();
+                if (value == null)
+                {
+                    DownloadState = DownloadState.None;
+                }
+                else
+                {
+                    DownloadState = DownloadState.Downloaded;
+                }
+            }
+        }
+        public DownloadState DownloadState
+        {
+            get => _downloadState;
+            set
+            {
+                _downloadState = value;
+                if (value == DownloadState.Downloaded || value == DownloadState.Error)
+                {
+                    FinishedDownload?.Invoke();
+                }
             }
         }
         public bool Owned { get; set; }
 
         public abstract Stream GetCoverStream();
-
-        public void InvokeFinishedDownload()
-        {
-            FinishedDownload?.Invoke();
-        }
-
         protected static void QueueLoadSprite(GenericEntry spriteEntry)
         {
             SpriteQueue.Enqueue(() =>
@@ -120,4 +134,5 @@ namespace MorePlaylists.Types
                 SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
         }
     }
+    public enum DownloadState { None, Downloading, Downloaded, Error };
 }

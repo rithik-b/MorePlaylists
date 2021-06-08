@@ -12,7 +12,7 @@ namespace MorePlaylists.Types
         string PlaylistURL { get; }
         BeatSaberPlaylistsLib.Types.IPlaylist Playlist { get; set; }
         event Action FinishedDownload;
-        void InvokeFinishedDownload();
+        DownloadState DownloadState { get; set; }
         bool Owned { get; set; }
         Sprite Sprite { get; }
         Stream GetCoverStream();

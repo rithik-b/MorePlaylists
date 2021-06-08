@@ -44,28 +44,17 @@ namespace MorePlaylists.UI
             didFinishDownloadingItem -= UpdateDownloadingState;
         }
 
-        internal void EnqueuePlaylist(IGenericEntry playlistToDownload)
+        internal void EnqueuePlaylist(IGenericEntry playlistToDownload, CancellationTokenSource tokenSource)
         {
-            DownloadQueueItem queuedPlaylist = new DownloadQueueItem(playlistToDownload);
+            DownloadQueueItem queuedPlaylist = new DownloadQueueItem(playlistToDownload, tokenSource);
             queueItems.Add(queuedPlaylist);
             customListTableData?.tableView?.ReloadData();
             UpdateDownloadingState(queuedPlaylist);
         }
 
-        internal void AbortAllDownloads()
-        {
-            tokenSource.Cancel();
-            tokenSource.Dispose();
-            tokenSource = new CancellationTokenSource();
-            foreach (DownloadQueueItem item in queueItems.ToArray())
-            {
-                item.AbortDownload();
-            }
-        }
-
         internal void UpdateDownloadingState(DownloadQueueItem item)
         {
-            foreach (DownloadQueueItem downloaded in queueItems.Where(x => (x as DownloadQueueItem).queueState == DownloadQueueItem.PlaylistQueueState.Downloaded).ToArray())
+            foreach (DownloadQueueItem downloaded in queueItems.Where(x => (x as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Downloaded || (x as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Error).ToArray())
             {
                 queueItems.Remove(downloaded);
                 customListTableData?.tableView?.ReloadData();
@@ -79,10 +68,14 @@ namespace MorePlaylists.UI
         internal void DownloadAborted(DownloadQueueItem download)
         {
             if (queueItems.Contains(download))
+            {
                 queueItems.Remove(download);
+            }
 
             if (queueItems.Count == 0)
+            {
                 SongCore.Loader.Instance.RefreshSongs(false);
+            }
             customListTableData?.tableView?.ReloadData();
         }
     }
@@ -90,11 +83,10 @@ namespace MorePlaylists.UI
     internal class DownloadQueueItem : INotifyPropertyChanged
     {
         public IGenericEntry playlistEntry;
-        public PlaylistQueueState queueState = PlaylistQueueState.Downloading;
         private ImageView bgImage;
         public Progress<double> downloadProgress;
         private float _downloadingProgess;
-        public CancellationTokenSource tokenSource = new CancellationTokenSource();
+        public CancellationTokenSource tokenSource;
         public event PropertyChangedEventHandler PropertyChanged;
 
         [UIComponent("playlist-cover")]
@@ -118,9 +110,10 @@ namespace MorePlaylists.UI
         {
         }
 
-        public DownloadQueueItem(IGenericEntry playlistEntry)
+        public DownloadQueueItem(IGenericEntry playlistEntry, CancellationTokenSource tokenSource)
         {
             this.playlistEntry = playlistEntry;
+            this.tokenSource = tokenSource;
             playlistEntry.Owned = true;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PlaylistName)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PlaylistAuthor)));
@@ -149,7 +142,7 @@ namespace MorePlaylists.UI
             bgImage.fillAmount = 0;
             bgImage.material = BeatSaberMarkupLanguage.Utilities.ImageResources.NoGlowMat;
 
-            if (playlistEntry.Playlist != null)
+            if (playlistEntry.DownloadState != DownloadState.Downloading)
             {
                 PlaylistEntry_FinishedDownload();
             }
@@ -162,25 +155,22 @@ namespace MorePlaylists.UI
         private void PlaylistEntry_FinishedDownload()
         {
             playlistEntry.FinishedDownload -= PlaylistEntry_FinishedDownload;
-            if (playlistEntry.Playlist != null)
+            if (playlistEntry.DownloadState == DownloadState.Downloaded)
             {
                 try
                 {
                     playlistEntry.Playlist.SetCustomData("syncURL", playlistEntry.PlaylistURL);
                     PlaylistLibUtils.SavePlaylist(playlistEntry.Playlist);
-                    queueState = PlaylistQueueState.Downloaded;
                 }
                 catch (Exception e)
                 {
                     Plugin.Log.Critical("An exception occurred while downloading. Exception: " + e.Message);
                     playlistEntry.Owned = false;
-                    queueState = PlaylistQueueState.Error;
                 }
             }
             else
             {
                 playlistEntry.Owned = false;
-                queueState = PlaylistQueueState.Error;
             }
             MorePlaylistsDownloadQueueViewController.didFinishDownloadingItem?.Invoke(this);
         }
@@ -194,6 +184,5 @@ namespace MorePlaylists.UI
             bgImage.fillAmount = _downloadingProgess;
         }
 
-        public enum PlaylistQueueState { Downloading, Downloaded, Error };
     }
 }

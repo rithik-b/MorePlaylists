@@ -9,6 +9,7 @@ using MorePlaylists.Types;
 using SongDetailsCache;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace MorePlaylists.UI
@@ -16,7 +17,7 @@ namespace MorePlaylists.UI
     public class MorePlaylistsSongListViewController : BSMLResourceViewController
     {
         private LoadingControl loadingSpinner;
-        private CancellationTokenSource tokenSource = new CancellationTokenSource();
+        private CancellationTokenSource tokenSource;
         private IGenericEntry playlistEntry;
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsSongListView.bsml";
 
@@ -36,6 +37,10 @@ namespace MorePlaylists.UI
                 return;
             }
 
+            tokenSource?.Cancel();
+            tokenSource?.Dispose();
+            tokenSource = new CancellationTokenSource();
+
             SetLoading(true);
 
             if (this.playlistEntry != null)
@@ -44,22 +49,25 @@ namespace MorePlaylists.UI
             }
             this.playlistEntry = playlistEntry;
 
-            customListTableData.tableView.ClearSelection();
             customListTableData.data.Clear();
             customListTableData.tableView.ReloadData();
 
             if (playlistEntry.Playlist != null)
             {
-                InitSongList();
+                Task.Run(InitSongList, tokenSource.Token);
+            }
+            else if(playlistEntry.DownloadState == DownloadState.Downloading)
+            {
+                playlistEntry.FinishedDownload += InitSongList;
             }
             else
             {
-                playlistEntry.FinishedDownload += InitSongList;
+                SetLoading(false);
             }
         }
 
         [UIAction("list-select")]
-        private void Select(TableView tableView, int row)
+        private void Select(TableView _, int __)
         {
             customListTableData.tableView.ClearSelection();
         }
