@@ -19,10 +19,12 @@ namespace MorePlaylists.UI
         private LoadingControl loadingSpinner;
         private CancellationTokenSource tokenSource;
         private static SemaphoreSlim imageLoadSemaphore = new SemaphoreSlim(1, 1);
+        private DownloadSource currentSource = DownloadSource.BSaber;
         private List<GenericEntry> currentPlaylists;
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsListView.bsml";
 
-        public Action<GenericEntry> didSelectPlaylist;
+        internal event Action<GenericEntry> DidSelectPlaylist;
+        internal event Action DidClickSource;
 
         [UIComponent("list")]
         private CustomListTableData customListTableData;
@@ -38,20 +40,26 @@ namespace MorePlaylists.UI
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             if (!firstActivation)
             {
-                InitPlaylistList();
+                ShowPlaylists();
             }
         }
 
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            InitPlaylistList();
+            ShowPlaylists();
         }
 
         [UIAction("list-select")]
         private void Select(TableView tableView, int row)
         {
-            didSelectPlaylist?.Invoke(currentPlaylists[row]);
+            DidSelectPlaylist?.Invoke(currentPlaylists[row]);
+        }
+
+        [UIAction("source-click")]
+        private void DisplaySources()
+        {
+            DidClickSource?.Invoke();
         }
 
 
@@ -62,7 +70,7 @@ namespace MorePlaylists.UI
             {
                 playlist.SpriteLoaded -= DeferredSpriteLoadPlaylist_SpriteLoaded;
             }
-            InitPlaylistList(true);
+            ShowPlaylists(true);
         }
 
         [UIAction("abort-click")]
@@ -72,14 +80,30 @@ namespace MorePlaylists.UI
             SetLoading(false);
         }
 
-        private async void InitPlaylistList(bool refreshRequested = false)
+        internal void ShowPlaylistsForSource(DownloadSource downloadSource)
+        {
+            currentSource = downloadSource;
+            ShowPlaylists(false);
+        }
+
+        private async void ShowPlaylists(bool refreshRequested = false)
         {
             customListTableData.tableView.ClearSelection();
             customListTableData.data.Clear();
             tokenSource?.Dispose();
             tokenSource = new CancellationTokenSource();
             SetLoading(true);
-            currentPlaylists = (await BSaberUtils.GetEndpointResultTask(refreshRequested, tokenSource.Token)).Cast<GenericEntry>().ToList();
+
+            switch (currentSource)
+            {
+                case DownloadSource.BSaber:
+                    currentPlaylists = (await BSaberUtils.GetEndpointResultTask(refreshRequested, tokenSource.Token)).Cast<GenericEntry>().ToList();
+                    break;
+                case DownloadSource.Hitbloq:
+                    currentPlaylists = (await HitbloqUtils.GetEndpointResultTask(refreshRequested, tokenSource.Token)).Cast<GenericEntry>().ToList();
+                    break;
+            }
+
             PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IGenericEntry>().ToList());
             SetLoading(true, 100);
 
@@ -127,7 +151,7 @@ namespace MorePlaylists.UI
             }
         }
 
-        public void SetLoading(bool value, double progress = 0, string details = "")
+        private void SetLoading(bool value, double progress = 0, string details = "")
         {
             if (loadingSpinner == null)
             {

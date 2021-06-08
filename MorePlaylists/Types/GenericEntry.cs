@@ -15,7 +15,7 @@ namespace MorePlaylists.Types
     {
         private BeatSaberPlaylistsLib.Types.IPlaylist _playlist = null;
         private DownloadState _downloadState = DownloadState.None;
-        private Sprite _sprite;
+        protected Sprite _sprite;
 
         protected static readonly Queue<Action> SpriteQueue = new Queue<Action>();
         protected bool SpriteLoadQueued;

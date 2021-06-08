@@ -2,7 +2,6 @@
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
 using MorePlaylists.Types;
-using MorePlaylists.Utilities;
 using System;
 using System.ComponentModel;
 using UnityEngine;
@@ -15,7 +14,7 @@ namespace MorePlaylists.UI
         private IGenericEntry selectedPlaylist;
         private bool _downloadInteractable = false;
 
-        public Action<IGenericEntry> didPressDownload;
+        internal event Action<IGenericEntry> DidPressDownload;
 
         [UIComponent("playlist-cover")]
         private readonly ImageView playlistCoverView;
@@ -43,7 +42,7 @@ namespace MorePlaylists.UI
         [UIAction("download-click")]
         private void DownloadPressed()
         {
-            didPressDownload?.Invoke(selectedPlaylist);
+            DidPressDownload?.Invoke(selectedPlaylist);
             DownloadInteractable = false;
         }
 

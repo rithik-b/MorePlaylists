@@ -17,8 +17,8 @@ namespace MorePlaylists.UI
     public class MorePlaylistsDownloadQueueViewController : BSMLResourceViewController, IInitializable, IDisposable
     {
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDownloadQueueView.bsml";
-        internal static Action<DownloadQueueItem> didAbortDownload;
-        internal static Action<DownloadQueueItem> didFinishDownloadingItem;
+        internal static Action<DownloadQueueItem> DidAbortDownload;
+        internal static Action<DownloadQueueItem> DidFinishDownloadingItem;
         internal CancellationTokenSource tokenSource = new CancellationTokenSource();
 
         [UIValue("download-queue")]
@@ -34,14 +34,14 @@ namespace MorePlaylists.UI
 
         public void Initialize()
         {
-            didAbortDownload += DownloadAborted;
-            didFinishDownloadingItem += UpdateDownloadingState;
+            DidAbortDownload += DownloadAborted;
+            DidFinishDownloadingItem += UpdateDownloadingState;
         }
 
         public void Dispose()
         {
-            didAbortDownload -= DownloadAborted;
-            didFinishDownloadingItem -= UpdateDownloadingState;
+            DidAbortDownload -= DownloadAborted;
+            DidFinishDownloadingItem -= UpdateDownloadingState;
         }
 
         internal void EnqueuePlaylist(IGenericEntry playlistToDownload, CancellationTokenSource tokenSource)
@@ -103,7 +103,7 @@ namespace MorePlaylists.UI
         {
             tokenSource.Cancel();
             playlistEntry.Owned = false;
-            MorePlaylistsDownloadQueueViewController.didAbortDownload?.Invoke(this);
+            MorePlaylistsDownloadQueueViewController.DidAbortDownload?.Invoke(this);
         }
 
         public DownloadQueueItem()
@@ -172,7 +172,7 @@ namespace MorePlaylists.UI
             {
                 playlistEntry.Owned = false;
             }
-            MorePlaylistsDownloadQueueViewController.didFinishDownloadingItem?.Invoke(this);
+            MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem?.Invoke(this);
         }
 
         public void ProgressUpdate(double progress)

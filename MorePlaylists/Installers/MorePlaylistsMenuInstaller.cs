@@ -13,6 +13,7 @@ namespace MorePlaylists.Installers
             Container.BindInterfacesAndSelfTo<MorePlaylistsDownloadQueueViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsDetailViewController>().FromNewComponentAsViewController().AsSingle();
             Container.Bind<MorePlaylistsNavigationController>().FromNewComponentAsViewController().AsSingle();
+            Container.BindInterfacesAndSelfTo<PopupModalsController>().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsFlowCoordinator>().FromNewComponentOnNewGameObject().AsSingle();
             Container.BindInterfacesTo<MenuButtonUI>().AsSingle();
         }

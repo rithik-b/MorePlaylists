@@ -145,15 +145,19 @@
     <Compile Include="Types\Base64Entry.cs" />
     <Compile Include="Types\GenericEntry.cs" />
     <Compile Include="Types\BSaberEntry.cs" />
+    <Compile Include="Types\HitbloqEntry.cs" />
     <Compile Include="Types\IGenericEntry.cs" />
+    <Compile Include="Types\ImageFileEntry.cs" />
     <Compile Include="UI\MenuButtonUI.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsDetailViewController.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsDownloadQueueViewController.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsFlowCoordinator.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsListViewController.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsSongListViewController.cs" />
+    <Compile Include="UI\ViewControllers\PopupModalsController.cs" />
     <Compile Include="Utilities\BSaberUtils.cs" />
     <Compile Include="Utilities\DownloaderUtils.cs" />
+    <Compile Include="Utilities\HitbloqUtils.cs" />
     <Compile Include="Utilities\PlaylistLibUtils.cs" />
     <Compile Include="Utilities\Utils.cs" />
   </ItemGroup>
@@ -165,7 +169,7 @@
     <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" />
     <None Include="MorePlaylists.csproj.user" Condition="Exists('MorePlaylists.csproj.user')" />
     <EmbeddedResource Include="UI\Views\MorePlaylistsListView.bsml" />
-    <EmbeddedResource Include="UI\Views\PopupModalsView.bsml" />
+    <EmbeddedResource Include="UI\Views\PopupModals.bsml" />
     <EmbeddedResource Include="UI\Views\MorePlaylistsDetailView.bsml" />
     <EmbeddedResource Include="UI\Views\MorePlaylistsSongListView.bsml" />
     <EmbeddedResource Include="UI\Views\MorePlaylistsDownloadQueueView.bsml" />
@@ -177,6 +181,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Images\*.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

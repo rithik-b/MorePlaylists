@@ -9,7 +9,6 @@ using MorePlaylists.Types;
 using SongDetailsCache;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace MorePlaylists.UI
@@ -17,7 +16,7 @@ namespace MorePlaylists.UI
     public class MorePlaylistsSongListViewController : BSMLResourceViewController
     {
         private LoadingControl loadingSpinner;
-        private CancellationTokenSource tokenSource;
+        private SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
         private IGenericEntry playlistEntry;
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsSongListView.bsml";
 
@@ -37,10 +36,6 @@ namespace MorePlaylists.UI
                 return;
             }
 
-            tokenSource?.Cancel();
-            tokenSource?.Dispose();
-            tokenSource = new CancellationTokenSource();
-
             SetLoading(true);
 
             if (this.playlistEntry != null)
@@ -52,17 +47,17 @@ namespace MorePlaylists.UI
             customListTableData.data.Clear();
             customListTableData.tableView.ReloadData();
 
-            if (playlistEntry.Playlist != null)
+            if (playlistEntry.DownloadState == DownloadState.Error)
             {
-                Task.Run(InitSongList, tokenSource.Token);
+                SetLoading(false);
             }
-            else if(playlistEntry.DownloadState == DownloadState.Downloading)
+            else if (playlistEntry.DownloadState == DownloadState.Downloaded)
             {
-                playlistEntry.FinishedDownload += InitSongList;
+                InitSongList();
             }
             else
             {
-                SetLoading(false);
+                playlistEntry.FinishedDownload += InitSongList;
             }
         }
 
@@ -74,19 +69,24 @@ namespace MorePlaylists.UI
 
         private async void InitSongList()
         {
-            if (playlistEntry.Playlist is LegacyPlaylist playlist)
+            await semaphoreSlim.WaitAsync();
+            if (customListTableData.data.Count == 0)
             {
-                SongDetails songDetails = await SongDetails.Init();
-                SetLoading(true, 100);
-                foreach (LegacyPlaylistSong playlistSong in playlist.Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default))
+                if (playlistEntry.Playlist is LegacyPlaylist playlist)
                 {
-                    if (songDetails.songs.FindByHash(playlistSong.Hash, out SongDetailsCache.Structs.Song song))
+                    SongDetails songDetails = await SongDetails.Init();
+                    SetLoading(true, 100);
+                    foreach (LegacyPlaylistSong playlistSong in playlist.Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default))
                     {
-                        customListTableData.data.Add(new CustomListTableData.CustomCellInfo(song.songName, $"{song.songAuthorName} [{song.levelAuthorName}]"));
+                        if (songDetails.songs.FindByHash(playlistSong.Hash, out SongDetailsCache.Structs.Song song))
+                        {
+                            customListTableData.data.Add(new CustomListTableData.CustomCellInfo(song.songName, $"{song.songAuthorName} [{song.levelAuthorName}]"));
+                        }
                     }
                 }
+                customListTableData.tableView.ReloadData();
             }
-            customListTableData.tableView.ReloadData();
+            semaphoreSlim.Release();
             SetLoading(false);
         }
 

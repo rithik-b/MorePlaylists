@@ -2,7 +2,6 @@
 using Zenject;
 using BeatSaberMarkupLanguage;
 using System;
-using BeatSaberPlaylistsLib.Legacy;
 using UnityEngine;
 using MorePlaylists.Types;
 using MorePlaylists.Utilities;
@@ -15,21 +14,22 @@ namespace MorePlaylists.UI
     public class MorePlaylistsFlowCoordinator : FlowCoordinator, IInitializable, IDisposable
     {
         private MainFlowCoordinator mainFlowCoordinator;
+        private PopupModalsController popupModalsController;
         private MorePlaylistsNavigationController morePlaylistsNavigationController;
         private MorePlaylistsListViewController morePlaylistsListViewController;
         private MorePlaylistsDownloadQueueViewController morePlaylistsDownloadQueueViewController;
         private MorePlaylistsDetailViewController morePlaylistsDetailViewController;
         private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
 
-        private event Action<BeatSaberPlaylistsLib.Types.IPlaylist> selectedPlaylistDownloadedEvent;
         private CancellationTokenSource playlistDownloadTokenSource;
         private bool playlistDownloading = false;
 
         [Inject]
-        public void Construct(MainFlowCoordinator mainFlowCoordinator, MorePlaylistsNavigationController morePlaylistsNavigationController, MorePlaylistsListViewController morePlaylistsListViewController, 
+        public void Construct(MainFlowCoordinator mainFlowCoordinator, PopupModalsController popupModalsController, MorePlaylistsNavigationController morePlaylistsNavigationController, MorePlaylistsListViewController morePlaylistsListViewController, 
             MorePlaylistsDownloadQueueViewController morePlaylistsDownloadQueueViewController, MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
         {
             this.mainFlowCoordinator = mainFlowCoordinator;
+            this.popupModalsController = popupModalsController;
             this.morePlaylistsNavigationController = morePlaylistsNavigationController;
             this.morePlaylistsListViewController = morePlaylistsListViewController;
             this.morePlaylistsDownloadQueueViewController = morePlaylistsDownloadQueueViewController;
@@ -39,14 +39,17 @@ namespace MorePlaylists.UI
 
         public void Initialize()
         {
-            morePlaylistsListViewController.didSelectPlaylist += MorePlaylistsListViewController_DidSelectPlaylist;
-            morePlaylistsDetailViewController.didPressDownload += MorePlaylistsDetailViewController_DidPressDownload;
+            popupModalsController.DidSelectSource += PopupModalsController_DidSelectSource;
+            morePlaylistsListViewController.DidSelectPlaylist += MorePlaylistsListViewController_DidSelectPlaylist;
+            morePlaylistsListViewController.DidClickSource += MorePlaylistsListViewController_DidClickSource;
+            morePlaylistsDetailViewController.DidPressDownload += MorePlaylistsDetailViewController_DidPressDownload;
         }
 
         public void Dispose()
         {
-            morePlaylistsListViewController.didSelectPlaylist -= MorePlaylistsListViewController_DidSelectPlaylist;
-            morePlaylistsDetailViewController.didPressDownload -= MorePlaylistsDetailViewController_DidPressDownload;
+            popupModalsController.DidSelectSource -= PopupModalsController_DidSelectSource;
+            morePlaylistsListViewController.DidSelectPlaylist -= MorePlaylistsListViewController_DidSelectPlaylist;
+            morePlaylistsDetailViewController.DidPressDownload -= MorePlaylistsDetailViewController_DidPressDownload;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -58,15 +61,17 @@ namespace MorePlaylists.UI
             ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloadQueueViewController, morePlaylistsSongListViewController);
         }
 
+        private void PopupModalsController_DidSelectSource(DownloadSource downloadSource)
+        {
+            morePlaylistsListViewController.ShowPlaylistsForSource(downloadSource);
+            if (morePlaylistsDetailViewController.isInViewControllerHierarchy)
+            {
+                PopViewControllerFromNavigationController(morePlaylistsNavigationController, immediately: true);
+            }
+        }
+
         private void MorePlaylistsListViewController_DidSelectPlaylist(GenericEntry selectedPlaylistEntry)
         {
-            if (!morePlaylistsDetailViewController.isInViewControllerHierarchy)
-            {
-                PushViewControllerToNavigationController(morePlaylistsNavigationController, morePlaylistsDetailViewController, DetailViewPushed, true);
-            }
-            morePlaylistsDetailViewController.ShowDetail(selectedPlaylistEntry);
-            morePlaylistsSongListViewController.SetCurrentPlaylist(selectedPlaylistEntry);
-
             if (!playlistDownloading)
             {
                 playlistDownloadTokenSource?.Cancel();
@@ -83,6 +88,18 @@ namespace MorePlaylists.UI
             {
                 playlistDownloadTokenSource = null;
             }
+
+            if (!morePlaylistsDetailViewController.isInViewControllerHierarchy)
+            {
+                PushViewControllerToNavigationController(morePlaylistsNavigationController, morePlaylistsDetailViewController, DetailViewPushed, true);
+            }
+            morePlaylistsDetailViewController.ShowDetail(selectedPlaylistEntry);
+            morePlaylistsSongListViewController.SetCurrentPlaylist(selectedPlaylistEntry);
+        }
+
+        private void MorePlaylistsListViewController_DidClickSource()
+        {
+            popupModalsController.ShowModal(morePlaylistsListViewController.transform);
         }
 
         private async void DownloadSelectedPlaylist(IGenericEntry playlistEntry)
@@ -95,11 +112,15 @@ namespace MorePlaylists.UI
             }
             catch (Exception e)
             {
-                if (playlistDownloading && !(e is TaskCanceledException))
+                if (!(e is TaskCanceledException))
                 {
-                    Plugin.Log.Critical("An exception occurred while downloading. Exception: " + e.Message);
+                    Plugin.Log.Critical("An exception occurred while acquiring " + playlistEntry.PlaylistURL + "\nException: " + e.Message);
+                    playlistEntry.DownloadState = DownloadState.Error;
                 }
-                playlistEntry.DownloadState = DownloadState.Error;
+                else
+                {
+                    playlistEntry.DownloadState = DownloadState.None;
+                }
             }
         }
 

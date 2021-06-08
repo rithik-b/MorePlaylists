@@ -2,7 +2,7 @@
 	<vertical>
 		<horizontal horizontal-fit='PreferredSize' vertical-fit='PreferredSize' spacing='2' anchor-min-x='0' anchor-max-x='0.5'>
 			<button pad='0' pref-height='8' pref-width='12' text='🔄' hover-hint='Refresh' on-click='refresh-click' />
-			<button pad='0' pref-height='8' pref-width='20' text='Source' />
+			<button pad='0' pref-height='8' pref-width='20' text='Source' on-click='source-click' />
 			<button pad='0' pref-height='8' pref-width='20' text='Search' />
 		</horizontal>
 		<modal id='loading-modal' show-event='open-loading-modal' hide-event='close-loading-modal,close-all-modals' move-to-center='true' size-delta-y='35' size-delta-x='48'>

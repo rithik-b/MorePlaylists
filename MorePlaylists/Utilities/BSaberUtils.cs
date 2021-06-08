@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MorePlaylists.Types;
 using Newtonsoft.Json;
+using UnityEngine;
 
 namespace MorePlaylists.Utilities
 {
@@ -12,6 +13,7 @@ namespace MorePlaylists.Utilities
     {
         public static readonly string WEBSITE_BASE_URL = "https://bsaber.com/";
         public static readonly string PLAYLIST_API_ENDPOINT = "PlaylistAPI/playlistAPI.json";
+        public static readonly Sprite LOGO = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("MorePlaylists.Images.BeastSaber.png");
         private static List<BSaberEntry> _endpointResult;
 
         public static async Task<List<BSaberEntry>> GetEndpointResultTask(bool refreshRequested, CancellationToken token)
