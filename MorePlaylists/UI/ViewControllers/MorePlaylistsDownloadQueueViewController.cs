@@ -1,6 +1,8 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
+using BeatSaberPlaylistsLib.Legacy;
+using BeatSaberPlaylistsLib.Types;
 using HMUI;
 using MorePlaylists.Types;
 using MorePlaylists.Utilities;
@@ -9,6 +11,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -26,9 +29,9 @@ namespace MorePlaylists.UI
         [UIComponent("download-list")]
         private CustomCellListTableData customListTableData;
 
-        [UIAction("#post-parse")]
-        internal void Setup() 
-        { 
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+        {
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             customListTableData?.tableView?.ReloadData();
         }
 
@@ -44,9 +47,9 @@ namespace MorePlaylists.UI
             DidFinishDownloadingItem -= UpdateDownloadingState;
         }
 
-        internal void EnqueuePlaylist(IGenericEntry playlistToDownload, CancellationTokenSource tokenSource)
+        internal void EnqueuePlaylist(IGenericEntry playlistToDownload, CancellationTokenSource tokenSource, bool downloadSongs)
         {
-            DownloadQueueItem queuedPlaylist = new DownloadQueueItem(playlistToDownload, tokenSource);
+            DownloadQueueItem queuedPlaylist = new DownloadQueueItem(playlistToDownload, tokenSource, downloadSongs);
             queueItems.Add(queuedPlaylist);
             customListTableData?.tableView?.ReloadData();
             UpdateDownloadingState(queuedPlaylist);
@@ -84,9 +87,10 @@ namespace MorePlaylists.UI
     {
         public IGenericEntry playlistEntry;
         private ImageView bgImage;
-        public Progress<double> downloadProgress;
-        private float _downloadingProgess;
+        public Progress<float> downloadProgress;
+        private float progressFloat;
         public CancellationTokenSource tokenSource;
+        private bool downloadSongs;
         public event PropertyChangedEventHandler PropertyChanged;
 
         [UIComponent("playlist-cover")]
@@ -110,10 +114,11 @@ namespace MorePlaylists.UI
         {
         }
 
-        public DownloadQueueItem(IGenericEntry playlistEntry, CancellationTokenSource tokenSource)
+        public DownloadQueueItem(IGenericEntry playlistEntry, CancellationTokenSource tokenSource, bool downloadSongs)
         {
             this.playlistEntry = playlistEntry;
             this.tokenSource = tokenSource;
+            this.downloadSongs = downloadSongs;
             playlistEntry.Owned = true;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PlaylistName)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PlaylistAuthor)));
@@ -132,7 +137,7 @@ namespace MorePlaylists.UI
             filter.aspectMode = UnityEngine.UI.AspectRatioFitter.AspectMode.HeightControlsWidth;
             playlistCoverView.sprite = playlistEntry.Sprite;
             playlistCoverView.rectTransform.sizeDelta = new Vector2(8, 0);
-            downloadProgress = new Progress<double>(ProgressUpdate);
+            downloadProgress = new Progress<float>(ProgressUpdate);
 
             bgImage = playlistCoverView.transform.parent.gameObject.AddComponent<HMUI.ImageView>();
             bgImage.enabled = true;
@@ -155,16 +160,30 @@ namespace MorePlaylists.UI
         private void PlaylistEntry_FinishedDownload()
         {
             playlistEntry.FinishedDownload -= PlaylistEntry_FinishedDownload;
-            if (playlistEntry.DownloadState == DownloadState.Downloaded)
+            if (playlistEntry.DownloadState == DownloadState.DownloadedPlaylist)
             {
                 try
                 {
                     playlistEntry.Playlist.SetCustomData("syncURL", playlistEntry.PlaylistURL);
                     PlaylistLibUtils.SavePlaylist(playlistEntry.Playlist);
+
+                    if (downloadSongs)
+                    {
+                        Task.Run(DownloadSongs);
+                    }
+                    else
+                    {
+                        if (downloadProgress is IProgress<float> progress)
+                        {
+                            progress.Report(1);
+                            playlistEntry.DownloadState = DownloadState.Downloaded;
+                        }
+                    }
                 }
                 catch (Exception e)
                 {
                     Plugin.Log.Critical("An exception occurred while downloading. Exception: " + e.Message);
+                    playlistEntry.DownloadState = DownloadState.Error;
                     playlistEntry.Owned = false;
                 }
             }
@@ -175,13 +194,37 @@ namespace MorePlaylists.UI
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem?.Invoke(this);
         }
 
-        public void ProgressUpdate(double progress)
+        private async Task DownloadSongs()
         {
-            _downloadingProgess = (float)progress;
-            Color color = SongCore.Utilities.HSBColor.ToColor(new SongCore.Utilities.HSBColor(Mathf.PingPong(_downloadingProgess * 0.35f, 1), 1, 1));
+            List<IPlaylistSong> missingSongs = playlistEntry.Playlist.Where(s => s.PreviewBeatmapLevel == null).Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
+            for (int i = 0; i < missingSongs.Count; i++)
+            {
+                if (!string.IsNullOrEmpty(missingSongs[i].Hash))
+                {
+                    await DownloaderUtils.instance.BeatmapDownloadByHash(missingSongs[i].Hash, tokenSource.Token);
+                }
+                else if (!string.IsNullOrEmpty(missingSongs[i].Key))
+                {
+                    await DownloaderUtils.instance.BeatmapDownloadByKey(missingSongs[i].Key.ToLower(), tokenSource.Token);
+                }
+
+                // Update progress
+                if (downloadProgress is IProgress<float> progress)
+                {
+                    progress.Report((float)(i + 1) / missingSongs.Count);
+                }
+            }
+            playlistEntry.DownloadState = DownloadState.Downloaded;
+            MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem?.Invoke(this);
+        }
+
+        public void ProgressUpdate(float progressFloat)
+        {
+            this.progressFloat = progressFloat;
+            Color color = SongCore.Utilities.HSBColor.ToColor(new SongCore.Utilities.HSBColor(Mathf.PingPong(progressFloat * 0.35f, 1), 1, 1));
             color.a = 0.35f;
             bgImage.color = color;
-            bgImage.fillAmount = _downloadingProgess;
+            bgImage.fillAmount = progressFloat;
         }
 
     }

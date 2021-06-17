@@ -77,6 +77,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression.FileSystem, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
@@ -155,6 +156,7 @@
     <Compile Include="UI\ViewControllers\MorePlaylistsListViewController.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsSongListViewController.cs" />
     <Compile Include="UI\ViewControllers\PopupModalsController.cs" />
+    <Compile Include="UI\ViewControllers\SourceModalController.cs" />
     <Compile Include="Utilities\BSaberUtils.cs" />
     <Compile Include="Utilities\DownloaderUtils.cs" />
     <Compile Include="Utilities\HitbloqUtils.cs" />
@@ -169,10 +171,11 @@
     <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" />
     <None Include="MorePlaylists.csproj.user" Condition="Exists('MorePlaylists.csproj.user')" />
     <EmbeddedResource Include="UI\Views\MorePlaylistsListView.bsml" />
-    <EmbeddedResource Include="UI\Views\PopupModals.bsml" />
+    <EmbeddedResource Include="UI\Views\SourceModal.bsml" />
     <EmbeddedResource Include="UI\Views\MorePlaylistsDetailView.bsml" />
     <EmbeddedResource Include="UI\Views\MorePlaylistsSongListView.bsml" />
     <EmbeddedResource Include="UI\Views\MorePlaylistsDownloadQueueView.bsml" />
+    <EmbeddedResource Include="UI\Views\PopupModals.bsml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BeatSaberModdingTools.Tasks">

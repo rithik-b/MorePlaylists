@@ -58,7 +58,7 @@ namespace MorePlaylists.Types
                 }
                 else
                 {
-                    DownloadState = DownloadState.Downloaded;
+                    DownloadState = DownloadState.DownloadedPlaylist;
                 }
             }
         }
@@ -68,7 +68,7 @@ namespace MorePlaylists.Types
             set
             {
                 _downloadState = value;
-                if (value == DownloadState.Downloaded || value == DownloadState.Error)
+                if (value == DownloadState.DownloadedPlaylist || value == DownloadState.Error)
                 {
                     FinishedDownload?.Invoke();
                 }
@@ -134,5 +134,5 @@ namespace MorePlaylists.Types
                 SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
         }
     }
-    public enum DownloadState { None, Downloading, Downloaded, Error };
+    public enum DownloadState { None, Downloading, DownloadedPlaylist, Downloaded, Error };
 }

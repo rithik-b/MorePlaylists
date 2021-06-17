@@ -14,7 +14,7 @@ namespace MorePlaylists.UI
         private IGenericEntry selectedPlaylist;
         private bool _downloadInteractable = false;
 
-        internal event Action<IGenericEntry> DidPressDownload;
+        internal event Action<IGenericEntry, bool> DidPressDownload;
 
         [UIComponent("playlist-cover")]
         private readonly ImageView playlistCoverView;
@@ -42,7 +42,14 @@ namespace MorePlaylists.UI
         [UIAction("download-click")]
         private void DownloadPressed()
         {
-            DidPressDownload?.Invoke(selectedPlaylist);
+            DidPressDownload?.Invoke(selectedPlaylist, false);
+            DownloadInteractable = false;
+        }
+
+        [UIAction("download-all-click")]
+        private void DownloadAllPressed()
+        {
+            DidPressDownload?.Invoke(selectedPlaylist, true);
             DownloadInteractable = false;
         }
 

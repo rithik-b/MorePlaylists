@@ -1,76 +1,234 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.Parser;
 using HMUI;
 using IPA.Utilities;
-using MorePlaylists.Utilities;
-using System;
+using System.ComponentModel;
 using System.Reflection;
 using UnityEngine;
-using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class PopupModalsController : IInitializable
+    public class PopupModalsController : INotifyPropertyChanged
     {
         private bool parsed;
-        internal event Action<DownloadSource> DidSelectSource;
+        public event PropertyChangedEventHandler PropertyChanged;
 
-        [UIComponent("list")]
-        private CustomListTableData customListTableData;
+        public delegate void ButtonPressed();
+        private ButtonPressed yesButtonPressed;
+        private ButtonPressed noButtonPressed;
+        private ButtonPressed okButtonPressed;
 
-        [UIComponent("source-modal")]
-        private ModalView sourceModalView;
+        public delegate void KeyboardPressed(string keyboardText);
+        private KeyboardPressed keyboardPressed;
 
-        [UIComponent("source-modal")]
-        private readonly RectTransform sourceModalTransform;
+        private string _yesNoText = "";
+        private string _yesButtonText = "Yes";
+        private string _noButtonText = "No";
 
-        private Vector3 sourceModalPosition;
+        private string _okText = "";
+        private string _okButtonText = "Ok";
+
+        private string _keyboardText = "";
+
+        [UIComponent("root")]
+        private readonly RectTransform rootTransform;
+
+        [UIComponent("yes-no-modal")]
+        private readonly RectTransform yesNoModalTransform;
+
+        [UIComponent("yes-no-modal")]
+        private ModalView yesNoModalView;
+
+        private Vector3 yesNoModalPosition;
+
+        [UIComponent("ok-modal")]
+        private readonly RectTransform okModalTransform;
+
+        [UIComponent("ok-modal")]
+        private ModalView okModalView;
+
+        private Vector3 okModalPosition;
+
+        [UIComponent("keyboard")]
+        private readonly RectTransform keyboardTransform;
+
+        [UIComponent("keyboard")]
+        private ModalView keyboardModalView;
 
         [UIParams]
         private readonly BSMLParserParams parserParams;
-
-        public void Initialize()
-        {
-            parsed = false;
-        }
 
         private void Parse(Transform parent)
         {
             if (!parsed)
             {
                 BSMLParser.instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "MorePlaylists.UI.Views.PopupModals.bsml"), parent.gameObject, this);
-                sourceModalPosition = sourceModalTransform.position;
+                yesNoModalPosition = yesNoModalTransform.position;
+                okModalPosition = okModalTransform.position;
                 parsed = true;
             }
-            sourceModalTransform.SetParent(parent);
-            sourceModalTransform.localPosition = sourceModalPosition;
-            FieldAccessor<ModalView, bool>.Set(ref sourceModalView, "_animateParentCanvas", true);
         }
 
-        [UIAction("#post-parse")]
-        private void PostParse()
-        {
-            customListTableData.data.Clear();
-            customListTableData.data.Add(new CustomListTableData.CustomCellInfo("BeastSaber", "", BSaberUtils.LOGO));
-            customListTableData.data.Add(new CustomListTableData.CustomCellInfo("Hitbloq", "", HitbloqUtils.LOGO));
-            customListTableData.tableView.ReloadData();
-        }
+        #region Yes/No Modal
 
-        internal void ShowModal(Transform parent)
+        // Methods
+
+        internal void ShowYesNoModal(Transform parent, string text, ButtonPressed yesButtonPressedCallback, string yesButtonText = "Yes", string noButtonText = "No", ButtonPressed noButtonPressedCallback = null, bool animateParentCanvas = true)
         {
             Parse(parent);
-            parserParams.EmitEvent("close-source-modal");
-            parserParams.EmitEvent("open-source-modal");
+            yesNoModalTransform.position = yesNoModalPosition;
+            keyboardTransform.transform.SetParent(rootTransform);
+            yesNoModalTransform.transform.SetParent(parent);
+            YesNoText = text;
+            YesButtonText = yesButtonText;
+            NoButtonText = noButtonText;
+            yesButtonPressed = yesButtonPressedCallback;
+            noButtonPressed = noButtonPressedCallback;
+            FieldAccessor<ModalView, bool>.Set(ref yesNoModalView, "_animateParentCanvas", animateParentCanvas);
+            parserParams.EmitEvent("close-yes-no");
+            parserParams.EmitEvent("open-yes-no");
         }
 
-        [UIAction("list-select")]
-        private void Select(TableView tableView, int row)
+        [UIAction("yes-button-pressed")]
+        private void YesButtonPressed()
         {
-            DidSelectSource?.Invoke((DownloadSource)Enum.ToObject(typeof(DownloadSource), row));
-            parserParams.EmitEvent("close-source-modal");
+            yesButtonPressed?.Invoke();
+            yesButtonPressed = null;
+            yesNoModalTransform.transform.SetParent(rootTransform);
         }
+
+        [UIAction("no-button-pressed")]
+        private void NoButtonPressed()
+        {
+            noButtonPressed?.Invoke();
+            noButtonPressed = null;
+            yesNoModalTransform.transform.SetParent(rootTransform);
+        }
+
+        // Values
+
+        [UIValue("yes-no-text")]
+        private string YesNoText
+        {
+            get => _yesNoText;
+            set
+            {
+                _yesNoText = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(YesNoText)));
+            }
+        }
+
+        [UIValue("yes-button-text")]
+        private string YesButtonText
+        {
+            get => _yesButtonText;
+            set
+            {
+                _yesButtonText = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(YesButtonText)));
+            }
+        }
+
+        [UIValue("no-button-text")]
+        private string NoButtonText
+        {
+            get => _noButtonText;
+            set
+            {
+                _noButtonText = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NoButtonText)));
+            }
+        }
+
+        #endregion
+
+        #region Ok Modal
+
+        // Methods
+
+        internal void ShowOkModal(Transform parent, string text, ButtonPressed buttonPressedCallback, string okButtonText = "Ok", bool animateParentCanvas = true)
+        {
+            Parse(parent);
+            okModalTransform.position = okModalPosition;
+            keyboardTransform.transform.SetParent(rootTransform);
+            okModalTransform.transform.SetParent(parent);
+            OkText = text;
+            OkButtonText = okButtonText;
+            okButtonPressed = buttonPressedCallback;
+            FieldAccessor<ModalView, bool>.Set(ref okModalView, "_animateParentCanvas", animateParentCanvas);
+            parserParams.EmitEvent("close-ok");
+            parserParams.EmitEvent("open-ok");
+        }
+
+        [UIAction("ok-button-pressed")]
+        private void OkButtonPressed()
+        {
+            okButtonPressed?.Invoke();
+            okButtonPressed = null;
+            okModalTransform.transform.SetParent(rootTransform);
+        }
+
+        // Values
+
+        [UIValue("ok-text")]
+        internal string OkText
+        {
+            get => _okText;
+            set
+            {
+                _okText = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OkText)));
+            }
+        }
+
+        [UIValue("ok-button-text")]
+        internal string OkButtonText
+        {
+            get => _okButtonText;
+            set
+            {
+                _okButtonText = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OkButtonText)));
+            }
+        }
+
+        #endregion
+
+        #region Keyboard
+
+        // Methods
+
+        internal void ShowKeyboard(Transform parent, KeyboardPressed keyboardPressedCallback, string keyboardText = "", bool animateParentCanvas = true)
+        {
+            Parse(parent);
+            keyboardTransform.transform.SetParent(rootTransform);
+            keyboardTransform.transform.SetParent(parent);
+            keyboardPressed = keyboardPressedCallback;
+            FieldAccessor<ModalView, bool>.Set(ref keyboardModalView, "_animateParentCanvas", animateParentCanvas);
+            KeyboardText = keyboardText;
+            parserParams.EmitEvent("close-keyboard");
+            parserParams.EmitEvent("open-keyboard");
+        }
+
+        [UIAction("keyboard-enter")]
+        private void KeyboardEnter(string keyboardText)
+        {
+            keyboardPressed?.Invoke(keyboardText);
+            keyboardPressed = null;
+            keyboardTransform.transform.SetParent(rootTransform);
+        }
+
+        // Values
+
+        [UIValue("keyboard-text")]
+        private string KeyboardText
+        {
+            get => _keyboardText;
+            set => _keyboardText = value;
+        }
+
+        #endregion
+
     }
-    public enum DownloadSource { BSaber, Hitbloq };
 }
