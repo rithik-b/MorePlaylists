@@ -11,10 +11,11 @@ using System.Threading;
 using static BeatSaberMarkupLanguage.Components.CustomListTableData;
 using UnityEngine;
 using BeatSaberMarkupLanguage.Parser;
+using System.ComponentModel;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsListViewController : BSMLResourceViewController
+    public class MorePlaylistsListViewController : BSMLResourceViewController, INotifyPropertyChanged
     {
         private LoadingControl loadingSpinner;
         private CancellationTokenSource tokenSource;
@@ -25,6 +26,7 @@ namespace MorePlaylists.UI
 
         internal event Action<GenericEntry> DidSelectPlaylist;
         internal event Action DidClickSource;
+        internal event Action DidClickSearch;
 
         [UIComponent("list")]
         private CustomListTableData customListTableData;
@@ -80,6 +82,30 @@ namespace MorePlaylists.UI
             SetLoading(false);
         }
 
+        [UIAction("search-click")]
+        private void SearchClick() => DidClickSearch?.Invoke();
+
+        internal void Search(string query)
+        {
+            customListTableData.tableView.ClearSelection();
+            customListTableData.data.Clear();
+            NotifyPropertyChanged(nameof(ButtonsInteractable));
+            currentPlaylists = currentPlaylists.Where(e => e.Title.Contains(query) || e.Author.Contains(query) || e.Description.Contains(query)).ToList();
+            foreach (GenericEntry playlist in currentPlaylists)
+            {
+                if (playlist.Owned)
+                {
+                    customListTableData.data.Add(new CustomCellInfo($"<#7F7F7F>{playlist.Title}", playlist.Author, playlist.Sprite));
+                }
+                else
+                {
+                    customListTableData.data.Add(new CustomCellInfo(playlist.Title, playlist.Author, playlist.Sprite));
+                }
+            }
+            customListTableData.tableView.ReloadData();
+            NotifyPropertyChanged(nameof(ButtonsInteractable));
+        }
+
         internal void ShowPlaylistsForSource(DownloadSource downloadSource)
         {
             currentSource = downloadSource;
@@ -90,6 +116,7 @@ namespace MorePlaylists.UI
         {
             customListTableData.tableView.ClearSelection();
             customListTableData.data.Clear();
+            NotifyPropertyChanged(nameof(ButtonsInteractable));
             tokenSource?.Dispose();
             tokenSource = new CancellationTokenSource();
             SetLoading(true);
@@ -125,6 +152,7 @@ namespace MorePlaylists.UI
                 }
             }
             customListTableData.tableView.ReloadData();
+            NotifyPropertyChanged(nameof(ButtonsInteractable));
             SetLoading(false);
         }
 
@@ -168,5 +196,8 @@ namespace MorePlaylists.UI
                 parserParams.EmitEvent("close-loading-modal");
             }
         }
+
+        [UIValue("buttons-interactable")]
+        private bool ButtonsInteractable => customListTableData?.data.Count != 0;
     }
 }

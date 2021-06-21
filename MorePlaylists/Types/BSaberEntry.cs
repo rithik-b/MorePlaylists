@@ -11,7 +11,10 @@ namespace MorePlaylists.Types
         public override string Author { get; protected set; }
 
         [JsonProperty("playlistDescription")]
-        public override string Description { get; protected set; }
+        private string BSaberDescription { get; set; }
+
+        [JsonProperty("playlistCategory")]
+        private string Category { get; set; }
 
         [JsonProperty("playlistURL")]
         public override string PlaylistURL { get; protected set; }
@@ -21,6 +24,12 @@ namespace MorePlaylists.Types
         {
             get => base.CoverString;
             set => base.CoverString = value;
+        }
+
+        public override string Description
+        {
+            get => $"Category: {Category}\n\n{BSaberDescription}";
+            protected set { }
         }
     }
 }

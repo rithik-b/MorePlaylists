@@ -1,4 +1,4 @@
-﻿<div horizontal-fit='PreferredSize' vertical-fit='PreferredSize' anchor-pos-y='6'>
+﻿<div>
 	<vertical horizontal-fit='PreferredSize' vertical-fit='PreferredSize' pref-width='70'>
 		<image id='playlist-cover' preserve-aspect='true' pref-width='20' pref-height='20' />
 		<horizontal spacing='5'>
@@ -9,8 +9,7 @@
 			<text text='Author' align='Left' word-wrapping='false' />
 			<text text='~playlist-author' align='Right' word-wrapping='true' />
 		</horizontal>
-		<text text='Description' />
-		<horizontal horizontal-fit='PreferredSize' vertical-fit='PreferredSize' preferred-width='65' preferred-height='20' spacing='2'>
+		<horizontal horizontal-fit='PreferredSize' vertical-fit='PreferredSize' pref-width='65' pref-height='20' spacing='2'>
 			<text-page id='text-page' text='~playlist-description' />
 		</horizontal>
 

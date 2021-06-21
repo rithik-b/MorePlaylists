@@ -3,7 +3,7 @@
   "id": "MorePlaylists",
   "name": "MorePlaylists",
   "author": "PixelBoom",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Download more playlists from the convinience of your game.",
   "gameVersion": "1.16.1",
   "dependsOn": {

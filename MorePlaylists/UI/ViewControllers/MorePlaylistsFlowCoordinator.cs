@@ -44,6 +44,7 @@ namespace MorePlaylists.UI
             sourceModalController.DidSelectSource += SourceModalController_DidSelectSource;
             morePlaylistsListViewController.DidSelectPlaylist += MorePlaylistsListViewController_DidSelectPlaylist;
             morePlaylistsListViewController.DidClickSource += MorePlaylistsListViewController_DidClickSource;
+            morePlaylistsListViewController.DidClickSearch += MorePlaylistsListViewController_DidClickSearch;
             morePlaylistsDetailViewController.DidPressDownload += MorePlaylistsDetailViewController_DidPressDownload;
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem += MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
         }
@@ -53,6 +54,7 @@ namespace MorePlaylists.UI
             sourceModalController.DidSelectSource -= SourceModalController_DidSelectSource;
             morePlaylistsListViewController.DidSelectPlaylist -= MorePlaylistsListViewController_DidSelectPlaylist;
             morePlaylistsListViewController.DidClickSource -= MorePlaylistsListViewController_DidClickSource;
+            morePlaylistsListViewController.DidClickSearch -= MorePlaylistsListViewController_DidClickSearch;
             morePlaylistsDetailViewController.DidPressDownload -= MorePlaylistsDetailViewController_DidPressDownload;
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem -= MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
         }
@@ -107,6 +109,8 @@ namespace MorePlaylists.UI
             sourceModalController.ShowModal(morePlaylistsListViewController.transform);
         }
 
+        private void MorePlaylistsListViewController_DidClickSearch() => popupModalsController.ShowKeyboard(morePlaylistsListViewController.transform, morePlaylistsListViewController.Search);
+
         private async void DownloadSelectedPlaylist(IGenericEntry playlistEntry)
         {
             playlistEntry.DownloadState = DownloadState.Downloading;
@@ -117,7 +121,7 @@ namespace MorePlaylists.UI
             }
             catch (Exception e)
             {
-                if (!(e is TaskCanceledException))
+                if (!(e is TaskCanceledException || e.Message == "Request aborted"))
                 {
                     Plugin.Log.Critical("An exception occurred while acquiring " + playlistEntry.PlaylistURL + "\nException: " + e.Message);
                     playlistEntry.DownloadState = DownloadState.Error;
