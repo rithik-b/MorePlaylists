@@ -143,12 +143,13 @@
     <Compile Include="Configuration\PluginConfig.cs" />
     <Compile Include="MorePlaylistsController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Types\Base64Entry.cs" />
-    <Compile Include="Types\GenericEntry.cs" />
-    <Compile Include="Types\BSaberEntry.cs" />
-    <Compile Include="Types\HitbloqEntry.cs" />
-    <Compile Include="Types\IGenericEntry.cs" />
-    <Compile Include="Types\ImageFileEntry.cs" />
+    <Compile Include="Entries\Base64Entry.cs" />
+    <Compile Include="Entries\GenericEntry.cs" />
+    <Compile Include="Entries\BSaberEntry.cs" />
+    <Compile Include="Entries\HitbloqEntry.cs" />
+    <Compile Include="Entries\IGenericEntry.cs" />
+    <Compile Include="Entries\ImageFileEntry.cs" />
+    <Compile Include="Sources\ISource.cs" />
     <Compile Include="UI\MenuButtonUI.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsDetailViewController.cs" />
     <Compile Include="UI\ViewControllers\MorePlaylistsDownloadQueueViewController.cs" />
@@ -157,9 +158,9 @@
     <Compile Include="UI\ViewControllers\MorePlaylistsSongListViewController.cs" />
     <Compile Include="UI\ViewControllers\PopupModalsController.cs" />
     <Compile Include="UI\ViewControllers\SourceModalController.cs" />
-    <Compile Include="Utilities\BSaberUtils.cs" />
+    <Compile Include="Sources\BSaber.cs" />
     <Compile Include="Utilities\DownloaderUtils.cs" />
-    <Compile Include="Utilities\HitbloqUtils.cs" />
+    <Compile Include="Sources\Hitbloq.cs" />
     <Compile Include="Utilities\PlaylistLibUtils.cs" />
     <Compile Include="Utilities\Utils.cs" />
   </ItemGroup>

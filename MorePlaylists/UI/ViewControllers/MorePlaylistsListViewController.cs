@@ -2,7 +2,7 @@
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
-using MorePlaylists.Types;
+using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
 using System;
 using System.Linq;
@@ -12,6 +12,8 @@ using static BeatSaberMarkupLanguage.Components.CustomListTableData;
 using UnityEngine;
 using BeatSaberMarkupLanguage.Parser;
 using System.ComponentModel;
+using MorePlaylists.Sources;
+using Zenject;
 
 namespace MorePlaylists.UI
 {
@@ -20,7 +22,7 @@ namespace MorePlaylists.UI
         private LoadingControl loadingSpinner;
         private CancellationTokenSource tokenSource;
         private static SemaphoreSlim imageLoadSemaphore = new SemaphoreSlim(1, 1);
-        private DownloadSource currentSource = DownloadSource.BSaber;
+        private ISource currentSource;
         private List<GenericEntry> currentPlaylists;
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsListView.bsml";
 
@@ -36,6 +38,12 @@ namespace MorePlaylists.UI
 
         [UIParams]
         internal BSMLParserParams parserParams;
+
+        [Inject]
+        public void Construct(List<ISource> sources)
+        {
+            currentSource = sources.FirstOrDefault();
+        }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -106,9 +114,9 @@ namespace MorePlaylists.UI
             NotifyPropertyChanged(nameof(ButtonsInteractable));
         }
 
-        internal void ShowPlaylistsForSource(DownloadSource downloadSource)
+        internal void ShowPlaylistsForSource(ISource source)
         {
-            currentSource = downloadSource;
+            currentSource = source;
             ShowPlaylists(false);
         }
 
@@ -121,15 +129,7 @@ namespace MorePlaylists.UI
             tokenSource = new CancellationTokenSource();
             SetLoading(true);
 
-            switch (currentSource)
-            {
-                case DownloadSource.BSaber:
-                    currentPlaylists = (await BSaberUtils.GetEndpointResultTask(refreshRequested, tokenSource.Token)).Cast<GenericEntry>().ToList();
-                    break;
-                case DownloadSource.Hitbloq:
-                    currentPlaylists = (await HitbloqUtils.GetEndpointResultTask(refreshRequested, tokenSource.Token)).Cast<GenericEntry>().ToList();
-                    break;
-            }
+            currentPlaylists = await currentSource.GetEndpointResultTask(refreshRequested, tokenSource.Token);
 
             PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IGenericEntry>().ToList());
             SetLoading(true, 100);

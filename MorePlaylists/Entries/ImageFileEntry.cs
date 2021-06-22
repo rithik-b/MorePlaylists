@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MorePlaylists.Types
+namespace MorePlaylists.Entries
 {
     public abstract class ImageFileEntry : GenericEntry
     {

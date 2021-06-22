@@ -4,7 +4,7 @@ using BeatSaberMarkupLanguage.ViewControllers;
 using BeatSaberPlaylistsLib.Legacy;
 using BeatSaberPlaylistsLib.Types;
 using HMUI;
-using MorePlaylists.Types;
+using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
 using System;
 using System.Collections.Generic;

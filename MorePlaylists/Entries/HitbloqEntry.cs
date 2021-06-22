@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace MorePlaylists.Types
+namespace MorePlaylists.Entries
 {
     public class HitbloqEntry : ImageFileEntry
     {

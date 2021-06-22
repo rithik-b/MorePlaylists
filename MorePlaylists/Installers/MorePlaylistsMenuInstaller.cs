@@ -1,4 +1,5 @@
-﻿using MorePlaylists.UI;
+﻿using MorePlaylists.Sources;
+using MorePlaylists.UI;
 using SiraUtil;
 using Zenject;
 
@@ -8,6 +9,8 @@ namespace MorePlaylists.Installers
     {
         public override void InstallBindings()
         {
+            Container.BindInterfacesTo<BeastSaber>().AsSingle();
+            Container.BindInterfacesTo<Hitbloq>().AsSingle();
             Container.Bind<MorePlaylistsListViewController>().FromNewComponentAsViewController().AsSingle();
             Container.Bind<MorePlaylistsSongListViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsDownloadQueueViewController>().FromNewComponentAsViewController().AsSingle();

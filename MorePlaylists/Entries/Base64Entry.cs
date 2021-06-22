@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace MorePlaylists.Types
+namespace MorePlaylists.Entries
 {
     public abstract class Base64Entry : GenericEntry
     {
@@ -12,7 +12,7 @@ namespace MorePlaylists.Types
             {
                 if (CoverData == null)
                     return string.Empty;
-                return Utils.ByteArrayToBase64(CoverData); ;
+                return Utils.ByteArrayToBase64(CoverData);
             }
             set
             {

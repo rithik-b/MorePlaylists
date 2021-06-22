@@ -5,7 +5,7 @@ using BeatSaberMarkupLanguage.ViewControllers;
 using BeatSaberPlaylistsLib.Legacy;
 using BeatSaberPlaylistsLib.Types;
 using HMUI;
-using MorePlaylists.Types;
+using MorePlaylists.Entries;
 using SongDetailsCache;
 using System.Linq;
 using System.Threading;

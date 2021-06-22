@@ -2,7 +2,7 @@
 using System.IO;
 using UnityEngine;
 
-namespace MorePlaylists.Types
+namespace MorePlaylists.Entries
 {
     public interface IGenericEntry
     {

@@ -1,7 +1,7 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
-using MorePlaylists.Types;
+using MorePlaylists.Entries;
 using System;
 using System.ComponentModel;
 using UnityEngine;

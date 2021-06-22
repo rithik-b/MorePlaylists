@@ -1,28 +1,38 @@
-﻿using MorePlaylists.Types;
+﻿using MorePlaylists.Entries;
+using MorePlaylists.Utilities;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using Zenject;
 
-namespace MorePlaylists.Utilities
+namespace MorePlaylists.Sources
 {
-    internal class HitbloqUtils
+    internal class Hitbloq : ISource, IInitializable
     {
-        public static readonly string WEBSITE_BASE_URL = "https://hitbloq.com/";
-        public static readonly string PLAYLIST_API_ENDPOINT = "api/map_pools_detailed";
-        public static readonly Sprite LOGO = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("MorePlaylists.Images.Hitbloq.png");
         private static List<HitbloqEntry> _endpointResult;
+        private Sprite _logo;
 
-        public static async Task<List<HitbloqEntry>> GetEndpointResultTask(bool refreshRequested, CancellationToken token)
+        public string Website => "https://hitbloq.com/";
+        public string Endpoint => "api/map_pools_detailed";
+        public Sprite Logo => _logo;
+
+        public void Initialize()
+        {
+            _logo = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("MorePlaylists.Images.Hitbloq.png");
+        }
+
+        public async Task<List<GenericEntry>> GetEndpointResultTask(bool refreshRequested, CancellationToken token)
         {
             if (_endpointResult == null || refreshRequested)
             {
                 try
                 {
-                    byte[] response = await DownloaderUtils.instance.DownloadFileToBytesAsync(WEBSITE_BASE_URL + PLAYLIST_API_ENDPOINT, token);
+                    byte[] response = await DownloaderUtils.instance.DownloadFileToBytesAsync(Website + Endpoint, token);
                     _endpointResult = JsonConvert.DeserializeObject<List<HitbloqEntry>>(Encoding.UTF8.GetString(response));
                     foreach (HitbloqEntry hitbloqEntry in _endpointResult)
                     {
@@ -36,7 +46,7 @@ namespace MorePlaylists.Utilities
                     }
                 }
             }
-            return _endpointResult;
+            return _endpointResult.Cast<GenericEntry>().ToList();
         }
     }
 }

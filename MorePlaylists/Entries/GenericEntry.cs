@@ -9,7 +9,7 @@ using UnityEngine;
  * Original Author: Zingabopp
  */
 
-namespace MorePlaylists.Types
+namespace MorePlaylists.Entries
 {
     public abstract class GenericEntry : IGenericEntry, IDeferredSpriteLoad
     {

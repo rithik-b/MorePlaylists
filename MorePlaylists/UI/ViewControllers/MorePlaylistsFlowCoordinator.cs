@@ -3,11 +3,12 @@ using Zenject;
 using BeatSaberMarkupLanguage;
 using System;
 using UnityEngine;
-using MorePlaylists.Types;
+using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using MorePlaylists.Sources;
 
 namespace MorePlaylists.UI
 {
@@ -68,9 +69,9 @@ namespace MorePlaylists.UI
             ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloadQueueViewController, morePlaylistsSongListViewController);
         }
 
-        private void SourceModalController_DidSelectSource(DownloadSource downloadSource)
+        private void SourceModalController_DidSelectSource(ISource source)
         {
-            morePlaylistsListViewController.ShowPlaylistsForSource(downloadSource);
+            morePlaylistsListViewController.ShowPlaylistsForSource(source);
             if (morePlaylistsDetailViewController.isInViewControllerHierarchy)
             {
                 PopViewControllerFromNavigationController(morePlaylistsNavigationController, immediately: true);

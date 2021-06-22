@@ -4,8 +4,9 @@ using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.Parser;
 using HMUI;
 using IPA.Utilities;
-using MorePlaylists.Utilities;
+using MorePlaylists.Sources;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using Zenject;
@@ -14,8 +15,9 @@ namespace MorePlaylists.UI
 {
     public class SourceModalController : IInitializable
     {
+        private List<ISource> sources;
         private bool parsed;
-        internal event Action<DownloadSource> DidSelectSource;
+        internal event Action<ISource> DidSelectSource;
 
         [UIComponent("list")]
         private CustomListTableData customListTableData;
@@ -30,6 +32,12 @@ namespace MorePlaylists.UI
 
         [UIParams]
         private readonly BSMLParserParams parserParams;
+
+        [Inject]
+        public void Construct(List<ISource> sources)
+        {
+            this.sources = sources;
+        }
 
         public void Initialize()
         {
@@ -53,8 +61,10 @@ namespace MorePlaylists.UI
         private void PostParse()
         {
             customListTableData.data.Clear();
-            customListTableData.data.Add(new CustomListTableData.CustomCellInfo("BeastSaber", "", BSaberUtils.LOGO));
-            customListTableData.data.Add(new CustomListTableData.CustomCellInfo("Hitbloq", "", HitbloqUtils.LOGO));
+            foreach (ISource source in sources)
+            {
+                customListTableData.data.Add(new CustomListTableData.CustomCellInfo(source.GetType().Name, "", source.Logo));
+            }
             customListTableData.tableView.ReloadData();
             customListTableData.tableView.SelectCellWithIdx(0);
         }
@@ -69,9 +79,8 @@ namespace MorePlaylists.UI
         [UIAction("list-select")]
         private void Select(TableView tableView, int row)
         {
-            DidSelectSource?.Invoke((DownloadSource)Enum.ToObject(typeof(DownloadSource), row));
+            DidSelectSource?.Invoke(sources[row]);
             parserParams.EmitEvent("close-source-modal");
         }
     }
-    public enum DownloadSource { BSaber, Hitbloq };
 }

@@ -1,4 +1,4 @@
-﻿using MorePlaylists.Types;
+﻿using MorePlaylists.Entries;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
