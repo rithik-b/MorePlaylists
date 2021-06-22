@@ -158,7 +158,7 @@
     <Compile Include="UI\ViewControllers\MorePlaylistsSongListViewController.cs" />
     <Compile Include="UI\ViewControllers\PopupModalsController.cs" />
     <Compile Include="UI\ViewControllers\SourceModalController.cs" />
-    <Compile Include="Sources\BSaber.cs" />
+    <Compile Include="Sources\BeastSaber.cs" />
     <Compile Include="Utilities\DownloaderUtils.cs" />
     <Compile Include="Sources\Hitbloq.cs" />
     <Compile Include="Utilities\PlaylistLibUtils.cs" />

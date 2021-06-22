@@ -87,7 +87,7 @@ namespace MorePlaylists.UI
             }
             playlistDownloading = false;
 
-            if (selectedPlaylistEntry.Playlist == null)
+            if (selectedPlaylistEntry.DownloadState == DownloadState.None || selectedPlaylistEntry.DownloadState == DownloadState.Error)
             {
                 playlistDownloadTokenSource = new CancellationTokenSource();
                 DownloadSelectedPlaylist(selectedPlaylistEntry);
@@ -122,7 +122,7 @@ namespace MorePlaylists.UI
             }
             catch (Exception e)
             {
-                if (!(e is TaskCanceledException || e.Message == "Request aborted"))
+                if (!(e is TaskCanceledException || e.Message.ToUpper().Contains("ABORTED")))
                 {
                     Plugin.Log.Critical("An exception occurred while acquiring " + playlistEntry.PlaylistURL + "\nException: " + e.Message);
                     playlistEntry.DownloadState = DownloadState.Error;
