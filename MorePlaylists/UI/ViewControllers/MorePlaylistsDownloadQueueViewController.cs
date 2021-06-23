@@ -9,9 +9,11 @@ using MorePlaylists.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using Zenject;
 
@@ -22,7 +24,10 @@ namespace MorePlaylists.UI
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDownloadQueueView.bsml";
         internal static Action<DownloadQueueItem> DidAbortDownload;
         internal static Action<DownloadQueueItem> DidFinishDownloadingItem;
+        internal static event Action<bool> QueueFull;
         internal CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+        public static readonly int MAX_SIMULTANEOUS_DOWNLOADS = 3;
 
         [UIValue("download-queue")]
         internal List<object> queueItems = new List<object>();
@@ -47,24 +52,35 @@ namespace MorePlaylists.UI
             DidFinishDownloadingItem -= UpdateDownloadingState;
         }
 
-        internal void EnqueuePlaylist(IGenericEntry playlistToDownload, CancellationTokenSource tokenSource, bool downloadSongs)
+        internal void EnqueuePlaylist(IGenericEntry playlistToDownload, bool downloadSongs)
         {
-            DownloadQueueItem queuedPlaylist = new DownloadQueueItem(playlistToDownload, tokenSource, downloadSongs);
+            DownloadQueueItem queuedPlaylist = new DownloadQueueItem(playlistToDownload, downloadSongs);
             queueItems.Add(queuedPlaylist);
+            if (queueItems.Count == 3)
+            {
+                QueueFull?.Invoke(true);
+            }
             customListTableData?.tableView?.ReloadData();
             UpdateDownloadingState(queuedPlaylist);
         }
 
         internal void UpdateDownloadingState(DownloadQueueItem item)
         {
-            foreach (DownloadQueueItem downloaded in queueItems.Where(x => (x as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Downloaded || (x as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Error).ToArray())
+            for (int i = 0; i < queueItems.Count; i++)
             {
-                queueItems.Remove(downloaded);
-                customListTableData?.tableView?.ReloadData();
+                if ((queueItems[i] as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Downloaded || (queueItems[i] as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Error)
+                {
+                    //queueItems.Remove(i);
+                    customListTableData?.tableView?.ReloadData();
+                }
             }
             if (queueItems.Count == 0)
             {
                 SongCore.Loader.Instance.RefreshSongs(false);
+            }
+            if (queueItems.Count < 3)
+            {
+                QueueFull?.Invoke(false);
             }
         }
 
@@ -74,33 +90,37 @@ namespace MorePlaylists.UI
             {
                 queueItems.Remove(download);
             }
-
             if (queueItems.Count == 0)
             {
                 SongCore.Loader.Instance.RefreshSongs(false);
             }
             customListTableData?.tableView?.ReloadData();
+            if (queueItems.Count < 3)
+            {
+                QueueFull?.Invoke(false);
+            }
         }
     }
 
-    internal class DownloadQueueItem : INotifyPropertyChanged
+    internal class DownloadQueueItem
     {
         public IGenericEntry playlistEntry;
         private ImageView bgImage;
         public Progress<float> downloadProgress;
-        private float progressFloat;
         public CancellationTokenSource tokenSource;
         private bool downloadSongs;
+        private bool initialized;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [UIComponent("playlist-cover")]
         private readonly ImageView playlistCoverView;
 
-        [UIValue("playlist-name")]
-        public string PlaylistName => playlistEntry == null || playlistEntry.Title == null ? " " : playlistEntry.Title;
+        [UIComponent("playlist-name")]
+        private TextMeshProUGUI playlistNameText;
 
-        [UIValue("playlist-author")]
-        public string PlaylistAuthor => playlistEntry == null || playlistEntry.Author == null ? " " : playlistEntry.Author;
+        [UIComponent("playlist-author")]
+        private TextMeshProUGUI playlistAuthorText;
 
         [UIAction("abort-clicked")]
         public void AbortDownload()
@@ -114,20 +134,32 @@ namespace MorePlaylists.UI
         {
         }
 
-        public DownloadQueueItem(IGenericEntry playlistEntry, CancellationTokenSource tokenSource, bool downloadSongs)
+        public DownloadQueueItem(IGenericEntry playlistEntry, bool downloadSongs)
         {
             this.playlistEntry = playlistEntry;
-            this.tokenSource = tokenSource;
             this.downloadSongs = downloadSongs;
+            tokenSource = new CancellationTokenSource();
             playlistEntry.Owned = true;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PlaylistName)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PlaylistAuthor)));
+            initialized = false;
         }
 
         [UIAction("#post-parse")]
         public void Setup()
         {
-            if (playlistCoverView == null)
+            if (!initialized)
+            {
+                if (playlistEntry.DownloadState == DownloadState.DownloadedPlaylist)
+                {
+                    PlaylistEntry_FinishedDownload();
+                }
+                else
+                {
+                    playlistEntry.FinishedDownload += PlaylistEntry_FinishedDownload;
+                }
+            }
+            initialized = true;
+
+            if (playlistCoverView == null || playlistNameText == null || playlistAuthorText == null)
             {
                 return;
             }
@@ -137,6 +169,8 @@ namespace MorePlaylists.UI
             filter.aspectMode = UnityEngine.UI.AspectRatioFitter.AspectMode.HeightControlsWidth;
             playlistCoverView.sprite = playlistEntry.Sprite;
             playlistCoverView.rectTransform.sizeDelta = new Vector2(8, 0);
+            playlistNameText.text = playlistEntry.Title;
+            playlistAuthorText.text = playlistEntry.Author;
             downloadProgress = new Progress<float>(ProgressUpdate);
 
             bgImage = playlistCoverView.transform.parent.gameObject.AddComponent<HMUI.ImageView>();
@@ -146,15 +180,6 @@ namespace MorePlaylists.UI
             bgImage.fillMethod = UnityEngine.UI.Image.FillMethod.Horizontal;
             bgImage.fillAmount = 0;
             bgImage.material = BeatSaberMarkupLanguage.Utilities.ImageResources.NoGlowMat;
-
-            if (playlistEntry.DownloadState != DownloadState.Downloading)
-            {
-                PlaylistEntry_FinishedDownload();
-            }
-            else
-            {
-                playlistEntry.FinishedDownload += PlaylistEntry_FinishedDownload;
-            }
         }
 
         private void PlaylistEntry_FinishedDownload()
@@ -220,7 +245,6 @@ namespace MorePlaylists.UI
 
         public void ProgressUpdate(float progressFloat)
         {
-            this.progressFloat = progressFloat;
             Color color = SongCore.Utilities.HSBColor.ToColor(new SongCore.Utilities.HSBColor(Mathf.PingPong(progressFloat * 0.35f, 1), 1, 1));
             color.a = 0.35f;
             bgImage.color = color;

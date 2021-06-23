@@ -173,5 +173,15 @@ namespace MorePlaylists.Utilities
                 return data;
             }
         }
+
+        public async Task<byte[]> DownloadFileToBytesAsync(string url)
+        {
+            Uri uri = new Uri(url);
+            using (var webClient = new WebClient())
+            {
+                var data = await webClient.DownloadDataTaskAsync(uri);
+                return data;
+            }
+        }
     }
 }

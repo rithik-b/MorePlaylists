@@ -5,14 +5,15 @@ using MorePlaylists.Entries;
 using System;
 using System.ComponentModel;
 using UnityEngine;
+using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsDetailViewController : BSMLResourceViewController, INotifyPropertyChanged
+    public class MorePlaylistsDetailViewController : BSMLResourceViewController, IInitializable, IDisposable, INotifyPropertyChanged
     {
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml";
         private IGenericEntry selectedPlaylist;
-        private bool _downloadInteractable = false;
+        private bool queueFull;
 
         internal event Action<IGenericEntry, bool> DidPressDownload;
 
@@ -43,14 +44,31 @@ namespace MorePlaylists.UI
         private void DownloadPressed()
         {
             DidPressDownload?.Invoke(selectedPlaylist, false);
-            DownloadInteractable = false;
+            NotifyPropertyChanged(nameof(DownloadInteractable));
         }
 
         [UIAction("download-all-click")]
         private void DownloadAllPressed()
         {
             DidPressDownload?.Invoke(selectedPlaylist, true);
-            DownloadInteractable = false;
+            NotifyPropertyChanged(nameof(DownloadInteractable));
+        }
+
+        public void Initialize()
+        {
+            MorePlaylistsDownloadQueueViewController.QueueFull += MorePlaylistsDownloadQueueViewController_QueueFull;
+            queueFull = false;
+        }
+
+        public void Dispose()
+        {
+            MorePlaylistsDownloadQueueViewController.QueueFull -= MorePlaylistsDownloadQueueViewController_QueueFull;
+        }
+
+        private void MorePlaylistsDownloadQueueViewController_QueueFull(bool queueFull)
+        {
+            this.queueFull = queueFull;
+            NotifyPropertyChanged(nameof(DownloadInteractable));
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -61,7 +79,7 @@ namespace MorePlaylists.UI
         internal void ShowDetail(IGenericEntry selectedPlaylist)
         {
             this.selectedPlaylist = selectedPlaylist;
-            DownloadInteractable = !selectedPlaylist.Owned;
+            NotifyPropertyChanged(nameof(DownloadInteractable));
             NotifyPropertyChanged(nameof(PlaylistName));
             NotifyPropertyChanged(nameof(PlaylistAuthor));
             NotifyPropertyChanged(nameof(PlaylistDescription));
@@ -70,14 +88,6 @@ namespace MorePlaylists.UI
         }
 
         [UIValue("download-interactable")]
-        public bool DownloadInteractable
-        {
-            get => _downloadInteractable;
-            set
-            {
-                _downloadInteractable = value;
-                NotifyPropertyChanged(nameof(DownloadInteractable));
-            }
-        }
+        public bool DownloadInteractable => selectedPlaylist != null && !selectedPlaylist.Owned && !queueFull;
     }
 }

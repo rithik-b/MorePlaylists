@@ -1,7 +1,10 @@
 ﻿using BeatSaberPlaylistsLib.Types;
+using MorePlaylists.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /*
@@ -48,8 +51,16 @@ namespace MorePlaylists.Entries
         public abstract string PlaylistURL { get; protected set; }
         public BeatSaberPlaylistsLib.Types.IPlaylist Playlist
         {
-            get => _playlist;
-            set
+            get
+            {
+                if (_playlist == null && DownloadState != DownloadState.Downloading)
+                {
+                    DownloadState = DownloadState.Downloading;
+                    DownloadPlaylist();
+                }
+                return _playlist;
+            }
+            private set
             {
                 _playlist = value;
                 if (value == null)
@@ -76,8 +87,29 @@ namespace MorePlaylists.Entries
         }
         public bool Owned { get; set; }
 
+        private async void DownloadPlaylist()
+        {
+            try
+            {
+                Stream playlistStream = new MemoryStream(await DownloaderUtils.instance.DownloadFileToBytesAsync(PlaylistURL));
+                Playlist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
+            }
+            catch (Exception e)
+            {
+                if (!(e is TaskCanceledException || e.Message.ToUpper().Contains("ABORTED")))
+                {
+                    Plugin.Log.Critical("An exception occurred while acquiring " + PlaylistURL + "\nException: " + e.Message);
+                    DownloadState = DownloadState.Error;
+                }
+                else
+                {
+                    DownloadState = DownloadState.None;
+                }
+            }
+        }
+
         public abstract Stream GetCoverStream();
-        protected static void QueueLoadSprite(GenericEntry spriteEntry)
+        private static void QueueLoadSprite(GenericEntry spriteEntry)
         {
             SpriteQueue.Enqueue(() =>
             {
@@ -115,7 +147,7 @@ namespace MorePlaylists.Entries
 
         public static YieldInstruction LoadWait = new WaitForEndOfFrame();
 
-        protected static IEnumerator<YieldInstruction> SpriteLoadCoroutine()
+        private static IEnumerator<YieldInstruction> SpriteLoadCoroutine()
         {
             lock (_loaderLock)
             {

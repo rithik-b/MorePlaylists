@@ -97,7 +97,6 @@ namespace MorePlaylists.UI
         {
             customListTableData.tableView.ClearSelection();
             customListTableData.data.Clear();
-            NotifyPropertyChanged(nameof(ButtonsInteractable));
             currentPlaylists = currentPlaylists.Where(e => e.Title.Contains(query) || e.Author.Contains(query) || e.Description.Contains(query)).ToList();
             foreach (GenericEntry playlist in currentPlaylists)
             {
@@ -111,7 +110,6 @@ namespace MorePlaylists.UI
                 }
             }
             customListTableData.tableView.ReloadData();
-            NotifyPropertyChanged(nameof(ButtonsInteractable));
         }
 
         internal void ShowPlaylistsForSource(ISource source)
@@ -124,7 +122,6 @@ namespace MorePlaylists.UI
         {
             customListTableData.tableView.ClearSelection();
             customListTableData.data.Clear();
-            NotifyPropertyChanged(nameof(ButtonsInteractable));
             tokenSource?.Dispose();
             tokenSource = new CancellationTokenSource();
             SetLoading(true);
@@ -152,7 +149,6 @@ namespace MorePlaylists.UI
                 }
             }
             customListTableData.tableView.ReloadData();
-            NotifyPropertyChanged(nameof(ButtonsInteractable));
             SetLoading(false);
         }
 
@@ -196,8 +192,5 @@ namespace MorePlaylists.UI
                 parserParams.EmitEvent("close-loading-modal");
             }
         }
-
-        [UIValue("buttons-interactable")]
-        private bool ButtonsInteractable => customListTableData?.data.Count != 0;
     }
 }

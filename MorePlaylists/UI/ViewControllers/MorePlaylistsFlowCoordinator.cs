@@ -4,10 +4,6 @@ using BeatSaberMarkupLanguage;
 using System;
 using UnityEngine;
 using MorePlaylists.Entries;
-using MorePlaylists.Utilities;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using MorePlaylists.Sources;
 
 namespace MorePlaylists.UI
@@ -22,9 +18,6 @@ namespace MorePlaylists.UI
         private MorePlaylistsDownloadQueueViewController morePlaylistsDownloadQueueViewController;
         private MorePlaylistsDetailViewController morePlaylistsDetailViewController;
         private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
-
-        private CancellationTokenSource playlistDownloadTokenSource;
-        private bool playlistDownloading = false;
 
         [Inject]
         public void Construct(MainFlowCoordinator mainFlowCoordinator, PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController, MorePlaylistsListViewController morePlaylistsListViewController, 
@@ -80,21 +73,9 @@ namespace MorePlaylists.UI
 
         private void MorePlaylistsListViewController_DidSelectPlaylist(GenericEntry selectedPlaylistEntry)
         {
-            if (!playlistDownloading)
-            {
-                playlistDownloadTokenSource?.Cancel();
-                playlistDownloadTokenSource?.Dispose();
-            }
-            playlistDownloading = false;
-
             if (selectedPlaylistEntry.DownloadState == DownloadState.None || selectedPlaylistEntry.DownloadState == DownloadState.Error)
             {
-                playlistDownloadTokenSource = new CancellationTokenSource();
-                DownloadSelectedPlaylist(selectedPlaylistEntry);
-            }
-            else
-            {
-                playlistDownloadTokenSource = null;
+                _ = selectedPlaylistEntry.Playlist;
             }
 
             if (!morePlaylistsDetailViewController.isInViewControllerHierarchy)
@@ -112,33 +93,10 @@ namespace MorePlaylists.UI
 
         private void MorePlaylistsListViewController_DidClickSearch() => popupModalsController.ShowKeyboard(morePlaylistsListViewController.transform, morePlaylistsListViewController.Search);
 
-        private async void DownloadSelectedPlaylist(IGenericEntry playlistEntry)
-        {
-            playlistEntry.DownloadState = DownloadState.Downloading;
-            try
-            {
-                Stream playlistStream = new MemoryStream(await DownloaderUtils.instance.DownloadFileToBytesAsync(playlistEntry.PlaylistURL, playlistDownloadTokenSource.Token));
-                playlistEntry.Playlist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
-            }
-            catch (Exception e)
-            {
-                if (!(e is TaskCanceledException || e.Message.ToUpper().Contains("ABORTED")))
-                {
-                    Plugin.Log.Critical("An exception occurred while acquiring " + playlistEntry.PlaylistURL + "\nException: " + e.Message);
-                    playlistEntry.DownloadState = DownloadState.Error;
-                }
-                else
-                {
-                    playlistEntry.DownloadState = DownloadState.None;
-                }
-            }
-        }
-
         private void MorePlaylistsDetailViewController_DidPressDownload(IGenericEntry playlistEntry, bool downloadSongs)
         {
-            playlistDownloading = true;
             playlistEntry.Owned = true;
-            morePlaylistsDownloadQueueViewController.EnqueuePlaylist(playlistEntry, playlistDownloadTokenSource, downloadSongs);
+            morePlaylistsDownloadQueueViewController.EnqueuePlaylist(playlistEntry, downloadSongs);
         }
 
         private void MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem(DownloadQueueItem item)
