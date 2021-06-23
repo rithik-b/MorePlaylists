@@ -21,3 +21,5 @@ If you encounter any issues with this mod, DM me on Discord PixelBoom#0001 or fi
 
 ## Contribution
 If you're a developer and would like to contribute to this mod, your contributions are welcome! Just submit a PR and I will take a look at it.
+
+![Screenshot](https://i.imgur.com/hXjVbuP.png)
