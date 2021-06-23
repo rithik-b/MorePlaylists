@@ -9,7 +9,6 @@ using MorePlaylists.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,10 +23,6 @@ namespace MorePlaylists.UI
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDownloadQueueView.bsml";
         internal static Action<DownloadQueueItem> DidAbortDownload;
         internal static Action<DownloadQueueItem> DidFinishDownloadingItem;
-        internal static event Action<bool> QueueFull;
-        internal CancellationTokenSource tokenSource = new CancellationTokenSource();
-
-        public static readonly int MAX_SIMULTANEOUS_DOWNLOADS = 3;
 
         [UIValue("download-queue")]
         internal List<object> queueItems = new List<object>();
@@ -58,7 +53,6 @@ namespace MorePlaylists.UI
             queueItems.Add(queuedPlaylist);
             if (queueItems.Count == 3)
             {
-                QueueFull?.Invoke(true);
             }
             customListTableData?.tableView?.ReloadData();
             UpdateDownloadingState(queuedPlaylist);
@@ -66,21 +60,10 @@ namespace MorePlaylists.UI
 
         internal void UpdateDownloadingState(DownloadQueueItem item)
         {
-            for (int i = 0; i < queueItems.Count; i++)
+            foreach (DownloadQueueItem downloaded in queueItems.Where(x => (x as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Downloaded || (x as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Error).ToArray())
             {
-                if ((queueItems[i] as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Downloaded || (queueItems[i] as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Error)
-                {
-                    //queueItems.Remove(i);
-                    customListTableData?.tableView?.ReloadData();
-                }
-            }
-            if (queueItems.Count == 0)
-            {
-                SongCore.Loader.Instance.RefreshSongs(false);
-            }
-            if (queueItems.Count < 3)
-            {
-                QueueFull?.Invoke(false);
+                customListTableData?.data?.Remove(downloaded);
+                customListTableData?.tableView?.ReloadData();
             }
         }
 
@@ -90,15 +73,7 @@ namespace MorePlaylists.UI
             {
                 queueItems.Remove(download);
             }
-            if (queueItems.Count == 0)
-            {
-                SongCore.Loader.Instance.RefreshSongs(false);
-            }
             customListTableData?.tableView?.ReloadData();
-            if (queueItems.Count < 3)
-            {
-                QueueFull?.Invoke(false);
-            }
         }
     }
 
@@ -110,8 +85,7 @@ namespace MorePlaylists.UI
         public CancellationTokenSource tokenSource;
         private bool downloadSongs;
         private bool initialized;
-
-        public event PropertyChangedEventHandler PropertyChanged;
+        private static SemaphoreSlim downloadSongsSemaphore = new SemaphoreSlim(1, 1);
 
         [UIComponent("playlist-cover")]
         private readonly ImageView playlistCoverView;
@@ -127,6 +101,7 @@ namespace MorePlaylists.UI
         {
             tokenSource.Cancel();
             playlistEntry.Owned = false;
+            PlaylistLibUtils.DeletePlaylistIfExists(playlistEntry.Playlist);
             MorePlaylistsDownloadQueueViewController.DidAbortDownload?.Invoke(this);
         }
 
@@ -194,15 +169,16 @@ namespace MorePlaylists.UI
 
                     if (downloadSongs)
                     {
-                        Task.Run(DownloadSongs);
+                        DownloadSongs();
                     }
                     else
                     {
                         if (downloadProgress is IProgress<float> progress)
                         {
                             progress.Report(1);
-                            playlistEntry.DownloadState = DownloadState.Downloaded;
                         }
+                        playlistEntry.DownloadState = DownloadState.Downloaded;
+                        Plugin.Log.Debug(playlistEntry.DownloadState.ToString());
                     }
                 }
                 catch (Exception e)
@@ -219,8 +195,11 @@ namespace MorePlaylists.UI
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem?.Invoke(this);
         }
 
-        private async Task DownloadSongs()
+        private async void DownloadSongs()
         {
+            // Song downloaded guarded by semaphore so songs cannot be duplicate downloaded
+            await downloadSongsSemaphore.WaitAsync();
+
             List<IPlaylistSong> missingSongs = playlistEntry.Playlist.Where(s => s.PreviewBeatmapLevel == null).Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
             for (int i = 0; i < missingSongs.Count; i++)
             {
@@ -239,11 +218,29 @@ namespace MorePlaylists.UI
                     progress.Report((float)(i + 1) / missingSongs.Count);
                 }
             }
-            playlistEntry.DownloadState = DownloadState.Downloaded;
+            SongCore.Loader.OnLevelPacksRefreshed += Loader_OnLevelPacksRefreshed;
+            SongCore.Loader.Instance.RefreshSongs();
+
+            downloadSongsSemaphore.Release();
+            // If cancelled, restore to DownloadedPlaylist state
+            if (tokenSource.IsCancellationRequested)
+            {
+                playlistEntry.DownloadState = DownloadState.DownloadedPlaylist;
+            }
+            else
+            {
+                playlistEntry.DownloadState = DownloadState.Downloaded;
+            }
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem?.Invoke(this);
         }
 
-        public void ProgressUpdate(float progressFloat)
+        private static void Loader_OnLevelPacksRefreshed()
+        {
+            SongCore.Loader.OnLevelPacksRefreshed -= Loader_OnLevelPacksRefreshed;
+            SongCore.Loader.Instance.RefreshSongs(false);
+        }
+
+        private void ProgressUpdate(float progressFloat)
         {
             Color color = SongCore.Utilities.HSBColor.ToColor(new SongCore.Utilities.HSBColor(Mathf.PingPong(progressFloat * 0.35f, 1), 1, 1));
             color.a = 0.35f;

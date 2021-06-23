@@ -38,6 +38,18 @@ namespace MorePlaylists.Utilities
             playlistManager.StorePlaylist(playlist);
         }
 
+        internal static void DeletePlaylistIfExists(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
+        {
+            if (playlist != null)
+            {
+                BeatSaberPlaylistsLib.PlaylistManager playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(MANAGER_NAME);
+                if (playlistManager.GetAllPlaylists(false).Contains(playlist))
+                {
+                    playlistManager.DeletePlaylist(playlist);
+                }
+            }
+        }
+
         internal static void UpdatePlaylistsOwned(List<IGenericEntry> genericEntries)
         {
             List<BeatSaberPlaylistsLib.Types.IPlaylist> playlists = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetAllPlaylists(true).ToList();

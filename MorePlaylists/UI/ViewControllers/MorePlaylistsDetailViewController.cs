@@ -9,7 +9,7 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsDetailViewController : BSMLResourceViewController, IInitializable, IDisposable, INotifyPropertyChanged
+    public class MorePlaylistsDetailViewController : BSMLResourceViewController, INotifyPropertyChanged
     {
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml";
         private IGenericEntry selectedPlaylist;
@@ -54,23 +54,6 @@ namespace MorePlaylists.UI
             NotifyPropertyChanged(nameof(DownloadInteractable));
         }
 
-        public void Initialize()
-        {
-            MorePlaylistsDownloadQueueViewController.QueueFull += MorePlaylistsDownloadQueueViewController_QueueFull;
-            queueFull = false;
-        }
-
-        public void Dispose()
-        {
-            MorePlaylistsDownloadQueueViewController.QueueFull -= MorePlaylistsDownloadQueueViewController_QueueFull;
-        }
-
-        private void MorePlaylistsDownloadQueueViewController_QueueFull(bool queueFull)
-        {
-            this.queueFull = queueFull;
-            NotifyPropertyChanged(nameof(DownloadInteractable));
-        }
-
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
@@ -88,6 +71,6 @@ namespace MorePlaylists.UI
         }
 
         [UIValue("download-interactable")]
-        public bool DownloadInteractable => selectedPlaylist != null && !selectedPlaylist.Owned && !queueFull;
+        public bool DownloadInteractable => selectedPlaylist != null && !selectedPlaylist.Owned;
     }
 }
