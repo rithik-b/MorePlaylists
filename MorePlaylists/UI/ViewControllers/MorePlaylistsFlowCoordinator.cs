@@ -103,6 +103,10 @@ namespace MorePlaylists.UI
             {
                 popupModalsController.ShowOkModal(morePlaylistsListViewController.transform, "An error occured while downloading, please try again later", null);
             }
+            else
+            {
+                morePlaylistsListViewController.SetEntryAsOwned(item.playlistEntry);
+            }
         }
 
         private void DetailViewPushed() => morePlaylistsDetailViewController.transform.localPosition = new Vector3(45, 0, 0);

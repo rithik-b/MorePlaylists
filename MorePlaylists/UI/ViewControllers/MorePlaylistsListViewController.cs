@@ -130,6 +130,16 @@ namespace MorePlaylists.UI
             ShowPlaylists(false);
         }
 
+        internal void SetEntryAsOwned(IGenericEntry playlistEntry)
+        {
+            int index = currentPlaylists.IndexOf(playlistEntry);
+            if (index >= 0)
+            {
+                customListTableData.data[index] = new CustomCellInfo($"<#7F7F7F>{playlistEntry.Title}", playlistEntry.Author, playlistEntry.Sprite);
+                customListTableData.tableView.ReloadDataKeepingPosition();
+            }
+        }
+
         private async void ShowPlaylists(bool refreshRequested = false)
         {
             await listUpdateSemaphore.WaitAsync();
@@ -177,15 +187,15 @@ namespace MorePlaylists.UI
             }
         }
 
-        private void ShowPlaylist(GenericEntry playlist)
+        private void ShowPlaylist(GenericEntry playlistEntry)
         {
-            if (playlist.Owned)
+            if (playlistEntry.Owned)
             {
-                customListTableData.data.Add(new CustomCellInfo($"<#7F7F7F>{playlist.Title}", playlist.Author, playlist.Sprite));
+                customListTableData.data.Add(new CustomCellInfo($"<#7F7F7F>{playlistEntry.Title}", playlistEntry.Author, playlistEntry.Sprite));
             }
             else
             {
-                customListTableData.data.Add(new CustomCellInfo(playlist.Title, playlist.Author, playlist.Sprite));
+                customListTableData.data.Add(new CustomCellInfo(playlistEntry.Title, playlistEntry.Author, playlistEntry.Sprite));
             }
         }
 
