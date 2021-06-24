@@ -21,6 +21,7 @@ namespace MorePlaylists.UI
     {
         private LoadingControl loadingSpinner;
         private CancellationTokenSource tokenSource;
+        private static SemaphoreSlim listUpdateSemaphore = new SemaphoreSlim(1, 1);
         private static SemaphoreSlim imageLoadSemaphore = new SemaphoreSlim(1, 1);
         private ISource currentSource;
         private List<GenericEntry> currentPlaylists;
@@ -93,11 +94,19 @@ namespace MorePlaylists.UI
         [UIAction("search-click")]
         private void SearchClick() => DidClickSearch?.Invoke();
 
-        internal void Search(string query)
+        internal async void Search(string query)
         {
+            await listUpdateSemaphore.WaitAsync();
             customListTableData.tableView.ClearSelection();
             customListTableData.data.Clear();
-            currentPlaylists = currentPlaylists.Where(e => e.Title.Contains(query) || e.Author.Contains(query) || e.Description.Contains(query)).ToList();
+            tokenSource = new CancellationTokenSource();
+            SetLoading(true);
+
+            currentPlaylists = await currentSource.GetEndpointResultTask(false, tokenSource.Token);
+            currentPlaylists = currentPlaylists.Where(e => e.Title.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || 
+                e.Author.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || e.Description.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+            SetLoading(true, 100);
+
             foreach (GenericEntry playlist in currentPlaylists)
             {
                 if (playlist.Owned)
@@ -109,7 +118,10 @@ namespace MorePlaylists.UI
                     customListTableData.data.Add(new CustomCellInfo(playlist.Title, playlist.Author, playlist.Sprite));
                 }
             }
+
             customListTableData.tableView.ReloadData();
+            SetLoading(false);
+            listUpdateSemaphore.Release();
         }
 
         internal void ShowPlaylistsForSource(ISource source)
@@ -120,6 +132,7 @@ namespace MorePlaylists.UI
 
         private async void ShowPlaylists(bool refreshRequested = false)
         {
+            await listUpdateSemaphore.WaitAsync();
             customListTableData.tableView.ClearSelection();
             customListTableData.data.Clear();
             tokenSource?.Dispose();
@@ -150,6 +163,7 @@ namespace MorePlaylists.UI
             }
             customListTableData.tableView.ReloadData();
             SetLoading(false);
+            listUpdateSemaphore.Release();
         }
 
         private void DeferredSpriteLoadPlaylist_SpriteLoaded(object sender, EventArgs e)
