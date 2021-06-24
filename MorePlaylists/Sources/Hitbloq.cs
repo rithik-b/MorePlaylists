@@ -14,7 +14,7 @@ namespace MorePlaylists.Sources
 {
     internal class Hitbloq : ISource, IInitializable
     {
-        private static List<HitbloqEntry> _endpointResult;
+        private static List<HitbloqEntry> _endpointResult = new List<HitbloqEntry>();
         private Sprite _logo;
 
         public string Website => "https://hitbloq.com/";
@@ -28,7 +28,7 @@ namespace MorePlaylists.Sources
 
         public async Task<List<GenericEntry>> GetEndpointResultTask(bool refreshRequested, CancellationToken token)
         {
-            if (_endpointResult == null || refreshRequested)
+            if (_endpointResult.Count == 0 || refreshRequested)
             {
                 try
                 {
@@ -41,9 +41,6 @@ namespace MorePlaylists.Sources
                 }
                 catch (Exception e)
                 {
-                    if (!(e is TaskCanceledException))
-                    {
-                    }
                 }
             }
             return _endpointResult.Cast<GenericEntry>().ToList();

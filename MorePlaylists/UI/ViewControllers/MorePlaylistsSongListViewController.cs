@@ -16,7 +16,7 @@ namespace MorePlaylists.UI
     public class MorePlaylistsSongListViewController : BSMLResourceViewController
     {
         private LoadingControl loadingSpinner;
-        private SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
+        private static SemaphoreSlim songLoadSemaphore = new SemaphoreSlim(1, 1);
         private IGenericEntry playlistEntry;
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsSongListView.bsml";
 
@@ -28,6 +28,15 @@ namespace MorePlaylists.UI
 
         [UIParams]
         internal BSMLParserParams parserParams;
+
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+        {
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+            if (!firstActivation)
+            {
+                ClearList();
+            }
+        }
 
         internal void SetCurrentPlaylist(IGenericEntry playlistEntry)
         {
@@ -44,8 +53,7 @@ namespace MorePlaylists.UI
             }
             this.playlistEntry = playlistEntry;
 
-            customListTableData.data.Clear();
-            customListTableData.tableView.ReloadData();
+            ClearList();
 
             if (playlistEntry.DownloadState == DownloadState.Error)
             {
@@ -61,6 +69,14 @@ namespace MorePlaylists.UI
             }
         }
 
+        internal void ClearList()
+        {
+            customListTableData.data.Clear();
+            customListTableData.tableView.ReloadData();
+        }
+
+        internal void AbortLoading() => SetLoading(false);
+
         [UIAction("list-select")]
         private void Select(TableView _, int __)
         {
@@ -69,7 +85,7 @@ namespace MorePlaylists.UI
 
         private async void InitSongList()
         {
-            await semaphoreSlim.WaitAsync();
+            await songLoadSemaphore.WaitAsync();
             if (customListTableData.data.Count == 0)
             {
                 if (playlistEntry.Playlist is LegacyPlaylist playlist)
@@ -86,7 +102,7 @@ namespace MorePlaylists.UI
                 }
                 customListTableData.tableView.ReloadData();
             }
-            semaphoreSlim.Release();
+            songLoadSemaphore.Release();
             SetLoading(false);
         }
 

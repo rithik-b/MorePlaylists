@@ -85,9 +85,9 @@ namespace MorePlaylists.UI
         }
 
         [UIAction("abort-click")]
-        private void AbortLoading()
+        internal void AbortLoading()
         {
-            tokenSource.Cancel();
+            tokenSource?.Cancel();
             SetLoading(false);
         }
 

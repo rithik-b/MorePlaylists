@@ -65,6 +65,7 @@ namespace MorePlaylists.UI
         private void SourceModalController_DidSelectSource(ISource source)
         {
             morePlaylistsListViewController.ShowPlaylistsForSource(source);
+            morePlaylistsSongListViewController.ClearList();
             if (morePlaylistsDetailViewController.isInViewControllerHierarchy)
             {
                 PopViewControllerFromNavigationController(morePlaylistsNavigationController, immediately: true);
@@ -86,10 +87,7 @@ namespace MorePlaylists.UI
             morePlaylistsSongListViewController.SetCurrentPlaylist(selectedPlaylistEntry);
         }
 
-        private void MorePlaylistsListViewController_DidClickSource()
-        {
-            sourceModalController.ShowModal(morePlaylistsListViewController.transform);
-        }
+        private void MorePlaylistsListViewController_DidClickSource() => sourceModalController.ShowModal(morePlaylistsListViewController.transform);
 
         private void MorePlaylistsListViewController_DidClickSearch() => popupModalsController.ShowKeyboard(morePlaylistsListViewController.transform, morePlaylistsListViewController.Search);
 
@@ -107,10 +105,7 @@ namespace MorePlaylists.UI
             }
         }
 
-        private void DetailViewPushed()
-        {
-            morePlaylistsDetailViewController.transform.localPosition = new Vector3(45, 0, 0);
-        }
+        private void DetailViewPushed() => morePlaylistsDetailViewController.transform.localPosition = new Vector3(45, 0, 0);
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
@@ -119,11 +114,15 @@ namespace MorePlaylists.UI
                 popupModalsController.ShowYesNoModal(morePlaylistsListViewController.transform, "There are still items in the download queue. Are you sure you want to cancel and exit?", ExitAndClear);
                 return;
             }
+            morePlaylistsListViewController.AbortLoading();
+            morePlaylistsSongListViewController.AbortLoading();
             mainFlowCoordinator.DismissFlowCoordinator(this);
         }
 
         private void ExitAndClear()
         {
+            morePlaylistsListViewController.AbortLoading();
+            morePlaylistsSongListViewController.AbortLoading();
             morePlaylistsDownloadQueueViewController.queueItems.ForEach(x => (x as DownloadQueueItem).tokenSource.Cancel());
             morePlaylistsDownloadQueueViewController.queueItems.Clear();
             SongCore.Loader.Instance.RefreshSongs(false);
