@@ -8,10 +8,8 @@ using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -100,8 +98,8 @@ namespace MorePlaylists.UI
         public void AbortDownload()
         {
             tokenSource.Cancel();
-            playlistEntry.Owned = false;
-            PlaylistLibUtils.DeletePlaylistIfExists(playlistEntry.Playlist);
+            playlistEntry.DownloadBlocked = false;
+            PlaylistLibUtils.DeletePlaylistIfExists(playlistEntry.RemotePlaylist);
             MorePlaylistsDownloadQueueViewController.DidAbortDownload?.Invoke(this);
         }
 
@@ -114,7 +112,7 @@ namespace MorePlaylists.UI
             this.playlistEntry = playlistEntry;
             this.downloadSongs = downloadSongs;
             tokenSource = new CancellationTokenSource();
-            playlistEntry.Owned = true;
+            playlistEntry.DownloadBlocked = true;
             initialized = false;
         }
 
@@ -164,8 +162,9 @@ namespace MorePlaylists.UI
             {
                 try
                 {
-                    playlistEntry.Playlist.SetCustomData("syncURL", playlistEntry.PlaylistURL);
-                    PlaylistLibUtils.SavePlaylist(playlistEntry.Playlist);
+                    playlistEntry.RemotePlaylist.SetCustomData("syncURL", playlistEntry.PlaylistURL);
+                    PlaylistLibUtils.SavePlaylist(playlistEntry.RemotePlaylist);
+                    playlistEntry.LocalPlaylist = playlistEntry.RemotePlaylist;
 
                     if (downloadSongs)
                     {
@@ -185,12 +184,12 @@ namespace MorePlaylists.UI
                 {
                     Plugin.Log.Critical("An exception occurred while downloading. Exception: " + e.Message);
                     playlistEntry.DownloadState = DownloadState.Error;
-                    playlistEntry.Owned = false;
+                    playlistEntry.DownloadBlocked = false;
                 }
             }
             else
             {
-                playlistEntry.Owned = false;
+                playlistEntry.DownloadBlocked = false;
             }
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem?.Invoke(this);
         }
@@ -200,7 +199,7 @@ namespace MorePlaylists.UI
             // Song downloaded guarded by semaphore so songs cannot be duplicate downloaded
             await downloadSongsSemaphore.WaitAsync();
 
-            List<IPlaylistSong> missingSongs = playlistEntry.Playlist.Where(s => s.PreviewBeatmapLevel == null).Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
+            List<IPlaylistSong> missingSongs = playlistEntry.RemotePlaylist.Where(s => s.PreviewBeatmapLevel == null).Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
             for (int i = 0; i < missingSongs.Count; i++)
             {
                 if (!string.IsNullOrEmpty(missingSongs[i].Hash))

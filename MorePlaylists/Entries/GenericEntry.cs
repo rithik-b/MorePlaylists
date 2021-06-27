@@ -48,7 +48,7 @@ namespace MorePlaylists.Entries
         public abstract string Author { get; protected set; }
         public abstract string Description { get; protected set; }
         public abstract string PlaylistURL { get; protected set; }
-        public BeatSaberPlaylistsLib.Types.IPlaylist Playlist
+        public BeatSaberPlaylistsLib.Types.IPlaylist RemotePlaylist
         {
             get
             {
@@ -72,6 +72,7 @@ namespace MorePlaylists.Entries
                 }
             }
         }
+        public BeatSaberPlaylistsLib.Types.IPlaylist LocalPlaylist { get; set; }
         public DownloadState DownloadState
         {
             get => _downloadState;
@@ -84,14 +85,13 @@ namespace MorePlaylists.Entries
                 }
             }
         }
-        public bool Owned { get; set; }
-
+        public bool DownloadBlocked { get; set; }
         private async void DownloadPlaylist()
         {
             try
             {
                 Stream playlistStream = new MemoryStream(await DownloaderUtils.instance.DownloadFileToBytesAsync(PlaylistURL));
-                Playlist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
+                RemotePlaylist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
             }
             catch (Exception e)
             {

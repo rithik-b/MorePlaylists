@@ -3,14 +3,20 @@ using Zenject;
 using BeatSaberMarkupLanguage;
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
+using IPA.Utilities;
 
 namespace MorePlaylists.UI
 {
     public class MorePlaylistsFlowCoordinator : FlowCoordinator, IInitializable, IDisposable
     {
         private MainFlowCoordinator mainFlowCoordinator;
+        private MainMenuViewController mainMenuViewController;
+        private LevelFilteringNavigationController levelFilteringNavigationController;
+        private SelectLevelCategoryViewController selectLevelCategoryViewController;
+        private IconSegmentedControl levelCategorySegmentedControl;
         private PopupModalsController popupModalsController;
         private SourceModalController sourceModalController;
         private MorePlaylistsNavigationController morePlaylistsNavigationController;
@@ -20,10 +26,15 @@ namespace MorePlaylists.UI
         private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
 
         [Inject]
-        public void Construct(MainFlowCoordinator mainFlowCoordinator, PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController, MorePlaylistsListViewController morePlaylistsListViewController, 
+        public void Construct(MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, LevelFilteringNavigationController levelFilteringNavigationController, SelectLevelCategoryViewController selectLevelCategoryViewController,
+            PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController, MorePlaylistsListViewController morePlaylistsListViewController, 
             MorePlaylistsDownloadQueueViewController morePlaylistsDownloadQueueViewController, MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
         {
             this.mainFlowCoordinator = mainFlowCoordinator;
+            this.mainMenuViewController = mainMenuViewController;
+            this.levelFilteringNavigationController = levelFilteringNavigationController;
+            this.selectLevelCategoryViewController = selectLevelCategoryViewController;
+            levelCategorySegmentedControl = FieldAccessor<SelectLevelCategoryViewController, IconSegmentedControl>.Get(ref selectLevelCategoryViewController, "_levelFilterCategoryIconSegmentedControl");
             this.popupModalsController = popupModalsController;
             this.sourceModalController = sourceModalController;
             this.morePlaylistsNavigationController = morePlaylistsNavigationController;
@@ -40,6 +51,7 @@ namespace MorePlaylists.UI
             morePlaylistsListViewController.DidClickSource += MorePlaylistsListViewController_DidClickSource;
             morePlaylistsListViewController.DidClickSearch += MorePlaylistsListViewController_DidClickSearch;
             morePlaylistsDetailViewController.DidPressDownload += MorePlaylistsDetailViewController_DidPressDownload;
+            morePlaylistsDetailViewController.DidGoToPlaylist += MorePlaylistsDetailViewController_DidGoToPlaylist;
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem += MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
         }
 
@@ -50,6 +62,7 @@ namespace MorePlaylists.UI
             morePlaylistsListViewController.DidClickSource -= MorePlaylistsListViewController_DidClickSource;
             morePlaylistsListViewController.DidClickSearch -= MorePlaylistsListViewController_DidClickSearch;
             morePlaylistsDetailViewController.DidPressDownload -= MorePlaylistsDetailViewController_DidPressDownload;
+            morePlaylistsDetailViewController.DidGoToPlaylist -= MorePlaylistsDetailViewController_DidGoToPlaylist;
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem -= MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
         }
 
@@ -76,7 +89,7 @@ namespace MorePlaylists.UI
         {
             if (selectedPlaylistEntry.DownloadState == DownloadState.None || selectedPlaylistEntry.DownloadState == DownloadState.Error)
             {
-                _ = selectedPlaylistEntry.Playlist;
+                _ = selectedPlaylistEntry.RemotePlaylist;
             }
 
             if (!morePlaylistsDetailViewController.isInViewControllerHierarchy)
@@ -93,8 +106,17 @@ namespace MorePlaylists.UI
 
         private void MorePlaylistsDetailViewController_DidPressDownload(IGenericEntry playlistEntry, bool downloadSongs)
         {
-            playlistEntry.Owned = true;
+            playlistEntry.DownloadBlocked = true;
             morePlaylistsDownloadQueueViewController.EnqueuePlaylist(playlistEntry, downloadSongs);
+        }
+
+        private void MorePlaylistsDetailViewController_DidGoToPlaylist(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
+        {
+            mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
+            mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
+            levelCategorySegmentedControl.SelectCellWithNumber(2);
+            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 2);
+            levelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(playlist);
         }
 
         private void MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem(DownloadQueueItem item)
@@ -107,6 +129,7 @@ namespace MorePlaylists.UI
             {
                 morePlaylistsListViewController.SetEntryAsOwned(item.playlistEntry);
             }
+            morePlaylistsDetailViewController.OnPlaylistDownloaded();
         }
 
         private void DetailViewPushed() => morePlaylistsDetailViewController.transform.localPosition = new Vector3(45, 0, 0);

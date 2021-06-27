@@ -10,10 +10,11 @@ namespace MorePlaylists.Entries
         string Author { get; }
         string Description { get; }
         string PlaylistURL { get; }
-        BeatSaberPlaylistsLib.Types.IPlaylist Playlist { get; }
+        BeatSaberPlaylistsLib.Types.IPlaylist RemotePlaylist { get; }
+        BeatSaberPlaylistsLib.Types.IPlaylist LocalPlaylist { get; set; }
         event Action FinishedDownload;
         DownloadState DownloadState { get; set; }
-        bool Owned { get; set; }
+        bool DownloadBlocked { get; set; }
         Sprite Sprite { get; }
         Stream GetCoverStream();
     }

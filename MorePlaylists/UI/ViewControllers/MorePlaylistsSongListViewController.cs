@@ -88,7 +88,7 @@ namespace MorePlaylists.UI
             await songLoadSemaphore.WaitAsync();
             if (customListTableData.data.Count == 0)
             {
-                if (playlistEntry.Playlist is LegacyPlaylist playlist)
+                if (playlistEntry.RemotePlaylist is LegacyPlaylist playlist)
                 {
                     SongDetails songDetails = await SongDetails.Init();
                     SetLoading(true, 100);

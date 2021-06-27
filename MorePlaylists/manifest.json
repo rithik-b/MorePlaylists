@@ -11,6 +11,7 @@
         "SongCore":  "^3.4.1",
         "BeatSaberMarkupLanguage": "^1.5.3",
         "SiraUtil": "^2.5.5",
-        "SongDetailsCache": "^1.0.5"
+        "SongDetailsCache": "^1.0.5",
+        "PlaylistManager": "^1.1.0"
     }
 }

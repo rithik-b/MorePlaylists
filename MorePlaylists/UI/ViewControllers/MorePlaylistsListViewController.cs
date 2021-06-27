@@ -109,7 +109,7 @@ namespace MorePlaylists.UI
 
             foreach (GenericEntry playlist in currentPlaylists)
             {
-                if (playlist.Owned)
+                if (playlist.DownloadBlocked)
                 {
                     customListTableData.data.Add(new CustomCellInfo($"<#7F7F7F>{playlist.Title}", playlist.Author, playlist.Sprite));
                 }
@@ -189,7 +189,7 @@ namespace MorePlaylists.UI
 
         private void ShowPlaylist(GenericEntry playlistEntry)
         {
-            if (playlistEntry.Owned)
+            if (playlistEntry.DownloadBlocked)
             {
                 customListTableData.data.Add(new CustomCellInfo($"<#7F7F7F>{playlistEntry.Title}", playlistEntry.Author, playlistEntry.Sprite));
             }

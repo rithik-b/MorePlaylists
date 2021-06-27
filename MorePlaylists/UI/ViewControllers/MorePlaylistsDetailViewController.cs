@@ -1,5 +1,6 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
+using BeatSaberMarkupLanguage;
 using HMUI;
 using MorePlaylists.Entries;
 using System;
@@ -12,10 +13,10 @@ namespace MorePlaylists.UI
     public class MorePlaylistsDetailViewController : BSMLResourceViewController, INotifyPropertyChanged
     {
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml";
-        private IGenericEntry selectedPlaylist;
-        private bool queueFull;
+        private IGenericEntry selectedPlaylistEntry;
 
         internal event Action<IGenericEntry, bool> DidPressDownload;
+        internal event Action<BeatSaberPlaylistsLib.Types.IPlaylist> DidGoToPlaylist;
 
         [UIComponent("playlist-cover")]
         private readonly ImageView playlistCoverView;
@@ -24,13 +25,13 @@ namespace MorePlaylists.UI
         private readonly TextPageScrollView descriptionTextPage;
 
         [UIValue("playlist-name")]
-        public string PlaylistName => selectedPlaylist == null || selectedPlaylist.Title == null ? " " : selectedPlaylist.Title;
+        public string PlaylistName => selectedPlaylistEntry == null || selectedPlaylistEntry.Title == null ? " " : selectedPlaylistEntry.Title;
 
         [UIValue("playlist-author")]
-        public string PlaylistAuthor => selectedPlaylist == null || selectedPlaylist.Author == null ? " " : selectedPlaylist.Author;
+        public string PlaylistAuthor => selectedPlaylistEntry == null || selectedPlaylistEntry.Author == null ? " " : selectedPlaylistEntry.Author;
 
         [UIValue("playlist-description")]
-        private string PlaylistDescription => selectedPlaylist == null || selectedPlaylist.Description == null ? "" : selectedPlaylist.Description;
+        private string PlaylistDescription => selectedPlaylistEntry == null || selectedPlaylistEntry.Description == null ? "" : selectedPlaylistEntry.Description;
 
         [UIAction("#post-parse")]
         private void PostParse()
@@ -43,15 +44,24 @@ namespace MorePlaylists.UI
         [UIAction("download-click")]
         private void DownloadPressed()
         {
-            DidPressDownload?.Invoke(selectedPlaylist, false);
+            DidPressDownload?.Invoke(selectedPlaylistEntry, false);
             NotifyPropertyChanged(nameof(DownloadInteractable));
         }
 
         [UIAction("download-all-click")]
         private void DownloadAllPressed()
         {
-            DidPressDownload?.Invoke(selectedPlaylist, true);
+            DidPressDownload?.Invoke(selectedPlaylistEntry, true);
             NotifyPropertyChanged(nameof(DownloadInteractable));
+        }
+
+        [UIAction("go-to-playlist")]
+        private void GoToPlaylist()
+        {
+            if (selectedPlaylistEntry.LocalPlaylist != null)
+            {
+                DidGoToPlaylist?.Invoke(selectedPlaylistEntry.LocalPlaylist);
+            }
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -61,8 +71,10 @@ namespace MorePlaylists.UI
 
         internal void ShowDetail(IGenericEntry selectedPlaylist)
         {
-            this.selectedPlaylist = selectedPlaylist;
+            this.selectedPlaylistEntry = selectedPlaylist;
             NotifyPropertyChanged(nameof(DownloadInteractable));
+            NotifyPropertyChanged(nameof(DownloadActive));
+            NotifyPropertyChanged(nameof(GoToActive));
             NotifyPropertyChanged(nameof(PlaylistName));
             NotifyPropertyChanged(nameof(PlaylistAuthor));
             NotifyPropertyChanged(nameof(PlaylistDescription));
@@ -70,7 +82,19 @@ namespace MorePlaylists.UI
             descriptionTextPage.ScrollTo(0, true);
         }
 
+        internal void OnPlaylistDownloaded()
+        {
+            NotifyPropertyChanged(nameof(DownloadActive));
+            NotifyPropertyChanged(nameof(GoToActive));
+        }
+
         [UIValue("download-interactable")]
-        public bool DownloadInteractable => selectedPlaylist != null && !selectedPlaylist.Owned;
+        public bool DownloadInteractable => selectedPlaylistEntry != null && !selectedPlaylistEntry.DownloadBlocked;
+
+        [UIValue("download-active")]
+        public bool DownloadActive => selectedPlaylistEntry != null && selectedPlaylistEntry.LocalPlaylist == null;
+
+        [UIValue("go-to-active")]
+        public bool GoToActive => selectedPlaylistEntry != null && selectedPlaylistEntry.LocalPlaylist != null;
     }
 }

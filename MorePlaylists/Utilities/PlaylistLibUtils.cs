@@ -50,24 +50,33 @@ namespace MorePlaylists.Utilities
             }
         }
 
-        internal static void UpdatePlaylistsOwned(List<IGenericEntry> genericEntries)
+        internal static void UpdatePlaylistsOwned(List<IGenericEntry> playlistEntries)
         {
             List<BeatSaberPlaylistsLib.Types.IPlaylist> playlists = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetAllPlaylists(true).ToList();
-            List<string> syncURLs = new List<string>();
+            Dictionary<string, BeatSaberPlaylistsLib.Types.IPlaylist> syncURLs = new Dictionary<string, BeatSaberPlaylistsLib.Types.IPlaylist>();
             foreach (var playlist in playlists)
             {
                 if (playlist.TryGetCustomData("syncURL", out object url))
                 {
                     if (url is string urlString)
                     {
-                        syncURLs.Add(urlString);
+                        syncURLs.Add(urlString, playlist);
                     }
                 }
             }
 
-            foreach (var genericEntry in genericEntries)
+            foreach (var playlistEntry in playlistEntries)
             {
-                genericEntry.Owned = syncURLs.Contains(genericEntry.PlaylistURL);
+                if (syncURLs.TryGetValue(playlistEntry.PlaylistURL, out BeatSaberPlaylistsLib.Types.IPlaylist playlist))
+                {
+                    playlistEntry.DownloadBlocked = true;
+                    playlistEntry.LocalPlaylist = playlist;
+                }
+                else
+                {
+                    playlistEntry.DownloadBlocked = false;
+                    playlistEntry.LocalPlaylist = null;
+                }
             }
         }
     }
