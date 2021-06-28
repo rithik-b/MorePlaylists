@@ -7,8 +7,8 @@
 		<horizontal child-expand-width='true' child-control-width='false' anchor-pos-x='11' pref-width='80'>
 			<button id='abort-button' on-click='abort-clicked' ignore-layout='true' text='Abort' anchor-pos-x='62' anchor-pos-y='-7	' />
 			<vertical  anchor-pos-x='20' anchor-min-x='0' anchor-max-x='0' child-align='MiddleLeft' vertical-fit='PreferredSize'>
-				<text id='playlist-name' font-size='4' />
-				<text id='playlist-author' font-size='3' />
+				<text text='~playlist-name' font-size='4' />
+				<text text='~playlist-author' font-size='3' />
 			</vertical>
 		</horizontal>
 	</custom-list>

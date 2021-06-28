@@ -25,7 +25,6 @@ namespace MorePlaylists
 
         internal static Plugin Instance { get; private set; }
         internal static IPALogger Log { get; private set; }
-        internal static MorePlaylistsController PluginController { get { return MorePlaylistsController.Instance; } }
 
         [Init]
         /// <summary>
@@ -63,7 +62,6 @@ namespace MorePlaylists
         [OnEnable]
         public void OnEnable()
         {
-            new GameObject("MorePlaylistsController").AddComponent<MorePlaylistsController>();
             //ApplyHarmonyPatches();
         }
 
@@ -75,8 +73,6 @@ namespace MorePlaylists
         [OnDisable]
         public void OnDisable()
         {
-            if (PluginController != null)
-                GameObject.Destroy(PluginController);
             //RemoveHarmonyPatches();
         }
 

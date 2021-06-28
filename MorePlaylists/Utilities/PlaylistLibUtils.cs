@@ -7,13 +7,12 @@ namespace MorePlaylists.Utilities
 {
     public class PlaylistLibUtils
     {
-        private static readonly string MANAGER_NAME = "Downloads";
-
-        internal static void SavePlaylist(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
+        internal static void SavePlaylist(IGenericEntry playlistEntry)
         {
-            BeatSaberPlaylistsLib.PlaylistManager playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(MANAGER_NAME);
+            BeatSaberPlaylistsLib.Types.IPlaylist playlist = playlistEntry.RemotePlaylist;
+            BeatSaberPlaylistsLib.PlaylistManager playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(playlistEntry.GetType().Name.Replace("Entry", ""));
 
-            // Generate 
+            // Generate Name
             string playlistFolderPath = playlistManager.PlaylistPath;
             string playlistFileName = string.Join("_", playlist.Title.Replace("/", "").Replace("\\", "").Replace(".", "").Replace(":", "").Replace("*", "").Replace("?", "")
                 .Replace("\"", "").Replace("<", "").Replace(">", "").Replace("|", "").Split());
@@ -35,14 +34,16 @@ namespace MorePlaylists.Utilities
                 playlistFileName += string.Format("({0})", dupNum);
             }
             playlist.Filename = playlistFileName;
+
             playlistManager.StorePlaylist(playlist);
         }
 
-        internal static void DeletePlaylistIfExists(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
+        internal static void DeletePlaylistIfExists(IGenericEntry playlistEntry)
         {
+            BeatSaberPlaylistsLib.Types.IPlaylist playlist = playlistEntry.RemotePlaylist;
             if (playlist != null)
             {
-                BeatSaberPlaylistsLib.PlaylistManager playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(MANAGER_NAME);
+                BeatSaberPlaylistsLib.PlaylistManager playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(playlistEntry.GetType().Name.Replace("Entry", ""));
                 if (playlistManager.GetAllPlaylists(false).Contains(playlist))
                 {
                     playlistManager.DeletePlaylist(playlist);

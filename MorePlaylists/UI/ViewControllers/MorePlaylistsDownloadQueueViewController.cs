@@ -8,9 +8,9 @@ using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-using TMPro;
 using UnityEngine;
 using Zenject;
 
@@ -21,7 +21,7 @@ namespace MorePlaylists.UI
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDownloadQueueView.bsml";
         internal static Action<DownloadQueueItem> DidAbortDownload;
         internal static Action<DownloadQueueItem> DidFinishDownloadingItem;
-        internal static Action<bool> DidFillQueue;
+        internal Action<bool> DidFillQueue;
 
         [UIValue("download-queue")]
         internal List<object> queueItems = new List<object>();
@@ -87,12 +87,13 @@ namespace MorePlaylists.UI
         }
     }
 
-    internal class DownloadQueueItem
+    internal class DownloadQueueItem : INotifyPropertyChanged
     {
         public IGenericEntry playlistEntry;
-        private ImageView bgImage;
         public Progress<float> downloadProgress;
         public CancellationTokenSource tokenSource;
+        public event PropertyChangedEventHandler PropertyChanged;
+        private ImageView bgImage;
         private bool downloadSongs;
         private bool initialized;
         private static SemaphoreSlim downloadSongsSemaphore = new SemaphoreSlim(1, 1);
@@ -100,18 +101,19 @@ namespace MorePlaylists.UI
         [UIComponent("playlist-cover")]
         private readonly ImageView playlistCoverView;
 
-        [UIComponent("playlist-name")]
-        private TextMeshProUGUI playlistNameText;
+        [UIValue("playlist-name")]
+        public string PlaylistName => playlistEntry == null || playlistEntry.Title == null ? " " : playlistEntry.Title;
 
-        [UIComponent("playlist-author")]
-        private TextMeshProUGUI playlistAuthorText;
+        [UIValue("playlist-author")]
+        public string PlaylistAuthor => playlistEntry == null || playlistEntry.Author == null ? " " : playlistEntry.Author;
 
         [UIAction("abort-clicked")]
         public void AbortDownload()
         {
             tokenSource.Cancel();
             playlistEntry.DownloadBlocked = false;
-            PlaylistLibUtils.DeletePlaylistIfExists(playlistEntry.RemotePlaylist);
+            playlistEntry.FinishedDownload -= PlaylistEntry_FinishedDownload;
+            PlaylistLibUtils.DeletePlaylistIfExists(playlistEntry);
             MorePlaylistsDownloadQueueViewController.DidAbortDownload?.Invoke(this);
         }
 
@@ -144,7 +146,7 @@ namespace MorePlaylists.UI
             }
             initialized = true;
 
-            if (playlistCoverView == null || playlistNameText == null || playlistAuthorText == null)
+            if (playlistCoverView == null)
             {
                 return;
             }
@@ -154,8 +156,8 @@ namespace MorePlaylists.UI
             filter.aspectMode = UnityEngine.UI.AspectRatioFitter.AspectMode.HeightControlsWidth;
             playlistCoverView.sprite = playlistEntry.Sprite;
             playlistCoverView.rectTransform.sizeDelta = new Vector2(8, 0);
-            playlistNameText.text = playlistEntry.Title;
-            playlistAuthorText.text = playlistEntry.Author;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PlaylistName)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PlaylistAuthor)));
             downloadProgress = new Progress<float>(ProgressUpdate);
 
             bgImage = playlistCoverView.transform.parent.gameObject.AddComponent<HMUI.ImageView>();
@@ -167,6 +169,8 @@ namespace MorePlaylists.UI
             bgImage.material = BeatSaberMarkupLanguage.Utilities.ImageResources.NoGlowMat;
         }
 
+        #region Download
+
         private void PlaylistEntry_FinishedDownload()
         {
             playlistEntry.FinishedDownload -= PlaylistEntry_FinishedDownload;
@@ -175,8 +179,7 @@ namespace MorePlaylists.UI
                 try
                 {
                     playlistEntry.RemotePlaylist.SetCustomData("syncURL", playlistEntry.PlaylistURL);
-                    PlaylistLibUtils.SavePlaylist(playlistEntry.RemotePlaylist);
-                    playlistEntry.LocalPlaylist = playlistEntry.RemotePlaylist;
+                    PlaylistLibUtils.SavePlaylist(playlistEntry);
 
                     if (downloadSongs)
                     {
@@ -189,6 +192,7 @@ namespace MorePlaylists.UI
                             progress.Report(1);
                         }
                         playlistEntry.DownloadState = DownloadState.Downloaded;
+                        playlistEntry.LocalPlaylist = playlistEntry.RemotePlaylist;
                     }
                 }
                 catch (Exception e)
@@ -229,9 +233,8 @@ namespace MorePlaylists.UI
                 }
             }
             SongCore.Loader.OnLevelPacksRefreshed += Loader_OnLevelPacksRefreshed;
-            SongCore.Loader.Instance.RefreshSongs();
+            SongCore.Loader.Instance.RefreshSongs(false);
 
-            downloadSongsSemaphore.Release();
             // If cancelled, restore to DownloadedPlaylist state
             if (tokenSource.IsCancellationRequested)
             {
@@ -240,6 +243,7 @@ namespace MorePlaylists.UI
             else
             {
                 playlistEntry.DownloadState = DownloadState.Downloaded;
+                playlistEntry.LocalPlaylist = playlistEntry.RemotePlaylist;
             }
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem?.Invoke(this);
         }
@@ -247,8 +251,10 @@ namespace MorePlaylists.UI
         private static void Loader_OnLevelPacksRefreshed()
         {
             SongCore.Loader.OnLevelPacksRefreshed -= Loader_OnLevelPacksRefreshed;
-            SongCore.Loader.Instance.RefreshSongs(false);
+            downloadSongsSemaphore.Release();
         }
+
+        #endregion
 
         private void ProgressUpdate(float progressFloat)
         {

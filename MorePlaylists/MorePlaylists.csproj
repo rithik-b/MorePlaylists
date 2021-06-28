@@ -141,11 +141,10 @@
     <Compile Include="Installers\MorePlaylistsMenuInstaller.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Configuration\PluginConfig.cs" />
-    <Compile Include="MorePlaylistsController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Entries\Base64Entry.cs" />
     <Compile Include="Entries\GenericEntry.cs" />
-    <Compile Include="Entries\BSaberEntry.cs" />
+    <Compile Include="Entries\BeastSaberEntry.cs" />
     <Compile Include="Entries\HitbloqEntry.cs" />
     <Compile Include="Entries\IGenericEntry.cs" />
     <Compile Include="Entries\ImageFileEntry.cs" />

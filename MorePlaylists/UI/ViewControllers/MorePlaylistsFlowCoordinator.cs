@@ -3,7 +3,6 @@ using Zenject;
 using BeatSaberMarkupLanguage;
 using System;
 using UnityEngine;
-using UnityEngine.UI;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
 using IPA.Utilities;
@@ -51,9 +50,8 @@ namespace MorePlaylists.UI
             morePlaylistsListViewController.DidClickSource += MorePlaylistsListViewController_DidClickSource;
             morePlaylistsListViewController.DidClickSearch += MorePlaylistsListViewController_DidClickSearch;
             morePlaylistsDetailViewController.DidPressDownload += MorePlaylistsDetailViewController_DidPressDownload;
-            morePlaylistsDetailViewController.DidGoToPlaylist += MorePlaylistsDetailViewController_DidGoToPlaylist;
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem += MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
-            MorePlaylistsDownloadQueueViewController.DidFillQueue += MorePlaylistsDownloadQueueViewController_DidFillQueue;
+            morePlaylistsDownloadQueueViewController.DidFillQueue += MorePlaylistsDownloadQueueViewController_DidFillQueue;
         }
 
         public void Dispose()
@@ -63,9 +61,8 @@ namespace MorePlaylists.UI
             morePlaylistsListViewController.DidClickSource -= MorePlaylistsListViewController_DidClickSource;
             morePlaylistsListViewController.DidClickSearch -= MorePlaylistsListViewController_DidClickSearch;
             morePlaylistsDetailViewController.DidPressDownload -= MorePlaylistsDetailViewController_DidPressDownload;
-            morePlaylistsDetailViewController.DidGoToPlaylist -= MorePlaylistsDetailViewController_DidGoToPlaylist;
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem -= MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
-            MorePlaylistsDownloadQueueViewController.DidFillQueue -= MorePlaylistsDownloadQueueViewController_DidFillQueue;
+            morePlaylistsDownloadQueueViewController.DidFillQueue -= MorePlaylistsDownloadQueueViewController_DidFillQueue;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -112,22 +109,13 @@ namespace MorePlaylists.UI
             morePlaylistsDownloadQueueViewController.EnqueuePlaylist(playlistEntry, downloadSongs);
         }
 
-        private void MorePlaylistsDetailViewController_DidGoToPlaylist(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
-        {
-            mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
-            mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
-            levelCategorySegmentedControl.SelectCellWithNumber(2);
-            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 2);
-            levelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(playlist);
-        }
-
         private void MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem(DownloadQueueItem item)
         {
             if (item.playlistEntry.DownloadState == DownloadState.Error)
             {
                 popupModalsController.ShowOkModal(morePlaylistsListViewController.transform, "An error occured while downloading, please try again later", null);
             }
-            else
+            else if(item.playlistEntry.DownloadState == DownloadState.Downloaded)
             {
                 morePlaylistsListViewController.SetEntryAsOwned(item.playlistEntry);
             }
@@ -140,6 +128,8 @@ namespace MorePlaylists.UI
         }
 
         private void DetailViewPushed() => morePlaylistsDetailViewController.transform.localPosition = new Vector3(45, 0, 0);
+
+        #region Back Button Pressed
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
@@ -162,6 +152,8 @@ namespace MorePlaylists.UI
             SongCore.Loader.Instance.RefreshSongs(false);
             mainFlowCoordinator.DismissFlowCoordinator(this);
         }
+
+        #endregion
     }
 
     public class MorePlaylistsNavigationController : NavigationController

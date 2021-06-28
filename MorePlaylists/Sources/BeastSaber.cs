@@ -14,7 +14,7 @@ namespace MorePlaylists.Sources
 {
     internal class BeastSaber : ISource, IInitializable
     {
-        private List<BSaberEntry> _endpointResult = new List<BSaberEntry>();
+        private List<BeastSaberEntry> _endpointResult = new List<BeastSaberEntry>();
         private Sprite _logo;
 
         public string Website => "https://bsaber.com/";
@@ -33,7 +33,7 @@ namespace MorePlaylists.Sources
                 try
                 {
                     byte[] response = await DownloaderUtils.instance.DownloadFileToBytesAsync(Website + Endpoint, token);
-                    _endpointResult = JsonConvert.DeserializeObject<List<BSaberEntry>>(Encoding.UTF8.GetString(response));
+                    _endpointResult = JsonConvert.DeserializeObject<List<BeastSaberEntry>>(Encoding.UTF8.GetString(response));
                 }
                 catch (Exception e)
                 {

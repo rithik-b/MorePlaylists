@@ -22,14 +22,7 @@ namespace MorePlaylists.UI
         [UIComponent("text-page")]
         private readonly TextPageScrollView descriptionTextPage;
 
-        [UIValue("playlist-name")]
-        public string PlaylistName => selectedPlaylistEntry == null || selectedPlaylistEntry.Title == null ? " " : selectedPlaylistEntry.Title;
-
-        [UIValue("playlist-author")]
-        public string PlaylistAuthor => selectedPlaylistEntry == null || selectedPlaylistEntry.Author == null ? " " : selectedPlaylistEntry.Author;
-
-        [UIValue("playlist-description")]
-        private string PlaylistDescription => selectedPlaylistEntry == null || selectedPlaylistEntry.Description == null ? "" : selectedPlaylistEntry.Description;
+        #region Actions
 
         [UIAction("#post-parse")]
         private void PostParse()
@@ -62,6 +55,8 @@ namespace MorePlaylists.UI
             }
         }
 
+        #endregion
+
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
@@ -82,9 +77,21 @@ namespace MorePlaylists.UI
 
         internal void OnPlaylistDownloaded()
         {
+            NotifyPropertyChanged(nameof(DownloadInteractable));
             NotifyPropertyChanged(nameof(DownloadActive));
             NotifyPropertyChanged(nameof(GoToActive));
         }
+
+        #region Values
+
+        [UIValue("playlist-name")]
+        public string PlaylistName => selectedPlaylistEntry == null || selectedPlaylistEntry.Title == null ? " " : selectedPlaylistEntry.Title;
+
+        [UIValue("playlist-author")]
+        public string PlaylistAuthor => selectedPlaylistEntry == null || selectedPlaylistEntry.Author == null ? " " : selectedPlaylistEntry.Author;
+
+        [UIValue("playlist-description")]
+        private string PlaylistDescription => selectedPlaylistEntry == null || selectedPlaylistEntry.Description == null ? "" : selectedPlaylistEntry.Description;
 
         [UIValue("download-interactable")]
         public bool DownloadInteractable => selectedPlaylistEntry != null && !selectedPlaylistEntry.DownloadBlocked;
@@ -94,5 +101,7 @@ namespace MorePlaylists.UI
 
         [UIValue("go-to-active")]
         public bool GoToActive => selectedPlaylistEntry != null && selectedPlaylistEntry.LocalPlaylist != null;
+
+        #endregion
     }
 }

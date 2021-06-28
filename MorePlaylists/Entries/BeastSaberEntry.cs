@@ -2,7 +2,7 @@
 
 namespace MorePlaylists.Entries
 {
-    public class BSaberEntry : Base64Entry
+    public class BeastSaberEntry : Base64Entry
     {
         [JsonProperty("playlistTitle")]
         public override string Title { get; protected set; }

@@ -34,7 +34,6 @@ namespace MorePlaylists.UI
         internal event Action DidClickSource;
         internal event Action DidClickSearch;
 
-
         [UIComponent("list")]
         private CustomListTableData customListTableData;
 
@@ -57,8 +56,11 @@ namespace MorePlaylists.UI
             if (!firstActivation)
             {
                 ShowPlaylists();
+                RefreshInteractable = true;
             }
         }
+
+        #region Actions
 
         [UIAction("#post-parse")]
         private void PostParse()
@@ -101,6 +103,8 @@ namespace MorePlaylists.UI
         [UIAction("search-click")]
         private void SearchClick() => DidClickSearch?.Invoke();
 
+        #endregion
+
         internal async void Search(string query)
         {
             await listUpdateSemaphore.WaitAsync();
@@ -131,12 +135,6 @@ namespace MorePlaylists.UI
             listUpdateSemaphore.Release();
         }
 
-        internal void ShowPlaylistsForSource(ISource source)
-        {
-            currentSource = source;
-            ShowPlaylists(false);
-        }
-
         internal void SetEntryAsOwned(IGenericEntry playlistEntry)
         {
             int index = currentPlaylists.IndexOf(playlistEntry);
@@ -150,6 +148,14 @@ namespace MorePlaylists.UI
         internal void DisableRefresh(bool refreshDisabled)
         {
             RefreshInteractable = !refreshDisabled;
+        }
+
+        #region Show Playlists
+
+        internal void ShowPlaylistsForSource(ISource source)
+        {
+            currentSource = source;
+            ShowPlaylists(false);
         }
 
         private async void ShowPlaylists(bool refreshRequested = false)
@@ -210,6 +216,8 @@ namespace MorePlaylists.UI
                 customListTableData.data.Add(new CustomCellInfo(playlistEntry.Title, playlistEntry.Author, playlistEntry.Sprite));
             }
         }
+
+        #endregion
 
         private void SetLoading(bool value, double progress = 0, string details = "")
         {
