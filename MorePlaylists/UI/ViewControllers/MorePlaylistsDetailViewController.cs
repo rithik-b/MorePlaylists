@@ -1,12 +1,10 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
-using BeatSaberMarkupLanguage;
 using HMUI;
 using MorePlaylists.Entries;
 using System;
 using System.ComponentModel;
 using UnityEngine;
-using Zenject;
 
 namespace MorePlaylists.UI
 {

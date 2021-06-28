@@ -53,6 +53,7 @@ namespace MorePlaylists.UI
             morePlaylistsDetailViewController.DidPressDownload += MorePlaylistsDetailViewController_DidPressDownload;
             morePlaylistsDetailViewController.DidGoToPlaylist += MorePlaylistsDetailViewController_DidGoToPlaylist;
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem += MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
+            MorePlaylistsDownloadQueueViewController.DidFillQueue += MorePlaylistsDownloadQueueViewController_DidFillQueue;
         }
 
         public void Dispose()
@@ -64,6 +65,7 @@ namespace MorePlaylists.UI
             morePlaylistsDetailViewController.DidPressDownload -= MorePlaylistsDetailViewController_DidPressDownload;
             morePlaylistsDetailViewController.DidGoToPlaylist -= MorePlaylistsDetailViewController_DidGoToPlaylist;
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem -= MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
+            MorePlaylistsDownloadQueueViewController.DidFillQueue -= MorePlaylistsDownloadQueueViewController_DidFillQueue;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -130,6 +132,11 @@ namespace MorePlaylists.UI
                 morePlaylistsListViewController.SetEntryAsOwned(item.playlistEntry);
             }
             morePlaylistsDetailViewController.OnPlaylistDownloaded();
+        }
+
+        private void MorePlaylistsDownloadQueueViewController_DidFillQueue(bool filled)
+        {
+            morePlaylistsListViewController.DisableRefresh(filled);
         }
 
         private void DetailViewPushed() => morePlaylistsDetailViewController.transform.localPosition = new Vector3(45, 0, 0);

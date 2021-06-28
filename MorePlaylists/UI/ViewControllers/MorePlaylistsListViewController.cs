@@ -19,17 +19,21 @@ namespace MorePlaylists.UI
 {
     public class MorePlaylistsListViewController : BSMLResourceViewController, INotifyPropertyChanged
     {
+        private StandardLevelDetailViewController standardLevelDetailViewController;
         private LoadingControl loadingSpinner;
         private CancellationTokenSource tokenSource;
-        private static SemaphoreSlim listUpdateSemaphore = new SemaphoreSlim(1, 1);
-        private static SemaphoreSlim imageLoadSemaphore = new SemaphoreSlim(1, 1);
         private ISource currentSource;
         private List<GenericEntry> currentPlaylists;
+        private bool _refreshInteractable = true;
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsListView.bsml";
+
+        private static SemaphoreSlim listUpdateSemaphore = new SemaphoreSlim(1, 1);
+        private static SemaphoreSlim imageLoadSemaphore = new SemaphoreSlim(1, 1);
 
         internal event Action<GenericEntry> DidSelectPlaylist;
         internal event Action DidClickSource;
         internal event Action DidClickSearch;
+
 
         [UIComponent("list")]
         private CustomListTableData customListTableData;
@@ -41,9 +45,10 @@ namespace MorePlaylists.UI
         internal BSMLParserParams parserParams;
 
         [Inject]
-        public void Construct(List<ISource> sources)
+        public void Construct(List<ISource> sources, StandardLevelDetailViewController standardLevelDetailViewController)
         {
             currentSource = sources.FirstOrDefault();
+            this.standardLevelDetailViewController = standardLevelDetailViewController;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -58,6 +63,8 @@ namespace MorePlaylists.UI
         [UIAction("#post-parse")]
         private void PostParse()
         {
+            loadingSpinner = GameObject.Instantiate(Utils.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
+            Destroy(loadingSpinner.GetComponent<Touchable>());
             ShowPlaylists();
         }
 
@@ -140,6 +147,11 @@ namespace MorePlaylists.UI
             }
         }
 
+        internal void DisableRefresh(bool refreshDisabled)
+        {
+            RefreshInteractable = !refreshDisabled;
+        }
+
         private async void ShowPlaylists(bool refreshRequested = false)
         {
             await listUpdateSemaphore.WaitAsync();
@@ -201,11 +213,6 @@ namespace MorePlaylists.UI
 
         private void SetLoading(bool value, double progress = 0, string details = "")
         {
-            if (loadingSpinner == null)
-            {
-                loadingSpinner = GameObject.Instantiate(Resources.FindObjectsOfTypeAll<LoadingControl>().First(), loadingModal);
-                Destroy(loadingSpinner.GetComponent<Touchable>());
-            }
             if (value)
             {
                 parserParams.EmitEvent("open-loading-modal");
@@ -214,6 +221,17 @@ namespace MorePlaylists.UI
             else
             {
                 parserParams.EmitEvent("close-loading-modal");
+            }
+        }
+
+        [UIValue("refresh-interactable")]
+        private bool RefreshInteractable
+        {
+            get => _refreshInteractable;
+            set
+            {
+                _refreshInteractable = value;
+                NotifyPropertyChanged(nameof(RefreshInteractable));
             }
         }
     }

@@ -6,15 +6,18 @@ using BeatSaberPlaylistsLib.Legacy;
 using BeatSaberPlaylistsLib.Types;
 using HMUI;
 using MorePlaylists.Entries;
+using MorePlaylists.Utilities;
 using SongDetailsCache;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
+using Zenject;
 
 namespace MorePlaylists.UI
 {
     public class MorePlaylistsSongListViewController : BSMLResourceViewController
     {
+        private StandardLevelDetailViewController standardLevelDetailViewController;
         private LoadingControl loadingSpinner;
         private static SemaphoreSlim songLoadSemaphore = new SemaphoreSlim(1, 1);
         private IGenericEntry playlistEntry;
@@ -28,6 +31,12 @@ namespace MorePlaylists.UI
 
         [UIParams]
         internal BSMLParserParams parserParams;
+
+        [Inject]
+        public void Construct(StandardLevelDetailViewController standardLevelDetailViewController)
+        {
+            this.standardLevelDetailViewController = standardLevelDetailViewController;
+        }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -77,6 +86,13 @@ namespace MorePlaylists.UI
 
         internal void AbortLoading() => SetLoading(false);
 
+        [UIAction("#post-parse")]
+        private void PostParse()
+        {
+            loadingSpinner = GameObject.Instantiate(Utils.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
+            Destroy(loadingSpinner.GetComponent<Touchable>());
+        }
+
         [UIAction("list-select")]
         private void Select(TableView _, int __)
         {
@@ -108,11 +124,6 @@ namespace MorePlaylists.UI
 
         private void SetLoading(bool value, double progress = 0, string details = "")
         {
-            if (loadingSpinner == null)
-            {
-                loadingSpinner = GameObject.Instantiate(Resources.FindObjectsOfTypeAll<LoadingControl>().First(), loadingModal);
-                Destroy(loadingSpinner.GetComponent<Touchable>());
-            }
             if (value)
             {
                 parserParams.EmitEvent("open-loading-modal");

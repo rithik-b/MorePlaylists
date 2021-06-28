@@ -21,6 +21,7 @@ namespace MorePlaylists.UI
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDownloadQueueView.bsml";
         internal static Action<DownloadQueueItem> DidAbortDownload;
         internal static Action<DownloadQueueItem> DidFinishDownloadingItem;
+        internal static Action<bool> DidFillQueue;
 
         [UIValue("download-queue")]
         internal List<object> queueItems = new List<object>();
@@ -53,7 +54,10 @@ namespace MorePlaylists.UI
             {
             }
             customListTableData?.tableView?.ReloadData();
-            UpdateDownloadingState(queuedPlaylist);
+            if (customListTableData?.data?.Count == 1)
+            {
+                DidFillQueue?.Invoke(true);
+            }
         }
 
         internal void UpdateDownloadingState(DownloadQueueItem item)
@@ -62,6 +66,10 @@ namespace MorePlaylists.UI
             {
                 customListTableData?.data?.Remove(downloaded);
                 customListTableData?.tableView?.ReloadData();
+            }
+            if (customListTableData?.data?.Count == 0)
+            {
+                DidFillQueue?.Invoke(false);
             }
         }
 
@@ -72,6 +80,10 @@ namespace MorePlaylists.UI
                 queueItems.Remove(download);
             }
             customListTableData?.tableView?.ReloadData();
+            if (customListTableData?.data?.Count == 0)
+            {
+                DidFillQueue?.Invoke(false);
+            }
         }
     }
 
@@ -177,7 +189,6 @@ namespace MorePlaylists.UI
                             progress.Report(1);
                         }
                         playlistEntry.DownloadState = DownloadState.Downloaded;
-                        Plugin.Log.Debug(playlistEntry.DownloadState.ToString());
                     }
                 }
                 catch (Exception e)
