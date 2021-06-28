@@ -46,10 +46,14 @@ namespace MorePlaylists.UI
         public void Initialize()
         {
             sourceModalController.DidSelectSource += SourceModalController_DidSelectSource;
+
             morePlaylistsListViewController.DidSelectPlaylist += MorePlaylistsListViewController_DidSelectPlaylist;
             morePlaylistsListViewController.DidClickSource += MorePlaylistsListViewController_DidClickSource;
             morePlaylistsListViewController.DidClickSearch += MorePlaylistsListViewController_DidClickSearch;
+
             morePlaylistsDetailViewController.DidPressDownload += MorePlaylistsDetailViewController_DidPressDownload;
+            morePlaylistsDetailViewController.DidGoToPlaylist += MorePlaylistsDetailViewController_DidGoToPlaylist;
+
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem += MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
             morePlaylistsDownloadQueueViewController.DidFillQueue += MorePlaylistsDownloadQueueViewController_DidFillQueue;
         }
@@ -57,10 +61,14 @@ namespace MorePlaylists.UI
         public void Dispose()
         {
             sourceModalController.DidSelectSource -= SourceModalController_DidSelectSource;
+
             morePlaylistsListViewController.DidSelectPlaylist -= MorePlaylistsListViewController_DidSelectPlaylist;
             morePlaylistsListViewController.DidClickSource -= MorePlaylistsListViewController_DidClickSource;
             morePlaylistsListViewController.DidClickSearch -= MorePlaylistsListViewController_DidClickSearch;
+
             morePlaylistsDetailViewController.DidPressDownload -= MorePlaylistsDetailViewController_DidPressDownload;
+            morePlaylistsDetailViewController.DidGoToPlaylist -= MorePlaylistsDetailViewController_DidGoToPlaylist;
+
             MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem -= MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
             morePlaylistsDownloadQueueViewController.DidFillQueue -= MorePlaylistsDownloadQueueViewController_DidFillQueue;
         }
@@ -109,6 +117,41 @@ namespace MorePlaylists.UI
             morePlaylistsDownloadQueueViewController.EnqueuePlaylist(playlistEntry, downloadSongs);
         }
 
+        #region Go To Playlist
+
+        private void MorePlaylistsDetailViewController_DidGoToPlaylist(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
+        {
+            if (morePlaylistsDownloadQueueViewController.queueItems.Count != 0)
+            {
+                popupModalsController.ShowYesNoModal(morePlaylistsListViewController.transform, "There are still items in the download queue. Are you sure you want to cancel and exit?", () => GoToPlaylistAndClear(playlist));
+                return;
+            }
+
+            morePlaylistsListViewController.AbortLoading();
+            morePlaylistsSongListViewController.AbortLoading();
+            mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
+            mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
+            levelCategorySegmentedControl.SelectCellWithNumber(2);
+            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 2);
+            levelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(playlist);
+        }
+
+        private void GoToPlaylistAndClear(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
+        {
+            morePlaylistsListViewController.AbortLoading();
+            morePlaylistsSongListViewController.AbortLoading();
+            morePlaylistsDownloadQueueViewController.queueItems.ForEach(x => (x as DownloadQueueItem).tokenSource.Cancel());
+            morePlaylistsDownloadQueueViewController.queueItems.Clear();
+
+            mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
+            mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
+            levelCategorySegmentedControl.SelectCellWithNumber(2);
+            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 2);
+            levelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(playlist);
+        }
+
+        #endregion
+
         private void MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem(DownloadQueueItem item)
         {
             if (item.playlistEntry.DownloadState == DownloadState.Error)
@@ -149,7 +192,6 @@ namespace MorePlaylists.UI
             morePlaylistsSongListViewController.AbortLoading();
             morePlaylistsDownloadQueueViewController.queueItems.ForEach(x => (x as DownloadQueueItem).tokenSource.Cancel());
             morePlaylistsDownloadQueueViewController.queueItems.Clear();
-            SongCore.Loader.Instance.RefreshSongs(false);
             mainFlowCoordinator.DismissFlowCoordinator(this);
         }
 
