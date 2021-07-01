@@ -2,6 +2,7 @@
 using Zenject;
 using BeatSaberMarkupLanguage;
 using System;
+using System.Linq;
 using UnityEngine;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
@@ -140,7 +141,7 @@ namespace MorePlaylists.UI
         {
             morePlaylistsListViewController.AbortLoading();
             morePlaylistsSongListViewController.AbortLoading();
-            morePlaylistsDownloadQueueViewController.queueItems.ForEach(x => (x as DownloadQueueItem).tokenSource.Cancel());
+            morePlaylistsDownloadQueueViewController.queueItems.OfType<DownloadQueueItem>().ToList().ForEach(x => x.tokenSource.Cancel());
             morePlaylistsDownloadQueueViewController.queueItems.Clear();
 
             mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
@@ -190,7 +191,7 @@ namespace MorePlaylists.UI
         {
             morePlaylistsListViewController.AbortLoading();
             morePlaylistsSongListViewController.AbortLoading();
-            morePlaylistsDownloadQueueViewController.queueItems.ForEach(x => (x as DownloadQueueItem).tokenSource.Cancel());
+            morePlaylistsDownloadQueueViewController.queueItems.OfType<DownloadQueueItem>().ToList().ForEach(x => x.tokenSource.Cancel());
             morePlaylistsDownloadQueueViewController.queueItems.Clear();
             mainFlowCoordinator.DismissFlowCoordinator(this);
         }

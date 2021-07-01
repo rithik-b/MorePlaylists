@@ -50,11 +50,8 @@ namespace MorePlaylists.UI
         {
             DownloadQueueItem queuedPlaylist = new DownloadQueueItem(playlistToDownload, downloadSongs);
             queueItems.Add(queuedPlaylist);
-            if (queueItems.Count == 3)
-            {
-            }
-            customListTableData?.tableView?.ReloadData();
-            if (customListTableData?.data?.Count == 1)
+            customListTableData.tableView.ReloadData();
+            if (customListTableData.data.Count == 1)
             {
                 DidFillQueue?.Invoke(true);
             }
@@ -62,10 +59,10 @@ namespace MorePlaylists.UI
 
         internal void UpdateDownloadingState(DownloadQueueItem item)
         {
-            foreach (DownloadQueueItem downloaded in queueItems.Where(x => (x as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Downloaded || (x as DownloadQueueItem).playlistEntry.DownloadState == DownloadState.Error).ToArray())
+            foreach (DownloadQueueItem downloaded in queueItems.OfType<DownloadQueueItem>().Where(x => x.playlistEntry.DownloadState == DownloadState.Downloaded || x.playlistEntry.DownloadState == DownloadState.Error).ToArray())
             {
-                customListTableData?.data?.Remove(downloaded);
-                customListTableData?.tableView?.ReloadData();
+                customListTableData.data.Remove(downloaded);
+                customListTableData.tableView.ReloadData();
             }
             if (customListTableData?.data?.Count == 0)
             {
@@ -79,8 +76,8 @@ namespace MorePlaylists.UI
             {
                 queueItems.Remove(download);
             }
-            customListTableData?.tableView?.ReloadData();
-            if (customListTableData?.data?.Count == 0)
+            customListTableData.tableView.ReloadData();
+            if (customListTableData.data.Count == 0)
             {
                 DidFillQueue?.Invoke(false);
             }
@@ -214,26 +211,36 @@ namespace MorePlaylists.UI
             // Song downloaded guarded by semaphore so songs cannot be duplicate downloaded
             await downloadSongsSemaphore.WaitAsync();
 
-            List<IPlaylistSong> missingSongs = playlistEntry.RemotePlaylist.Where(s => s.PreviewBeatmapLevel == null).Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
-            for (int i = 0; i < missingSongs.Count; i++)
+            try
             {
-                if (!string.IsNullOrEmpty(missingSongs[i].Hash))
+                List<IPlaylistSong> missingSongs = playlistEntry.RemotePlaylist.Where(s => s.PreviewBeatmapLevel == null).Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
+                for (int i = 0; i < missingSongs.Count; i++)
                 {
-                    await DownloaderUtils.instance.BeatmapDownloadByHash(missingSongs[i].Hash, tokenSource.Token);
-                }
-                else if (!string.IsNullOrEmpty(missingSongs[i].Key))
-                {
-                    await DownloaderUtils.instance.BeatmapDownloadByKey(missingSongs[i].Key.ToLower(), tokenSource.Token);
-                }
+                    if (!string.IsNullOrEmpty(missingSongs[i].Hash))
+                    {
+                        await DownloaderUtils.instance.BeatmapDownloadByHash(missingSongs[i].Hash, tokenSource.Token);
+                    }
+                    else if (!string.IsNullOrEmpty(missingSongs[i].Key))
+                    {
+                        await DownloaderUtils.instance.BeatmapDownloadByKey(missingSongs[i].Key.ToLower(), tokenSource.Token);
+                    }
 
-                // Update progress
-                if (downloadProgress is IProgress<float> progress)
-                {
-                    progress.Report((float)(i + 1) / missingSongs.Count);
+                    // Update progress
+                    if (downloadProgress is IProgress<float> progress)
+                    {
+                        progress.Report((float)(i + 1) / missingSongs.Count);
+                    }
                 }
             }
-            SongCore.Loader.OnLevelPacksRefreshed += Loader_OnLevelPacksRefreshed;
-            SongCore.Loader.Instance.RefreshSongs(false);
+            catch (Exception e)
+            {
+                Plugin.Log.Critical("An exception occurred while downloading. Exception: " + e.Message);
+            }
+            finally
+            {
+                SongCore.Loader.OnLevelPacksRefreshed += Loader_OnLevelPacksRefreshed;
+                SongCore.Loader.Instance.RefreshSongs(false);
+            }
 
             // If cancelled, restore to DownloadedPlaylist state
             if (tokenSource.IsCancellationRequested)

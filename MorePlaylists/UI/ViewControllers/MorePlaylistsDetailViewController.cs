@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsDetailViewController : BSMLResourceViewController, INotifyPropertyChanged
+    public class MorePlaylistsDetailViewController : BSMLResourceViewController
     {
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml";
         private IGenericEntry selectedPlaylistEntry;
@@ -62,16 +62,16 @@ namespace MorePlaylists.UI
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
         }
 
-        internal void ShowDetail(IGenericEntry selectedPlaylist)
+        internal void ShowDetail(IGenericEntry selectedPlaylistEntry)
         {
-            this.selectedPlaylistEntry = selectedPlaylist;
+            this.selectedPlaylistEntry = selectedPlaylistEntry;
             NotifyPropertyChanged(nameof(DownloadInteractable));
             NotifyPropertyChanged(nameof(DownloadActive));
             NotifyPropertyChanged(nameof(GoToActive));
             NotifyPropertyChanged(nameof(PlaylistName));
             NotifyPropertyChanged(nameof(PlaylistAuthor));
             NotifyPropertyChanged(nameof(PlaylistDescription));
-            playlistCoverView.sprite = selectedPlaylist.Sprite;
+            playlistCoverView.sprite = selectedPlaylistEntry.Sprite;
             descriptionTextPage.ScrollTo(0, true);
         }
 

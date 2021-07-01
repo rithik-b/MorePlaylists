@@ -17,7 +17,7 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsListViewController : BSMLResourceViewController, INotifyPropertyChanged
+    public class MorePlaylistsListViewController : BSMLResourceViewController
     {
         private StandardLevelDetailViewController standardLevelDetailViewController;
         private LoadingControl loadingSpinner;
@@ -114,8 +114,8 @@ namespace MorePlaylists.UI
             SetLoading(true);
 
             currentPlaylists = await currentSource.GetEndpointResultTask(false, tokenSource.Token);
-            currentPlaylists = currentPlaylists.Where(e => e.Title.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || 
-                e.Author.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || e.Description.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+            currentPlaylists = currentPlaylists.Where(p => p.Title.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || 
+                p.Author.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || p.Description.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
             SetLoading(true, 100);
 
             foreach (GenericEntry playlist in currentPlaylists)
@@ -179,9 +179,9 @@ namespace MorePlaylists.UI
                     if (!playlist.SpriteWasLoaded)
                     {
                         await imageLoadSemaphore.WaitAsync();
-                        _ = playlist.Sprite;
                         playlist.SpriteLoaded -= DeferredSpriteLoadPlaylist_SpriteLoaded;
                         playlist.SpriteLoaded += DeferredSpriteLoadPlaylist_SpriteLoaded;
+                        _ = playlist.Sprite;
                     }
                     else
                     {
@@ -207,14 +207,7 @@ namespace MorePlaylists.UI
 
         private void ShowPlaylist(GenericEntry playlistEntry)
         {
-            if (playlistEntry.DownloadBlocked)
-            {
-                customListTableData.data.Add(new CustomCellInfo($"<#7F7F7F>{playlistEntry.Title}", playlistEntry.Author, playlistEntry.Sprite));
-            }
-            else
-            {
-                customListTableData.data.Add(new CustomCellInfo(playlistEntry.Title, playlistEntry.Author, playlistEntry.Sprite));
-            }
+            customListTableData.data.Add(new CustomCellInfo(playlistEntry.DownloadBlocked ? $"<#7F7F7F>{playlistEntry.Title}" : playlistEntry.Title, playlistEntry.Author, playlistEntry.Sprite));
         }
 
         #endregion
