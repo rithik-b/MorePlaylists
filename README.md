@@ -6,6 +6,7 @@ Discover and download new playlists in Beat Saber.
 - View information about playlists such as the Name, Author, Description and Songs before you download
 - Download playlists with their songs
 - Downloads neatly organized in folders for PlaylistManager
+- Navigate directly to the playlist and start playing once the download has completed
 
 ## Download
 Download the latest version of the mod (v1.0.1) [here](https://github.com/rithik-b/MorePlaylists/releases/tag/1.0.1 "here").
