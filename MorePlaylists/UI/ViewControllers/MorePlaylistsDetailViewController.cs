@@ -27,9 +27,10 @@ namespace MorePlaylists.UI
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            (transform as RectTransform).sizeDelta = new Vector2(70, 0);
-            (transform as RectTransform).anchorMin = new Vector2(0.5f, 0);
-            (transform as RectTransform).anchorMax = new Vector2(0.5f, 1);
+            var rectTransform = (RectTransform) transform;
+            rectTransform.sizeDelta = new Vector2(70, 0);
+            rectTransform.anchorMin = new Vector2(0.5f, 0);
+            rectTransform.anchorMax = new Vector2(0.5f, 1);
         }
 
         [UIAction("download-click")]
