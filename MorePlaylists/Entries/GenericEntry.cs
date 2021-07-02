@@ -35,11 +35,14 @@ namespace MorePlaylists.Entries
                         SpriteLoadQueued = true;
                         QueueLoadSprite(this);
                     }
+
                     return BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite;
                 }
+
                 return _sprite;
             }
         }
+
         public bool SpriteWasLoaded { get; private set; }
         public event EventHandler SpriteLoaded;
         public event Action FinishedDownload;
@@ -48,6 +51,7 @@ namespace MorePlaylists.Entries
         public abstract string Author { get; protected set; }
         public abstract string Description { get; protected set; }
         public abstract string PlaylistURL { get; protected set; }
+
         public BeatSaberPlaylistsLib.Types.IPlaylist RemotePlaylist
         {
             get
@@ -57,22 +61,18 @@ namespace MorePlaylists.Entries
                     DownloadState = DownloadState.Downloading;
                     DownloadPlaylist();
                 }
+
                 return _playlist;
             }
             private set
             {
                 _playlist = value;
-                if (value == null)
-                {
-                    DownloadState = DownloadState.None;
-                }
-                else
-                {
-                    DownloadState = DownloadState.DownloadedPlaylist;
-                }
+                DownloadState = value == null ? DownloadState.None : DownloadState.DownloadedPlaylist;
             }
         }
+
         public BeatSaberPlaylistsLib.Types.IPlaylist LocalPlaylist { get; set; }
+
         public DownloadState DownloadState
         {
             get => _downloadState;
@@ -85,7 +85,9 @@ namespace MorePlaylists.Entries
                 }
             }
         }
+
         public bool DownloadBlocked { get; set; }
+
         private async void DownloadPlaylist()
         {
             try
@@ -108,6 +110,7 @@ namespace MorePlaylists.Entries
         }
 
         public abstract Stream GetCoverStream();
+
         private static void QueueLoadSprite(GenericEntry spriteEntry)
         {
             SpriteQueue.Enqueue(() =>
@@ -129,6 +132,7 @@ namespace MorePlaylists.Entries
                             spriteEntry.SpriteWasLoaded = true;
                         }
                     }
+
                     spriteEntry.SpriteLoaded?.Invoke(spriteEntry, null);
                     spriteEntry.SpriteLoadQueued = false;
                 }
@@ -154,16 +158,19 @@ namespace MorePlaylists.Entries
                     yield break;
                 CoroutineRunning = true;
             }
+
             while (SpriteQueue.Count > 0)
             {
                 yield return LoadWait;
                 var loader = SpriteQueue.Dequeue();
                 loader?.Invoke();
             }
+
             CoroutineRunning = false;
             if (SpriteQueue.Count > 0)
                 SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
         }
     }
+
     public enum DownloadState { None, Downloading, DownloadedPlaylist, Downloaded, Error };
 }

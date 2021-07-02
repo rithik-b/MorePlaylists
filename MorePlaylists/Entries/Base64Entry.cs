@@ -10,17 +10,16 @@ namespace MorePlaylists.Entries
         {
             get
             {
-                if (CoverData == null)
-                    return string.Empty;
-                return Utils.ByteArrayToBase64(CoverData);
+                return CoverData == null ? string.Empty : Utils.ByteArrayToBase64(CoverData);
             }
             set
             {
-                if (value == null || value.Length == 0)
+                if (string.IsNullOrEmpty(value))
                 {
                     CoverData = Array.Empty<byte>();
                     return;
                 }
+
                 try
                 {
                     CoverData = Utils.Base64ToByteArray(value);
@@ -36,10 +35,7 @@ namespace MorePlaylists.Entries
 
         public override Stream GetCoverStream()
         {
-            if (CoverData != null)
-                return new MemoryStream(CoverData);
-            else
-                return new MemoryStream(Array.Empty<byte>());
+            return new MemoryStream(CoverData != null ? CoverData : Array.Empty<byte>());
         }
     }
 }
