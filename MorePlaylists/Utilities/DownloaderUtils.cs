@@ -57,10 +57,12 @@ namespace MorePlaylists.Utilities
                         await Task.Delay((int)timeRemaining);
                         continue;
                     }
-                    else if (!(e is TaskCanceledException))
+
+                    if (!(e is TaskCanceledException))
                     {
-                        Plugin.Log.Critical(string.Format("Failed to download Song {0}. Exception: {1}", key, e.ToString()));
+                        Plugin.Log.Critical($"Failed to download Song {key}. Exception: {e}");
                     }
+
                     songDownloaded = true;
                 }
             }
@@ -87,9 +89,10 @@ namespace MorePlaylists.Utilities
                         await Task.Delay((int)timeRemaining);
                         continue;
                     }
-                    else if (!(e is TaskCanceledException))
+
+                    if (!(e is TaskCanceledException))
                     {
-                        Plugin.Log.Critical(string.Format("Failed to download Song {0}. Exception: {1}", hash, e.ToString()));
+                        Plugin.Log.Critical($"Failed to download Song {hash}. Exception: {e}");
                     }
                     songDownloaded = true;
                 }
@@ -111,7 +114,7 @@ namespace MorePlaylists.Utilities
             catch (Exception e)
             {
                 if (!(e is TaskCanceledException))
-                    Plugin.Log.Critical(string.Format("Failed to download Song {0}", url));
+                    Plugin.Log.Critical($"Failed to download Song {url}");
             }
         }
 
@@ -121,15 +124,7 @@ namespace MorePlaylists.Utilities
             try
             {
                 ZipArchive archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
-                string basePath = "";
-                if (songInfo != null)
-                {
-                    basePath = songInfo.Key + " (" + songInfo.Metadata.SongName + " - " + songInfo.Metadata.LevelAuthorName + ")";
-                }
-                else
-                {
-                    basePath = songName;
-                }
+                var basePath = songInfo != null ? songInfo.Key + " (" + songInfo.Metadata.SongName + " - " + songInfo.Metadata.LevelAuthorName + ")" : songName;
                 basePath = string.Join("", basePath.Split(Path.GetInvalidFileNameChars().Concat(Path.GetInvalidPathChars()).ToArray()));
                 string path = Path.Combine(customSongsPath, basePath);
 
@@ -163,25 +158,19 @@ namespace MorePlaylists.Utilities
             zipStream.Close();
         }
 
-        public async Task<byte[]> DownloadFileToBytesAsync(string url, CancellationToken token)
+        public Task<byte[]> DownloadFileToBytesAsync(string url, CancellationToken token)
         {
             Uri uri = new Uri(url);
-            using (var webClient = new WebClient())
-            using (var registration = token.Register(() => webClient.CancelAsync()))
-            {
-                var data = await webClient.DownloadDataTaskAsync(uri);
-                return data;
-            }
+            using var webClient = new WebClient();
+            using var registration = token.Register(() => webClient.CancelAsync());
+            return webClient.DownloadDataTaskAsync(uri);
         }
 
-        public async Task<byte[]> DownloadFileToBytesAsync(string url)
+        public Task<byte[]> DownloadFileToBytesAsync(string url)
         {
             Uri uri = new Uri(url);
-            using (var webClient = new WebClient())
-            {
-                var data = await webClient.DownloadDataTaskAsync(uri);
-                return data;
-            }
+            using var webClient = new WebClient();
+            return webClient.DownloadDataTaskAsync(uri);
         }
     }
 }

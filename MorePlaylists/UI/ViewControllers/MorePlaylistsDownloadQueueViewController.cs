@@ -93,7 +93,7 @@ namespace MorePlaylists.UI
         private ImageView bgImage;
         private bool downloadSongs;
         private bool initialized;
-        private static SemaphoreSlim downloadSongsSemaphore = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim downloadSongsSemaphore = new SemaphoreSlim(1, 1);
 
         [UIComponent("playlist-cover")]
         private readonly ImageView playlistCoverView;
@@ -112,10 +112,6 @@ namespace MorePlaylists.UI
             playlistEntry.FinishedDownload -= PlaylistEntry_FinishedDownload;
             PlaylistLibUtils.DeletePlaylistIfExists(playlistEntry);
             MorePlaylistsDownloadQueueViewController.DidAbortDownload?.Invoke(this);
-        }
-
-        public DownloadQueueItem()
-        {
         }
 
         public DownloadQueueItem(IGenericEntry playlistEntry, bool downloadSongs)
@@ -270,6 +266,5 @@ namespace MorePlaylists.UI
             bgImage.color = color;
             bgImage.fillAmount = progressFloat;
         }
-
     }
 }

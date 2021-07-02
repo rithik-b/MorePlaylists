@@ -1,13 +1,15 @@
-﻿using IPA.Utilities;
-using System;
+﻿using System;
+using IPA.Utilities;
 
 namespace MorePlaylists.Utilities
 {
     internal class Utils
     {
-        public static readonly string Base64Prefix = "base64,";
+        private const string Base64Prefix = "base64,";
 
-        public static FieldAccessor<StandardLevelDetailViewController, LoadingControl>.Accessor LoadingControlAccessor = FieldAccessor<StandardLevelDetailViewController, LoadingControl>.GetAccessor("_loadingControl");
+        public static readonly FieldAccessor<StandardLevelDetailViewController, LoadingControl>.Accessor LoadingControlAccessor =
+            FieldAccessor<StandardLevelDetailViewController, LoadingControl>.GetAccessor("_loadingControl");
+
         public static string ByteArrayToBase64(byte[] byteArray)
         {
             if (byteArray == null || byteArray.Length == 0)
@@ -21,17 +23,14 @@ namespace MorePlaylists.Utilities
             {
                 return null;
             }
+
             int dataIndex = GetBase64DataStartIndex(base64Str);
-            if (dataIndex > 0)
-                return Convert.FromBase64String(base64Str.Substring(dataIndex));
-            else
-                return Convert.FromBase64String(base64Str);
+            return Convert.FromBase64String(dataIndex > 0 ? base64Str.Substring(dataIndex) : base64Str);
         }
 
         public static int GetBase64DataStartIndex(string base64Str)
         {
-            int tagIndex = Math.Max(0, base64Str.IndexOf(',') + 1);
-            return tagIndex;
+            return Math.Max(0, base64Str.IndexOf(',') + 1);
         }
     }
 }

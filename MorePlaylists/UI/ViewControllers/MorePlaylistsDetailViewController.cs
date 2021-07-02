@@ -3,7 +3,6 @@ using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
 using MorePlaylists.Entries;
 using System;
-using System.ComponentModel;
 using UnityEngine;
 
 namespace MorePlaylists.UI
@@ -57,11 +56,6 @@ namespace MorePlaylists.UI
         }
 
         #endregion
-
-        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
-        {
-            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-        }
 
         internal void ShowDetail(IGenericEntry selectedPlaylistEntry)
         {
