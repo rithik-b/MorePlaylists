@@ -5,6 +5,7 @@ on:
         branches: [ master ]
         paths:
             - 'MorePlaylists/**'
+            - '.github/workflows/**.yml'
 
 jobs:
     Build:
@@ -14,7 +15,7 @@ jobs:
             - name: Setup dotnet
               uses: actions/setup-dotnet@v1
               with:
-                  dotnet-version: 4.8.x
+                  dotnet-version: 5.0.x
             - name: GetStrippedRefs
               env:
                   FILES_URL: ${{ secrets.BSFILES_URL }}
@@ -27,8 +28,6 @@ jobs:
                   manifest: ${{github.workspace}}/MorePlaylists/manifest.json
             - name: Build
               id: Build
-              env:
-                  FrameworkPathOverride: /usr/lib/mono/4.7.2-api
               run: dotnet build --configuration Release
             - name: GitStatus
               run: git status
