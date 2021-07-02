@@ -5,6 +5,7 @@ on:
         branches: [ master ]
         paths:
             - 'MorePlaylists/**'
+            - '.github/workflows/**.yml'
 
 jobs:
     Build:
