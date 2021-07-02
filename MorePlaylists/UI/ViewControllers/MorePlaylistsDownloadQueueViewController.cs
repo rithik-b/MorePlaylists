@@ -99,10 +99,10 @@ namespace MorePlaylists.UI
         private readonly ImageView playlistCoverView;
 
         [UIValue("playlist-name")]
-        public string PlaylistName => playlistEntry == null || playlistEntry.Title == null ? " " : playlistEntry.Title;
+        public string PlaylistName => playlistEntry?.Title ?? " ";
 
         [UIValue("playlist-author")]
-        public string PlaylistAuthor => playlistEntry == null || playlistEntry.Author == null ? " " : playlistEntry.Author;
+        public string PlaylistAuthor => playlistEntry?.Author ?? " ";
 
         [UIAction("abort-clicked")]
         public void AbortDownload()
