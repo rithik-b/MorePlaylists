@@ -41,6 +41,7 @@ namespace MorePlaylists.Sources
                 }
                 catch (Exception e)
                 {
+                    Plugin.Log.Warn($"An error occurred while trying to fetch the HitBloq playlists\nException: {e}");
                 }
             }
             return _endpointResult.Cast<GenericEntry>().ToList();

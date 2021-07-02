@@ -132,7 +132,7 @@ namespace MorePlaylists.Entries
                     spriteEntry.SpriteLoaded?.Invoke(spriteEntry, null);
                     spriteEntry.SpriteLoadQueued = false;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     spriteEntry._sprite = BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite;
                     spriteEntry.SpriteWasLoaded = true;
