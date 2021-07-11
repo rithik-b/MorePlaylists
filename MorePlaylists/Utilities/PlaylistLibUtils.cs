@@ -14,12 +14,23 @@ namespace MorePlaylists.Utilities
 
             // Generate Name
             string playlistFolderPath = playlistManager.PlaylistPath;
-            string playlistFileName = string.Join("_", playlist.Title.Replace("/", "").Replace("\\", "").Replace(".", "").Replace(":", "").Replace("*", "").Replace("?", "")
-                .Replace("\"", "").Replace("<", "").Replace(">", "").Replace("|", "").Split());
+            string playlistFileName = string.Join("_", playlist.Title
+                .Replace("/", "")
+                .Replace("\\", "")
+                .Replace(".", "")
+                .Replace(":", "")
+                .Replace("*", "")
+                .Replace("?", "")
+                .Replace("\"", "")
+                .Replace("<", "")
+                .Replace(">", "")
+                .Replace("|", "")
+                .Split());
             if (string.IsNullOrEmpty(playlistFileName))
             {
                 playlistFileName = "playlist";
             }
+
             string extension = playlistManager.DefaultHandler?.DefaultExtension;
             string playlistPath = Path.Combine(playlistFolderPath, playlistFileName + "." + extension);
             string originalPlaylistPath = Path.Combine(playlistFolderPath, playlistFileName);
@@ -27,12 +38,14 @@ namespace MorePlaylists.Utilities
             while (File.Exists(playlistPath))
             {
                 dupNum++;
-                playlistPath = originalPlaylistPath + string.Format("({0}).{1}", dupNum, extension);
+                playlistPath = originalPlaylistPath + $"({dupNum}).{extension}";
             }
+
             if (dupNum != 0)
             {
-                playlistFileName += string.Format("({0})", dupNum);
+                playlistFileName += $"({dupNum})";
             }
+
             playlist.Filename = playlistFileName;
 
             playlistManager.StorePlaylist(playlist);
@@ -41,13 +54,15 @@ namespace MorePlaylists.Utilities
         internal static void DeletePlaylistIfExists(IGenericEntry playlistEntry)
         {
             BeatSaberPlaylistsLib.Types.IPlaylist playlist = playlistEntry.RemotePlaylist;
-            if (playlist != null)
+            if (playlist == null)
             {
-                BeatSaberPlaylistsLib.PlaylistManager playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(playlistEntry.GetType().Name.Replace("Entry", ""));
-                if (playlistManager.GetAllPlaylists(false).Contains(playlist))
-                {
-                    playlistManager.DeletePlaylist(playlist);
-                }
+                return;
+            }
+
+            BeatSaberPlaylistsLib.PlaylistManager playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(playlistEntry.GetType().Name.Replace("Entry", ""));
+            if (playlistManager.GetAllPlaylists(false).Contains(playlist))
+            {
+                playlistManager.DeletePlaylist(playlist);
             }
         }
 
@@ -57,12 +72,9 @@ namespace MorePlaylists.Utilities
             Dictionary<string, BeatSaberPlaylistsLib.Types.IPlaylist> syncURLs = new Dictionary<string, BeatSaberPlaylistsLib.Types.IPlaylist>();
             foreach (var playlist in playlists)
             {
-                if (playlist.TryGetCustomData("syncURL", out object url))
+                if (playlist.TryGetCustomData("syncURL", out object url) && url is string urlString)
                 {
-                    if (url is string urlString)
-                    {
-                        syncURLs.Add(urlString, playlist);
-                    }
+                    syncURLs.Add(urlString, playlist);
                 }
             }
 

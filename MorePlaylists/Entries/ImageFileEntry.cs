@@ -10,6 +10,7 @@ namespace MorePlaylists.Entries
         protected virtual string CoverURL { get; set; }
         protected byte[] imageData = null;
         public override Stream GetCoverStream() => new MemoryStream(imageData);
+
         internal async Task DownloadImage(CancellationToken token)
         {
             imageData = await DownloaderUtils.instance.DownloadFileToBytesAsync(CoverURL, token);

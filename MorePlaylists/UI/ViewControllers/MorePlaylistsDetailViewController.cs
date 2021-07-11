@@ -3,7 +3,6 @@ using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
 using MorePlaylists.Entries;
 using System;
-using System.ComponentModel;
 using UnityEngine;
 
 namespace MorePlaylists.UI
@@ -27,9 +26,10 @@ namespace MorePlaylists.UI
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            (transform as RectTransform).sizeDelta = new Vector2(70, 0);
-            (transform as RectTransform).anchorMin = new Vector2(0.5f, 0);
-            (transform as RectTransform).anchorMax = new Vector2(0.5f, 1);
+            var rectTransform = (RectTransform) transform;
+            rectTransform.sizeDelta = new Vector2(70, 0);
+            rectTransform.anchorMin = new Vector2(0.5f, 0);
+            rectTransform.anchorMax = new Vector2(0.5f, 1);
         }
 
         [UIAction("download-click")]
@@ -57,11 +57,6 @@ namespace MorePlaylists.UI
 
         #endregion
 
-        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
-        {
-            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-        }
-
         internal void ShowDetail(IGenericEntry selectedPlaylistEntry)
         {
             this.selectedPlaylistEntry = selectedPlaylistEntry;
@@ -85,22 +80,22 @@ namespace MorePlaylists.UI
         #region Values
 
         [UIValue("playlist-name")]
-        public string PlaylistName => selectedPlaylistEntry == null || selectedPlaylistEntry.Title == null ? " " : selectedPlaylistEntry.Title;
+        public string PlaylistName => selectedPlaylistEntry?.Title ?? " ";
 
         [UIValue("playlist-author")]
-        public string PlaylistAuthor => selectedPlaylistEntry == null || selectedPlaylistEntry.Author == null ? " " : selectedPlaylistEntry.Author;
+        public string PlaylistAuthor => selectedPlaylistEntry?.Author ?? " ";
 
         [UIValue("playlist-description")]
-        private string PlaylistDescription => selectedPlaylistEntry == null || selectedPlaylistEntry.Description == null ? "" : selectedPlaylistEntry.Description;
+        private string PlaylistDescription => selectedPlaylistEntry?.Description ?? "";
 
         [UIValue("download-interactable")]
-        public bool DownloadInteractable => selectedPlaylistEntry != null && !selectedPlaylistEntry.DownloadBlocked;
+        public bool DownloadInteractable => selectedPlaylistEntry is {DownloadBlocked: false};
 
         [UIValue("download-active")]
-        public bool DownloadActive => selectedPlaylistEntry != null && selectedPlaylistEntry.LocalPlaylist == null;
+        public bool DownloadActive => selectedPlaylistEntry is {LocalPlaylist: null};
 
         [UIValue("go-to-active")]
-        public bool GoToActive => selectedPlaylistEntry != null && selectedPlaylistEntry.LocalPlaylist != null;
+        public bool GoToActive => selectedPlaylistEntry is {LocalPlaylist: { }};
 
         #endregion
     }
