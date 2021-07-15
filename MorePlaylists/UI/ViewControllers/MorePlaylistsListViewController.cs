@@ -28,7 +28,6 @@ namespace MorePlaylists.UI
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsListView.bsml";
 
         private static SemaphoreSlim listUpdateSemaphore = new SemaphoreSlim(1, 1);
-        private static SemaphoreSlim imageLoadSemaphore = new SemaphoreSlim(1, 1);
 
         internal event Action<GenericEntry> DidSelectPlaylist;
         internal event Action DidClickSource;
@@ -178,7 +177,6 @@ namespace MorePlaylists.UI
                 {
                     if (!playlist.SpriteWasLoaded)
                     {
-                        await imageLoadSemaphore.WaitAsync();
                         playlist.SpriteLoaded -= DeferredSpriteLoadPlaylist_SpriteLoaded;
                         playlist.SpriteLoaded += DeferredSpriteLoadPlaylist_SpriteLoaded;
                         _ = playlist.Sprite;
@@ -201,7 +199,6 @@ namespace MorePlaylists.UI
                 ShowPlaylist(playlist);
                 customListTableData.tableView.ReloadData();
                 playlist.SpriteLoaded -= DeferredSpriteLoadPlaylist_SpriteLoaded;
-                imageLoadSemaphore.Release();
             }
         }
 
