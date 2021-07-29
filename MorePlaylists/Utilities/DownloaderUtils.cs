@@ -21,7 +21,7 @@ namespace MorePlaylists.Utilities
         public static void Init()
         {
             instance = new DownloaderUtils();
-            HttpOptions options = new HttpOptions(name: typeof(DownloaderUtils).Assembly.GetName().Name, version: typeof(DownloaderUtils).Assembly.GetName().Version);
+            HttpOptions options = new HttpOptions(name: nameof(MorePlaylists), version: typeof(DownloaderUtils).Assembly.GetName().Version);
             instance.beatSaverInstance = new BeatSaver(options);
         }
 

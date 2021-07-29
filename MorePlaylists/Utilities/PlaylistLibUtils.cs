@@ -74,7 +74,7 @@ namespace MorePlaylists.Utilities
             {
                 if (playlist.TryGetCustomData("syncURL", out object url) && url is string urlString)
                 {
-                    syncURLs.Add(urlString, playlist);
+                    syncURLs[urlString] = playlist;
                 }
             }
 
