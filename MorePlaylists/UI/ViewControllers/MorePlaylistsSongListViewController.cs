@@ -52,6 +52,8 @@ namespace MorePlaylists.UI
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             if (!firstActivation)
             {
+                SetLoading(false);
+                loadingModal.gameObject.SetActive(false);
                 ClearList();
             }
         }
@@ -200,7 +202,7 @@ namespace MorePlaylists.UI
 
         private void SetLoading(bool value, double progress = 0, string details = "Loading Songs")
         {
-            if (value)
+            if (value && isActiveAndEnabled)
             {
                 parserParams.EmitEvent("open-loading-modal");
                 loadingSpinner.ShowDownloadingProgress(details, (float)progress);

@@ -11,7 +11,6 @@ using System.Threading;
 using static BeatSaberMarkupLanguage.Components.CustomListTableData;
 using UnityEngine;
 using BeatSaberMarkupLanguage.Parser;
-using System.ComponentModel;
 using MorePlaylists.Sources;
 using Zenject;
 
@@ -211,7 +210,7 @@ namespace MorePlaylists.UI
 
         private void SetLoading(bool value, double progress = 0, string details = "")
         {
-            if (value)
+            if (value && isActiveAndEnabled)
             {
                 parserParams.EmitEvent("open-loading-modal");
                 loadingSpinner.ShowDownloadingProgress("Fetching More Playlists... " + details, (float)progress);
