@@ -8,19 +8,28 @@ using HMUI;
 using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
 using SongDetailsCache;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsSongListViewController : BSMLResourceViewController
+    public class MorePlaylistsSongListViewController : BSMLResourceViewController, IInitializable, IDisposable
     {
         private StandardLevelDetailViewController standardLevelDetailViewController;
         private LoadingControl loadingSpinner;
-        private static SemaphoreSlim songLoadSemaphore = new SemaphoreSlim(1, 1);
+        private HttpClient httpClient;
         private IGenericEntry playlistEntry;
+        private Dictionary<string, Sprite> spriteCache = new Dictionary<string, Sprite>();
+        private static CancellationTokenSource tokenSource;
+        private static SemaphoreSlim songLoadSemaphore = new SemaphoreSlim(1, 1);
+
         public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsSongListView.bsml";
 
         [UIComponent("list")]
@@ -47,6 +56,29 @@ namespace MorePlaylists.UI
             }
         }
 
+        public void Initialize()
+        {
+            httpClient = new HttpClient(new HttpClientHandler()
+            {
+                AutomaticDecompression = DecompressionMethods.GZip,
+                AllowAutoRedirect = false
+            })
+            {
+                Timeout = TimeSpan.FromSeconds(5)
+            };
+
+            httpClient.DefaultRequestHeaders.Add("User-Agent", nameof(MorePlaylists));
+            tokenSource = new CancellationTokenSource();
+        }
+
+        public void Dispose()
+        {
+            httpClient.CancelPendingRequests();
+            httpClient.Dispose();
+            tokenSource.Cancel();
+            tokenSource.Dispose();
+        }
+
         internal void SetCurrentPlaylist(IGenericEntry playlistEntry)
         {
             if (customListTableData == null)
@@ -54,7 +86,10 @@ namespace MorePlaylists.UI
                 return;
             }
 
-            SetLoading(true);
+            AbortLoading();
+            tokenSource.Dispose();
+            tokenSource = new CancellationTokenSource();
+            SetLoading(true, 0);
 
             if (this.playlistEntry != null)
             {
@@ -84,8 +119,6 @@ namespace MorePlaylists.UI
             customListTableData.tableView.ReloadData();
         }
 
-        internal void AbortLoading() => SetLoading(false);
-
         [UIAction("#post-parse")]
         private void PostParse()
         {
@@ -107,14 +140,21 @@ namespace MorePlaylists.UI
                 if (playlistEntry.RemotePlaylist is LegacyPlaylist playlist)
                 {
                     SongDetails songDetails = await SongDetails.Init();
-                    SetLoading(true, 100);
-                    foreach (LegacyPlaylistSong playlistSong in playlist.Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default))
+                    List<IPlaylistSong> playlistSongs = playlist.Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
+                    for (int i = 0; i < playlistSongs.Count; i++)
                     {
-                        if (songDetails.songs.FindByHash(playlistSong.Hash, out SongDetailsCache.Structs.Song song))
+                        if (songDetails.songs.FindByHash(playlistSongs[i].Hash, out SongDetailsCache.Structs.Song song))
                         {
-                            customListTableData.data.Add(new CustomListTableData.CustomCellInfo(song.songName, $"{song.songAuthorName} [{song.levelAuthorName}]"));
+                            Sprite sprite = await LoadSpriteAsync(song);
+                            customListTableData.data.Add(new CustomListTableData.CustomCellInfo(song.songName, $"{song.songAuthorName} [{song.levelAuthorName}]", sprite));
                         }
+                        SetLoading(true, (float)i / (float)playlistSongs.Count);
                     }
+                }
+
+                if (tokenSource.IsCancellationRequested)
+                {
+                    ClearList();
                 }
                 customListTableData.tableView.ReloadData();
             }
@@ -122,7 +162,45 @@ namespace MorePlaylists.UI
             SetLoading(false);
         }
 
-        private void SetLoading(bool value, double progress = 0, string details = "")
+        [UIAction("abort-click")]
+        internal void AbortLoading()
+        {
+            SetLoading(false);
+            tokenSource.Cancel();
+        }
+
+        private async Task<Sprite> LoadSpriteAsync(SongDetailsCache.Structs.Song song)
+        {
+            var path = song.coverURL;
+
+            if (spriteCache.TryGetValue(path, out Sprite sprite))
+                return sprite;
+
+            try
+            {
+                using (var resp = await httpClient.GetAsync(path, HttpCompletionOption.ResponseContentRead, tokenSource.Token))
+                {
+                    if (resp.StatusCode == HttpStatusCode.OK)
+                    {
+                        var imageBytes = await resp.Content.ReadAsByteArrayAsync();
+
+                        if (spriteCache.TryGetValue(path, out sprite))
+                            return sprite;
+
+                        sprite = BeatSaberMarkupLanguage.Utilities.LoadSpriteRaw(imageBytes);
+                        sprite.texture.wrapMode = TextureWrapMode.Clamp;
+                        spriteCache[path] = sprite;
+
+                        return sprite;
+                    }
+                }
+            }
+            catch { }
+
+            return SongCore.Loader.defaultCoverImage;
+        }
+
+        private void SetLoading(bool value, double progress = 0, string details = "Loading Songs")
         {
             if (value)
             {
