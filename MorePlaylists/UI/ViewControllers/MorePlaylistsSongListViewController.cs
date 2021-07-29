@@ -87,8 +87,6 @@ namespace MorePlaylists.UI
             }
 
             AbortLoading();
-            tokenSource.Dispose();
-            tokenSource = new CancellationTokenSource();
             SetLoading(true, 0);
 
             if (this.playlistEntry != null)
@@ -135,6 +133,11 @@ namespace MorePlaylists.UI
         private async void InitSongList()
         {
             await songLoadSemaphore.WaitAsync();
+            tokenSource.Dispose();
+            tokenSource = new CancellationTokenSource();
+            ClearList();
+            SetLoading(true, 0);
+
             if (customListTableData.data.Count == 0)
             {
                 if (playlistEntry.RemotePlaylist is LegacyPlaylist playlist)
@@ -150,11 +153,6 @@ namespace MorePlaylists.UI
                         }
                         SetLoading(true, (float)i / (float)playlistSongs.Count);
                     }
-                }
-
-                if (tokenSource.IsCancellationRequested)
-                {
-                    ClearList();
                 }
                 customListTableData.tableView.ReloadData();
             }
