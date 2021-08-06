@@ -38,7 +38,6 @@ namespace MorePlaylists
             Plugin.Log = logger;
             Plugin.Log?.Debug("MorePlaylists initialized.");
             zenjector.OnMenu<MorePlaylistsMenuInstaller>();
-            DownloaderUtils.Init();
         }
 
         #region BSIPA Config
@@ -62,6 +61,10 @@ namespace MorePlaylists
         [OnEnable]
         public void OnEnable()
         {
+            if (DownloaderUtils.instance == null)
+            {
+                DownloaderUtils.Init();
+            }
             //ApplyHarmonyPatches();
         }
 
