@@ -26,14 +26,14 @@ namespace MorePlaylists.Utilities
             instance.beatSaverInstance = new BeatSaver(options);
         }
 
-        private async Task BeatSaverBeatmapDownload(Beatmap song, BeatmapVersion version, CancellationToken token, IProgress<double> progress = null)
+        private async Task BeatSaverBeatmapDownload(Beatmap song, BeatmapVersion songversion, CancellationToken token, IProgress<double> progress = null)
         {
             string customSongsPath = CustomLevelPathHelper.customLevelsDirectoryPath;
             if (!Directory.Exists(customSongsPath))
             {
                 Directory.CreateDirectory(customSongsPath);
             }
-            var zip = await song.LatestVersion.DownloadZIP(token, progress).ConfigureAwait(false);
+            var zip = await songversion.DownloadZIP(token, progress).ConfigureAwait(false);
             await ExtractZipAsync(zip, customSongsPath, songInfo: song).ConfigureAwait(false);
         }
 
