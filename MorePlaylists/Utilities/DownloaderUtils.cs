@@ -26,7 +26,7 @@ namespace MorePlaylists.Utilities
             instance.beatSaverInstance = new BeatSaver(options);
         }
 
-        private async Task BeatSaverBeatmapDownload(Beatmap song, CancellationToken token, IProgress<double> progress = null)
+        private async Task BeatSaverBeatmapDownload(Beatmap song, BeatmapVersion version, CancellationToken token, IProgress<double> progress = null)
         {
             string customSongsPath = CustomLevelPathHelper.customLevelsDirectoryPath;
             if (!Directory.Exists(customSongsPath))
@@ -45,7 +45,8 @@ namespace MorePlaylists.Utilities
                 try
                 {
                     var song = await beatSaverInstance.Beatmap(key, token);
-                    await BeatSaverBeatmapDownload(song, token, progress);
+                    // A key is not enough to identify a specific version. So just get the latest one.
+                    await BeatSaverBeatmapDownload(song, song.LatestVersion, token, progress);
                     songDownloaded = true;
                 }
                 catch (Exception e)
@@ -68,7 +69,31 @@ namespace MorePlaylists.Utilities
                 try
                 {
                     var song = await beatSaverInstance.BeatmapByHash(hash, token);
-                    await BeatSaverBeatmapDownload(song, token, progress);
+                    if (song == null)
+                    {
+                        Plugin.Log.Critical(string.Format("Failed to download Song {0}. Unable to find a beatmap for that hash.", hash));
+                        return;
+                    }
+
+                    BeatmapVersion matchingVersion = null;
+                    foreach (BeatmapVersion version in song.Versions)
+                    {
+                        if (hash.ToLowerInvariant() == version.Hash.ToLowerInvariant())
+                        {
+                            matchingVersion = version;
+                        }
+                    }
+
+                    // Just download exact hash matches for now. Updating to a newer version of a song based on a hash should require some user interaction or option setting.
+                    // It would also require changing the playlist itself.
+                    if (matchingVersion != null)
+                    {
+                        await BeatSaverBeatmapDownload(song, matchingVersion, token, progress);
+                    }
+                    else
+                    {
+                        Plugin.Log.Critical(string.Format("Failed to download Song {0}. Unable to find a matching version for that hash.", hash));
+                    }
                     songDownloaded = true;
                 }
                 catch (Exception e)
