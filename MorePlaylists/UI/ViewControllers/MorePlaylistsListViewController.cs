@@ -63,8 +63,8 @@ namespace MorePlaylists.UI
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            loadingSpinner = GameObject.Instantiate(Utils.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
-            Destroy(loadingSpinner.GetComponent<Touchable>());
+            loadingSpinner = GameObject.Instantiate(Accessors.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
+            Destroy(loadingSpinner.GetComponent<Touchable>());;
             ShowPlaylists();
         }
 

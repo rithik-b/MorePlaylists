@@ -20,9 +20,13 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsSongListViewController : BSMLResourceViewController, IInitializable, IDisposable
+    [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsSongListView.bsml")]
+    [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsSongListView.bsml")]
+    public class MorePlaylistsSongListViewController : BSMLAutomaticViewController, IInitializable, IDisposable
     {
         private StandardLevelDetailViewController standardLevelDetailViewController;
+        private IVRPlatformHelper platformHelper;
+
         private LoadingControl loadingSpinner;
         private HttpClient httpClient;
         private IGenericEntry playlistEntry;
@@ -30,10 +34,11 @@ namespace MorePlaylists.UI
         private static CancellationTokenSource tokenSource;
         private static SemaphoreSlim songLoadSemaphore = new SemaphoreSlim(1, 1);
 
-        public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsSongListView.bsml";
-
         [UIComponent("list")]
         private CustomListTableData customListTableData;
+
+        [UIComponent("scroll-view")]
+        private ScrollView bsmlScrollView;
 
         [UIComponent("loading-modal")]
         public RectTransform loadingModal;
@@ -42,9 +47,10 @@ namespace MorePlaylists.UI
         internal BSMLParserParams parserParams;
 
         [Inject]
-        public void Construct(StandardLevelDetailViewController standardLevelDetailViewController)
+        public void Construct(StandardLevelDetailViewController standardLevelDetailViewController, IVRPlatformHelper platformHelper)
         {
             this.standardLevelDetailViewController = standardLevelDetailViewController;
+            this.platformHelper = platformHelper;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -122,8 +128,12 @@ namespace MorePlaylists.UI
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            loadingSpinner = GameObject.Instantiate(Utils.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
+            loadingSpinner = GameObject.Instantiate(Accessors.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
             Destroy(loadingSpinner.GetComponent<Touchable>());
+
+            ScrollView scrollView = customListTableData.tableView.GetComponent<ScrollView>();
+            Accessors.PlatformHelperAccessor(ref scrollView) = platformHelper;
+            Utils.TransferScrollBar(bsmlScrollView, scrollView);
         }
 
         [UIAction("list-select")]
