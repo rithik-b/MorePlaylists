@@ -16,7 +16,9 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsListViewController : BSMLResourceViewController
+    [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsListView.bsml")]
+    [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsListView.bsml")]
+    public class MorePlaylistsListViewController : BSMLAutomaticViewController
     {
         private StandardLevelDetailViewController standardLevelDetailViewController;
         private LoadingControl loadingSpinner;
@@ -24,7 +26,6 @@ namespace MorePlaylists.UI
         private ISource currentSource;
         private List<GenericEntry> currentPlaylists;
         private bool _refreshInteractable = true;
-        public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsListView.bsml";
 
         private static SemaphoreSlim listUpdateSemaphore = new SemaphoreSlim(1, 1);
 

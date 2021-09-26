@@ -16,9 +16,10 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsDownloadQueueViewController : BSMLResourceViewController, IInitializable, IDisposable
+    [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsDownloadQueueView.bsml")]
+    [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsDownloadQueueView.bsml")]
+    public class MorePlaylistsDownloadQueueViewController : BSMLAutomaticViewController, IInitializable, IDisposable
     {
-        public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDownloadQueueView.bsml";
         internal static Action<DownloadQueueItem> DidAbortDownload;
         internal static Action<DownloadQueueItem> DidFinishDownloadingItem;
         internal Action<bool> DidFillQueue;

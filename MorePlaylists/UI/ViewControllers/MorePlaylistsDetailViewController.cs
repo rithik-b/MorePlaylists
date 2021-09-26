@@ -9,9 +9,10 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsDetailViewController : BSMLResourceViewController
+    [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsDetailView.bsml")]
+    [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml")]
+    public class MorePlaylistsDetailViewController : BSMLAutomaticViewController
     {
-        public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml";
         private IGenericEntry selectedPlaylistEntry;
         private IVRPlatformHelper platformHelper;
 
