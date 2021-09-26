@@ -11,7 +11,7 @@ namespace MorePlaylists.UI
 {
     [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsDetailView.bsml")]
     [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml")]
-    public class MorePlaylistsDetailViewController : BSMLAutomaticViewController
+    internal class MorePlaylistsDetailViewController : BSMLAutomaticViewController
     {
         private IGenericEntry selectedPlaylistEntry;
         private IVRPlatformHelper platformHelper;

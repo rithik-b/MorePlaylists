@@ -18,7 +18,7 @@ namespace MorePlaylists.UI
 {
     [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsDownloadQueueView.bsml")]
     [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsDownloadQueueView.bsml")]
-    public class MorePlaylistsDownloadQueueViewController : BSMLAutomaticViewController, IInitializable, IDisposable
+    internal class MorePlaylistsDownloadQueueViewController : BSMLAutomaticViewController, IInitializable, IDisposable
     {
         internal static Action<DownloadQueueItem> DidAbortDownload;
         internal static Action<DownloadQueueItem> DidFinishDownloadingItem;

@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace MorePlaylists.UI
 {
-    public class PopupModalsController : INotifyPropertyChanged
+    internal class PopupModalsController : INotifyPropertyChanged
     {
         private bool parsed;
         public event PropertyChangedEventHandler PropertyChanged;

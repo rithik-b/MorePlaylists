@@ -3,9 +3,7 @@
         <horizontal anchor-min-y='1'  bg='panel-top' pad-left='10' pad-right='10' horizontal-fit='PreferredSize'>
             <text text='Songs' align='Center' font-size='8'></text>
         </horizontal>
-        <modal id='loading-modal' show-event='open-loading-modal' hide-event='close-loading-modal,close-all-modals' move-to-center='true' size-delta-y='35' size-delta-x='48'>
-            <button on-click='abort-click' text='Abort' ignore-layout='true' anchor-min-x='0.5' anchor-max-x='0.5' anchor-pos-y='-30' anchor-pos-x='0' pref-height='8' pref-width='35' pad='0' />
-        </modal>
+        <modal id='loading-modal' show-event='open-loading-modal' hide-event='close-loading-modal,close-all-modals' move-to-center='true' size-delta-y='35' size-delta-x='48' />
         <list id='list' expand-cell='true' select-cell='list-select' list-width='62' />
     </vertical>
     <scroll-view id='scroll-view' anchor-pos-x='-19' anchor-pos-y='0' pref-height='90' />
