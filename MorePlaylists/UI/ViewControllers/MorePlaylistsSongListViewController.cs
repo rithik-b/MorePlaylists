@@ -35,10 +35,10 @@ namespace MorePlaylists.UI
         private static SemaphoreSlim songLoadSemaphore = new SemaphoreSlim(1, 1);
 
         [UIComponent("list")]
-        private CustomListTableData customListTableData;
+        private readonly CustomListTableData customListTableData;
 
         [UIComponent("scroll-view")]
-        private ScrollView bsmlScrollView;
+        private readonly ScrollView bsmlScrollView;
 
         [UIComponent("loading-modal")]
         public RectTransform loadingModal;

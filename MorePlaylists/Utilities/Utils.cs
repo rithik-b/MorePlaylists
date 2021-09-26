@@ -42,6 +42,8 @@ namespace MorePlaylists.Utilities
             scrollBar.SetParent(sender.transform.parent);
             GameObject.Destroy(sender.gameObject);
             scrollBar.sizeDelta = new Vector2(8f, scrollBar.sizeDelta.y);
+
+            reciever.Awake();
         }
     }
 }

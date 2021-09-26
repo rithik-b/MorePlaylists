@@ -26,8 +26,9 @@ namespace MorePlaylists.UI
 
         [UIValue("download-queue")]
         internal List<object> queueItems = new List<object>();
+
         [UIComponent("download-list")]
-        private CustomCellListTableData customListTableData;
+        private readonly CustomCellListTableData customListTableData;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
