@@ -132,8 +132,8 @@ namespace MorePlaylists.UI
             morePlaylistsSongListViewController.SetLoading(false);
             mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
             mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
-            levelCategorySegmentedControl.SelectCellWithNumber(2);
-            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 2);
+            levelCategorySegmentedControl.SelectCellWithNumber(1);
+            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 1);
             levelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(playlist);
         }
 
@@ -146,8 +146,8 @@ namespace MorePlaylists.UI
 
             mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
             mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
-            levelCategorySegmentedControl.SelectCellWithNumber(2);
-            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 2);
+            levelCategorySegmentedControl.SelectCellWithNumber(1);
+            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 1);
             levelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(playlist);
         }
 
