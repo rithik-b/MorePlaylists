@@ -144,7 +144,8 @@ namespace MorePlaylists.UI
                 }
                 customListTableData.tableView.ReloadData();
             }
-            await Task.Delay(100);
+            // I am sorry
+            await Task.Delay(500);
             SetLoading(false);
             songLoadSemaphore.Release();
         }
