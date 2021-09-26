@@ -12,42 +12,6 @@ namespace MorePlaylists.Utilities
             BeatSaberPlaylistsLib.Types.IPlaylist playlist = playlistEntry.RemotePlaylist;
             BeatSaberPlaylistsLib.PlaylistManager playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(playlistEntry.GetType().Name.Replace("Entry", ""));
 
-            // Generate Name
-            string playlistFolderPath = playlistManager.PlaylistPath;
-            string playlistFileName = string.Join("_", playlist.Title
-                .Replace("/", "")
-                .Replace("\\", "")
-                .Replace(".", "")
-                .Replace(":", "")
-                .Replace("*", "")
-                .Replace("?", "")
-                .Replace("\"", "")
-                .Replace("<", "")
-                .Replace(">", "")
-                .Replace("|", "")
-                .Split());
-            if (string.IsNullOrEmpty(playlistFileName))
-            {
-                playlistFileName = "playlist";
-            }
-
-            string extension = playlistManager.DefaultHandler?.DefaultExtension;
-            string playlistPath = Path.Combine(playlistFolderPath, playlistFileName + "." + extension);
-            string originalPlaylistPath = Path.Combine(playlistFolderPath, playlistFileName);
-            int dupNum = 0;
-            while (File.Exists(playlistPath))
-            {
-                dupNum++;
-                playlistPath = originalPlaylistPath + $"({dupNum}).{extension}";
-            }
-
-            if (dupNum != 0)
-            {
-                playlistFileName += $"({dupNum})";
-            }
-
-            playlist.Filename = playlistFileName;
-
             playlistManager.StorePlaylist(playlist);
         }
 
