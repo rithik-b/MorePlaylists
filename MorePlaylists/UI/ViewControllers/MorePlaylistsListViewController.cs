@@ -8,7 +8,6 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
-using static BeatSaberMarkupLanguage.Components.CustomListTableData;
 using UnityEngine;
 using BeatSaberMarkupLanguage.Parser;
 using MorePlaylists.Sources;
@@ -16,15 +15,18 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsListViewController : BSMLResourceViewController
+    [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsListView.bsml")]
+    [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsListView.bsml")]
+    internal class MorePlaylistsListViewController : BSMLAutomaticViewController
     {
         private StandardLevelDetailViewController standardLevelDetailViewController;
+        private IVRPlatformHelper platformHelper;
+
         private LoadingControl loadingSpinner;
         private CancellationTokenSource tokenSource;
         private ISource currentSource;
         private List<GenericEntry> currentPlaylists;
         private bool _refreshInteractable = true;
-        public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsListView.bsml";
 
         private static SemaphoreSlim listUpdateSemaphore = new SemaphoreSlim(1, 1);
 
@@ -33,7 +35,10 @@ namespace MorePlaylists.UI
         internal event Action DidClickSearch;
 
         [UIComponent("list")]
-        private CustomListTableData customListTableData;
+        private readonly CustomListTableData customListTableData;
+
+        [UIComponent("scroll-view")]
+        private readonly ScrollView bsmlScrollView;
 
         [UIComponent("loading-modal")]
         public RectTransform loadingModal;
@@ -42,10 +47,11 @@ namespace MorePlaylists.UI
         internal BSMLParserParams parserParams;
 
         [Inject]
-        public void Construct(List<ISource> sources, StandardLevelDetailViewController standardLevelDetailViewController)
+        public void Construct(List<ISource> sources, StandardLevelDetailViewController standardLevelDetailViewController, IVRPlatformHelper platformHelper)
         {
             currentSource = sources.FirstOrDefault();
             this.standardLevelDetailViewController = standardLevelDetailViewController;
+            this.platformHelper = platformHelper;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -63,9 +69,13 @@ namespace MorePlaylists.UI
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            loadingSpinner = GameObject.Instantiate(Utils.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
-            Destroy(loadingSpinner.GetComponent<Touchable>());
+            loadingSpinner = GameObject.Instantiate(Accessors.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
+            Destroy(loadingSpinner.GetComponent<Touchable>());;
             ShowPlaylists();
+
+            ScrollView scrollView = customListTableData.tableView.GetComponent<ScrollView>();
+            Accessors.PlatformHelperAccessor(ref scrollView) = platformHelper;
+            Utils.TransferScrollBar(bsmlScrollView, scrollView);
         }
 
         [UIAction("list-select")]
@@ -120,11 +130,11 @@ namespace MorePlaylists.UI
             {
                 if (playlist.DownloadBlocked)
                 {
-                    customListTableData.data.Add(new CustomCellInfo($"<#7F7F7F>{playlist.Title}", playlist.Author, playlist.Sprite));
+                    customListTableData.data.Add(new CustomListTableData.CustomCellInfo($"<#7F7F7F>{playlist.Title}", playlist.Author, playlist.Sprite));
                 }
                 else
                 {
-                    customListTableData.data.Add(new CustomCellInfo(playlist.Title, playlist.Author, playlist.Sprite));
+                    customListTableData.data.Add(new CustomListTableData.CustomCellInfo(playlist.Title, playlist.Author, playlist.Sprite));
                 }
             }
 
@@ -138,7 +148,7 @@ namespace MorePlaylists.UI
             int index = currentPlaylists.IndexOf(playlistEntry);
             if (index >= 0)
             {
-                customListTableData.data[index] = new CustomCellInfo($"<#7F7F7F>{playlistEntry.Title}", playlistEntry.Author, playlistEntry.Sprite);
+                customListTableData.data[index] = new CustomListTableData.CustomCellInfo($"<#7F7F7F>{playlistEntry.Title}", playlistEntry.Author, playlistEntry.Sprite);
                 customListTableData.tableView.ReloadDataKeepingPosition();
             }
         }
@@ -186,7 +196,7 @@ namespace MorePlaylists.UI
                     }
                 }
             }
-            customListTableData.tableView.ReloadData();
+            customListTableData.tableView.ReloadDataKeepingPosition();
             SetLoading(false);
             listUpdateSemaphore.Release();
         }
@@ -196,14 +206,14 @@ namespace MorePlaylists.UI
             if (sender is GenericEntry playlist)
             {
                 ShowPlaylist(playlist);
-                customListTableData.tableView.ReloadData();
+                customListTableData.tableView.ReloadDataKeepingPosition();
                 playlist.SpriteLoaded -= DeferredSpriteLoadPlaylist_SpriteLoaded;
             }
         }
 
         private void ShowPlaylist(GenericEntry playlistEntry)
         {
-            customListTableData.data.Add(new CustomCellInfo(playlistEntry.DownloadBlocked ? $"<#7F7F7F>{playlistEntry.Title}" : playlistEntry.Title, playlistEntry.Author, playlistEntry.Sprite));
+            customListTableData.data.Add(new CustomListTableData.CustomCellInfo(playlistEntry.DownloadBlocked ? $"<#7F7F7F>{playlistEntry.Title}" : playlistEntry.Title, playlistEntry.Author, playlistEntry.Sprite));
         }
 
         #endregion

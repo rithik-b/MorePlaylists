@@ -13,7 +13,7 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class SourceModalController : IInitializable
+    internal class SourceModalController : IInitializable
     {
         private List<ISource> sources;
         private bool parsed;

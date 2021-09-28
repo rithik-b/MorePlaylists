@@ -1,14 +1,13 @@
 ﻿using System;
+using HMUI;
 using IPA.Utilities;
+using UnityEngine;
 
 namespace MorePlaylists.Utilities
 {
     internal class Utils
     {
         private const string Base64Prefix = "base64,";
-
-        public static readonly FieldAccessor<StandardLevelDetailViewController, LoadingControl>.Accessor LoadingControlAccessor =
-            FieldAccessor<StandardLevelDetailViewController, LoadingControl>.GetAccessor("_loadingControl");
 
         public static string ByteArrayToBase64(byte[] byteArray)
         {
@@ -31,6 +30,20 @@ namespace MorePlaylists.Utilities
         public static int GetBase64DataStartIndex(string base64Str)
         {
             return Math.Max(0, base64Str.IndexOf(',') + 1);
+        }
+
+        public static void TransferScrollBar(ScrollView sender, ScrollView reciever)
+        {
+            Accessors.PageUpAccessor(ref reciever) = Accessors.PageUpAccessor(ref sender);
+            Accessors.PageDownAccessor(ref reciever) = Accessors.PageDownAccessor(ref sender);
+            Accessors.ScrollIndicatorAccessor(ref reciever) = Accessors.ScrollIndicatorAccessor(ref sender);
+
+            RectTransform scrollBar = sender.transform.Find("ScrollBar").GetComponent<RectTransform>();
+            scrollBar.SetParent(sender.transform.parent);
+            GameObject.Destroy(sender.gameObject);
+            scrollBar.sizeDelta = new Vector2(8f, scrollBar.sizeDelta.y);
+
+            reciever.Awake();
         }
     }
 }

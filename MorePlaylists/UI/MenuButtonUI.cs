@@ -5,7 +5,7 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MenuButtonUI : IInitializable, IDisposable
+    internal class MenuButtonUI : IInitializable, IDisposable
     {
         private readonly MenuButton menuButton;
         private readonly MainFlowCoordinator mainFlowCoordinator;

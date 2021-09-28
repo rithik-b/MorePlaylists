@@ -2,15 +2,19 @@
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
 using MorePlaylists.Entries;
+using MorePlaylists.Utilities;
 using System;
 using UnityEngine;
+using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsDetailViewController : BSMLResourceViewController
+    [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsDetailView.bsml")]
+    [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml")]
+    internal class MorePlaylistsDetailViewController : BSMLAutomaticViewController
     {
-        public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml";
         private IGenericEntry selectedPlaylistEntry;
+        private IVRPlatformHelper platformHelper;
 
         internal event Action<IGenericEntry, bool> DidPressDownload;
         internal event Action<BeatSaberPlaylistsLib.Types.IPlaylist> DidGoToPlaylist;
@@ -21,6 +25,12 @@ namespace MorePlaylists.UI
         [UIComponent("text-page")]
         private readonly TextPageScrollView descriptionTextPage;
 
+        [Inject]
+        public void Construct(IVRPlatformHelper platformHelper)
+        {
+            this.platformHelper = platformHelper;
+        }
+
         #region Actions
 
         [UIAction("#post-parse")]
@@ -30,6 +40,9 @@ namespace MorePlaylists.UI
             rectTransform.sizeDelta = new Vector2(70, 0);
             rectTransform.anchorMin = new Vector2(0.5f, 0);
             rectTransform.anchorMax = new Vector2(0.5f, 1);
+
+            ScrollView scrollView = descriptionTextPage;
+            Accessors.PlatformHelperAccessor(ref scrollView) = platformHelper;
         }
 
         [UIAction("download-click")]

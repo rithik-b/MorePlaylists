@@ -10,7 +10,7 @@ using IPA.Utilities;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsFlowCoordinator : FlowCoordinator, IInitializable, IDisposable
+    internal class MorePlaylistsFlowCoordinator : FlowCoordinator, IInitializable, IDisposable
     {
         private MainFlowCoordinator mainFlowCoordinator;
         private MainMenuViewController mainMenuViewController;
@@ -129,25 +129,25 @@ namespace MorePlaylists.UI
             }
 
             morePlaylistsListViewController.AbortLoading();
-            morePlaylistsSongListViewController.AbortLoading();
+            morePlaylistsSongListViewController.SetLoading(false);
             mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
             mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
-            levelCategorySegmentedControl.SelectCellWithNumber(2);
-            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 2);
+            levelCategorySegmentedControl.SelectCellWithNumber(1);
+            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 1);
             levelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(playlist);
         }
 
         private void GoToPlaylistAndClear(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
         {
             morePlaylistsListViewController.AbortLoading();
-            morePlaylistsSongListViewController.AbortLoading();
+            morePlaylistsSongListViewController.SetLoading(false);
             morePlaylistsDownloadQueueViewController.queueItems.OfType<DownloadQueueItem>().ToList().ForEach(x => x.tokenSource.Cancel());
             morePlaylistsDownloadQueueViewController.queueItems.Clear();
 
             mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
             mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
-            levelCategorySegmentedControl.SelectCellWithNumber(2);
-            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 2);
+            levelCategorySegmentedControl.SelectCellWithNumber(1);
+            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 1);
             levelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(playlist);
         }
 
@@ -183,14 +183,14 @@ namespace MorePlaylists.UI
                 return;
             }
             morePlaylistsListViewController.AbortLoading();
-            morePlaylistsSongListViewController.AbortLoading();
+            morePlaylistsSongListViewController.SetLoading(false);
             mainFlowCoordinator.DismissFlowCoordinator(this);
         }
 
         private void ExitAndClear()
         {
             morePlaylistsListViewController.AbortLoading();
-            morePlaylistsSongListViewController.AbortLoading();
+            morePlaylistsSongListViewController.SetLoading(false);
             morePlaylistsDownloadQueueViewController.queueItems.OfType<DownloadQueueItem>().ToList().ForEach(x => x.tokenSource.Cancel());
             morePlaylistsDownloadQueueViewController.queueItems.Clear();
             mainFlowCoordinator.DismissFlowCoordinator(this);

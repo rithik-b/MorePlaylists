@@ -16,17 +16,19 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsDownloadQueueViewController : BSMLResourceViewController, IInitializable, IDisposable
+    [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsDownloadQueueView.bsml")]
+    [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsDownloadQueueView.bsml")]
+    internal class MorePlaylistsDownloadQueueViewController : BSMLAutomaticViewController, IInitializable, IDisposable
     {
-        public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsDownloadQueueView.bsml";
         internal static Action<DownloadQueueItem> DidAbortDownload;
         internal static Action<DownloadQueueItem> DidFinishDownloadingItem;
         internal Action<bool> DidFillQueue;
 
         [UIValue("download-queue")]
         internal List<object> queueItems = new List<object>();
+
         [UIComponent("download-list")]
-        private CustomCellListTableData customListTableData;
+        private readonly CustomCellListTableData customListTableData;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {

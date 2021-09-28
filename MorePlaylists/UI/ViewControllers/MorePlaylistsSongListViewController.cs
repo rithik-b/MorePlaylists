@@ -11,8 +11,6 @@ using SongDetailsCache;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -20,20 +18,23 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    public class MorePlaylistsSongListViewController : BSMLResourceViewController, IInitializable, IDisposable
+    [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsSongListView.bsml")]
+    [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsSongListView.bsml")]
+    internal class MorePlaylistsSongListViewController : BSMLAutomaticViewController
     {
         private StandardLevelDetailViewController standardLevelDetailViewController;
+        private SpriteLoader spriteLoader;
+        private IVRPlatformHelper platformHelper;
+
         private LoadingControl loadingSpinner;
-        private HttpClient httpClient;
         private IGenericEntry playlistEntry;
-        private Dictionary<string, Sprite> spriteCache = new Dictionary<string, Sprite>();
-        private static CancellationTokenSource tokenSource;
         private static SemaphoreSlim songLoadSemaphore = new SemaphoreSlim(1, 1);
 
-        public override string ResourceName => "MorePlaylists.UI.Views.MorePlaylistsSongListView.bsml";
-
         [UIComponent("list")]
-        private CustomListTableData customListTableData;
+        private readonly CustomListTableData customListTableData;
+
+        [UIComponent("scroll-view")]
+        private readonly ScrollView bsmlScrollView;
 
         [UIComponent("loading-modal")]
         public RectTransform loadingModal;
@@ -42,9 +43,11 @@ namespace MorePlaylists.UI
         internal BSMLParserParams parserParams;
 
         [Inject]
-        public void Construct(StandardLevelDetailViewController standardLevelDetailViewController)
+        public void Construct(StandardLevelDetailViewController standardLevelDetailViewController, SpriteLoader spriteLoader, IVRPlatformHelper platformHelper)
         {
             this.standardLevelDetailViewController = standardLevelDetailViewController;
+            this.spriteLoader = spriteLoader;
+            this.platformHelper = platformHelper;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -58,29 +61,6 @@ namespace MorePlaylists.UI
             }
         }
 
-        public void Initialize()
-        {
-            httpClient = new HttpClient(new HttpClientHandler()
-            {
-                AutomaticDecompression = DecompressionMethods.GZip,
-                AllowAutoRedirect = false
-            })
-            {
-                Timeout = TimeSpan.FromSeconds(5)
-            };
-
-            httpClient.DefaultRequestHeaders.Add("User-Agent", nameof(MorePlaylists));
-            tokenSource = new CancellationTokenSource();
-        }
-
-        public void Dispose()
-        {
-            httpClient.CancelPendingRequests();
-            httpClient.Dispose();
-            tokenSource.Cancel();
-            tokenSource.Dispose();
-        }
-
         internal void SetCurrentPlaylist(IGenericEntry playlistEntry)
         {
             if (customListTableData == null)
@@ -88,7 +68,6 @@ namespace MorePlaylists.UI
                 return;
             }
 
-            AbortLoading();
             SetLoading(true, 0);
 
             if (this.playlistEntry != null)
@@ -122,8 +101,12 @@ namespace MorePlaylists.UI
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            loadingSpinner = GameObject.Instantiate(Utils.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
+            loadingSpinner = GameObject.Instantiate(Accessors.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
             Destroy(loadingSpinner.GetComponent<Touchable>());
+
+            ScrollView scrollView = customListTableData.tableView.GetComponent<ScrollView>();
+            Accessors.PlatformHelperAccessor(ref scrollView) = platformHelper;
+            Utils.TransferScrollBar(bsmlScrollView, scrollView);
         }
 
         [UIAction("list-select")]
@@ -135,8 +118,6 @@ namespace MorePlaylists.UI
         private async void InitSongList()
         {
             await songLoadSemaphore.WaitAsync();
-            tokenSource.Dispose();
-            tokenSource = new CancellationTokenSource();
             ClearList();
             SetLoading(true, 0);
 
@@ -146,61 +127,30 @@ namespace MorePlaylists.UI
                 {
                     SongDetails songDetails = await SongDetails.Init();
                     List<IPlaylistSong> playlistSongs = playlist.Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
+                    SetLoading(true, 100);
                     for (int i = 0; i < playlistSongs.Count; i++)
                     {
                         if (songDetails.songs.FindByHash(playlistSongs[i].Hash, out SongDetailsCache.Structs.Song song))
                         {
-                            Sprite sprite = await LoadSpriteAsync(song);
-                            customListTableData.data.Add(new CustomListTableData.CustomCellInfo(song.songName, $"{song.songAuthorName} [{song.levelAuthorName}]", sprite));
+                            CustomListTableData.CustomCellInfo customCellInfo = new CustomListTableData.CustomCellInfo(song.songName, $"{song.songAuthorName} [{song.levelAuthorName}]", BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
+                            spriteLoader.DownloadSpriteAsync(song.coverURL, (Sprite sprite) =>
+                            {
+                                customCellInfo.icon = sprite;
+                                customListTableData.tableView.ReloadDataKeepingPosition();
+                            });
+                            customListTableData.data.Add(customCellInfo);
                         }
-                        SetLoading(true, (float)i / (float)playlistSongs.Count);
                     }
                 }
                 customListTableData.tableView.ReloadData();
             }
+            // I am sorry
+            await Task.Delay(500);
+            SetLoading(false);
             songLoadSemaphore.Release();
-            SetLoading(false);
         }
 
-        [UIAction("abort-click")]
-        internal void AbortLoading()
-        {
-            SetLoading(false);
-            tokenSource.Cancel();
-        }
-
-        private async Task<Sprite> LoadSpriteAsync(SongDetailsCache.Structs.Song song)
-        {
-            var path = song.coverURL;
-
-            if (spriteCache.TryGetValue(path, out Sprite sprite))
-                return sprite;
-
-            try
-            {
-                using (var resp = await httpClient.GetAsync(path, HttpCompletionOption.ResponseContentRead, tokenSource.Token))
-                {
-                    if (resp.StatusCode == HttpStatusCode.OK)
-                    {
-                        var imageBytes = await resp.Content.ReadAsByteArrayAsync();
-
-                        if (spriteCache.TryGetValue(path, out sprite))
-                            return sprite;
-
-                        sprite = BeatSaberMarkupLanguage.Utilities.LoadSpriteRaw(imageBytes);
-                        sprite.texture.wrapMode = TextureWrapMode.Clamp;
-                        spriteCache[path] = sprite;
-
-                        return sprite;
-                    }
-                }
-            }
-            catch { }
-
-            return SongCore.Loader.defaultCoverImage;
-        }
-
-        private void SetLoading(bool value, double progress = 0, string details = "Loading Songs")
+        internal void SetLoading(bool value, double progress = 0, string details = "Loading Songs")
         {
             if (value && isActiveAndEnabled)
             {
