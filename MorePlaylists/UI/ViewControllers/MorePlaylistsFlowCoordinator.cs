@@ -5,10 +5,10 @@ using System;
 using UnityEngine;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
-using IPA.Utilities;
 using PlaylistManager.Utilities;
 using PlaylistLibUtils = MorePlaylists.Utilities.PlaylistLibUtils;
 using SiraUtil;
+using MorePlaylists.Utilities;
 
 namespace MorePlaylists.UI
 {
@@ -17,9 +17,7 @@ namespace MorePlaylists.UI
         private SiraClient siraClient;
         private MainFlowCoordinator mainFlowCoordinator;
         private MainMenuViewController mainMenuViewController;
-        private LevelFilteringNavigationController levelFilteringNavigationController;
-        private SelectLevelCategoryViewController selectLevelCategoryViewController;
-        private IconSegmentedControl levelCategorySegmentedControl;
+        private SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator;
         private PopupModalsController popupModalsController;
         private SourceModalController sourceModalController;
         private MorePlaylistsNavigationController morePlaylistsNavigationController;
@@ -30,17 +28,15 @@ namespace MorePlaylists.UI
         private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
 
         [Inject]
-        public void Construct(SiraClient siraClient, MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, LevelFilteringNavigationController levelFilteringNavigationController,
-            SelectLevelCategoryViewController selectLevelCategoryViewController, PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController,
+        public void Construct(SiraClient siraClient, MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator,
+            PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController,
             MorePlaylistsListViewController morePlaylistsListViewController, MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController, PlaylistDownloader playlistDownloader,
             MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
         {
             this.siraClient = siraClient;
             this.mainFlowCoordinator = mainFlowCoordinator;
             this.mainMenuViewController = mainMenuViewController;
-            this.levelFilteringNavigationController = levelFilteringNavigationController;
-            this.selectLevelCategoryViewController = selectLevelCategoryViewController;
-            levelCategorySegmentedControl = FieldAccessor<SelectLevelCategoryViewController, IconSegmentedControl>.Get(ref selectLevelCategoryViewController, "_levelFilterCategoryIconSegmentedControl");
+            this.soloFreePlayFlowCoordinator = soloFreePlayFlowCoordinator;
             this.popupModalsController = popupModalsController;
             this.sourceModalController = sourceModalController;
             this.morePlaylistsNavigationController = morePlaylistsNavigationController;
@@ -144,10 +140,8 @@ namespace MorePlaylists.UI
             morePlaylistsListViewController.AbortLoading();
             morePlaylistsSongListViewController.SetLoading(false);
             mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
+            soloFreePlayFlowCoordinator.Setup(Utils.GetStateForPlaylist(playlist));
             mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
-            levelCategorySegmentedControl.SelectCellWithNumber(1);
-            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 1);
-            levelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(playlist);
         }
 
         #endregion
