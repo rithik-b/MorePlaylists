@@ -37,9 +37,6 @@ namespace MorePlaylists.UI
         [UIComponent("list")]
         private readonly CustomListTableData customListTableData;
 
-        [UIComponent("scroll-view")]
-        private readonly ScrollView bsmlScrollView;
-
         [UIComponent("loading-modal")]
         public RectTransform loadingModal;
 
@@ -75,7 +72,6 @@ namespace MorePlaylists.UI
 
             ScrollView scrollView = customListTableData.tableView.GetComponent<ScrollView>();
             Accessors.PlatformHelperAccessor(ref scrollView) = platformHelper;
-            Utils.TransferScrollBar(bsmlScrollView, scrollView);
         }
 
         [UIAction("list-select")]
