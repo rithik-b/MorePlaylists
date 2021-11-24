@@ -20,7 +20,7 @@ namespace MorePlaylists.UI
     internal class MorePlaylistsListViewController : BSMLAutomaticViewController
     {
         private StandardLevelDetailViewController standardLevelDetailViewController;
-        private IVRPlatformHelper platformHelper;
+        private SpriteLoader spriteLoader;
 
         private LoadingControl loadingSpinner;
         private CancellationTokenSource tokenSource;
@@ -44,11 +44,11 @@ namespace MorePlaylists.UI
         internal BSMLParserParams parserParams;
 
         [Inject]
-        public void Construct(List<ISource> sources, StandardLevelDetailViewController standardLevelDetailViewController, IVRPlatformHelper platformHelper)
+        public void Construct(List<ISource> sources, StandardLevelDetailViewController standardLevelDetailViewController, SpriteLoader spriteLoader)
         {
             currentSource = sources.FirstOrDefault();
             this.standardLevelDetailViewController = standardLevelDetailViewController;
-            this.platformHelper = platformHelper;
+            this.spriteLoader = spriteLoader;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -71,7 +71,6 @@ namespace MorePlaylists.UI
             ShowPlaylists();
 
             ScrollView scrollView = customListTableData.tableView.GetComponent<ScrollView>();
-            Accessors.PlatformHelperAccessor(ref scrollView) = platformHelper;
         }
 
         [UIAction("list-select")]
@@ -88,14 +87,7 @@ namespace MorePlaylists.UI
 
 
         [UIAction("refresh-click")]
-        private void RefreshList()
-        {
-            foreach (GenericEntry playlist in currentPlaylists)
-            {
-                playlist.SpriteLoaded -= DeferredSpriteLoadPlaylist_SpriteLoaded;
-            }
-            ShowPlaylists(true);
-        }
+        private void RefreshList() => ShowPlaylists(true);
 
         [UIAction("abort-click")]
         internal void AbortLoading()
@@ -109,43 +101,19 @@ namespace MorePlaylists.UI
 
         #endregion
 
-        internal async void Search(string query)
-        {
-            await listUpdateSemaphore.WaitAsync();
-            customListTableData.tableView.ClearSelection();
-            customListTableData.data.Clear();
-            tokenSource = new CancellationTokenSource();
-            SetLoading(true);
-
-            currentPlaylists = await currentSource.GetEndpointResultTask(false, tokenSource.Token);
-            currentPlaylists = currentPlaylists.Where(p => p.Title.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || 
-                p.Author.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || p.Description.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
-            SetLoading(true, 100);
-
-            foreach (GenericEntry playlist in currentPlaylists)
-            {
-                if (playlist.DownloadBlocked)
-                {
-                    customListTableData.data.Add(new CustomListTableData.CustomCellInfo($"<#7F7F7F>{playlist.Title}", playlist.Author, playlist.Sprite));
-                }
-                else
-                {
-                    customListTableData.data.Add(new CustomListTableData.CustomCellInfo(playlist.Title, playlist.Author, playlist.Sprite));
-                }
-            }
-
-            customListTableData.tableView.ReloadData();
-            SetLoading(false);
-            listUpdateSemaphore.Release();
-        }
+        internal void Search(string query) => ShowPlaylists(query: query);
 
         internal void SetEntryAsOwned(IGenericEntry playlistEntry)
         {
             int index = currentPlaylists.IndexOf(playlistEntry);
             if (index >= 0)
             {
-                customListTableData.data[index] = new CustomListTableData.CustomCellInfo($"<#7F7F7F>{playlistEntry.Title}", playlistEntry.Author, playlistEntry.Sprite);
-                customListTableData.tableView.ReloadDataKeepingPosition();
+                customListTableData.data[index] = new CustomListTableData.CustomCellInfo($"<#7F7F7F>{playlistEntry.Title}", playlistEntry.Author);
+                spriteLoader.GetSpriteForEntry(playlistEntry, (Sprite sprite) =>
+                {
+                    customListTableData.data[index].icon = sprite;
+                    customListTableData.tableView.ReloadDataKeepingPosition();
+                });
             }
         }
 
@@ -162,54 +130,42 @@ namespace MorePlaylists.UI
             ShowPlaylists(false);
         }
 
-        private async void ShowPlaylists(bool refreshRequested = false)
+        private async void ShowPlaylists(bool refreshRequested = false, string query = null)
         {
             await listUpdateSemaphore.WaitAsync();
             customListTableData.tableView.ClearSelection();
             customListTableData.data.Clear();
-            tokenSource?.Dispose();
             tokenSource = new CancellationTokenSource();
             SetLoading(true);
 
             currentPlaylists = await currentSource.GetEndpointResultTask(refreshRequested, tokenSource.Token);
+
+            if (query != null)
+            {
+                currentPlaylists = currentPlaylists.Where(p => p.Title.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    p.Author.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || p.Description.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+            }
 
             PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IGenericEntry>().ToList());
             SetLoading(true, 100);
 
             if (currentPlaylists != null)
             {
-                foreach (GenericEntry playlist in currentPlaylists)
+                foreach (GenericEntry playlistEntry in currentPlaylists)
                 {
-                    if (!playlist.SpriteWasLoaded)
+                    CustomListTableData.CustomCellInfo customCellInfo = new CustomListTableData.CustomCellInfo(playlistEntry.DownloadBlocked ? $"<#7F7F7F>{playlistEntry.Title}" : playlistEntry.Title,
+                        playlistEntry.Author);
+                    customListTableData.data.Add(customCellInfo);
+                    spriteLoader.GetSpriteForEntry(playlistEntry, (Sprite sprite) =>
                     {
-                        playlist.SpriteLoaded -= DeferredSpriteLoadPlaylist_SpriteLoaded;
-                        playlist.SpriteLoaded += DeferredSpriteLoadPlaylist_SpriteLoaded;
-                        _ = playlist.Sprite;
-                    }
-                    else
-                    {
-                        ShowPlaylist(playlist);
-                    }
+                        customCellInfo.icon = sprite;
+                        customListTableData.tableView.ReloadDataKeepingPosition();
+                    });
                 }
             }
-            customListTableData.tableView.ReloadDataKeepingPosition();
+            customListTableData.tableView.ReloadData();
             SetLoading(false);
             listUpdateSemaphore.Release();
-        }
-
-        private void DeferredSpriteLoadPlaylist_SpriteLoaded(object sender, EventArgs e)
-        {
-            if (sender is GenericEntry playlist)
-            {
-                ShowPlaylist(playlist);
-                customListTableData.tableView.ReloadDataKeepingPosition();
-                playlist.SpriteLoaded -= DeferredSpriteLoadPlaylist_SpriteLoaded;
-            }
-        }
-
-        private void ShowPlaylist(GenericEntry playlistEntry)
-        {
-            customListTableData.data.Add(new CustomListTableData.CustomCellInfo(playlistEntry.DownloadBlocked ? $"<#7F7F7F>{playlistEntry.Title}" : playlistEntry.Title, playlistEntry.Author, playlistEntry.Sprite));
         }
 
         #endregion

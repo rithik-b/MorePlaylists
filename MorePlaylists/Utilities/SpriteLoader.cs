@@ -1,4 +1,5 @@
-﻿using SiraUtil;
+﻿using MorePlaylists.Entries;
+using SiraUtil;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -9,7 +10,8 @@ namespace MorePlaylists.Utilities
     internal class SpriteLoader
     {
         private readonly SiraClient siraClient;
-        private readonly Dictionary<string, Sprite> cachedSprites;
+        private readonly Dictionary<string, Sprite> cachedURLSprites;
+        private readonly Dictionary<string, Sprite> cachedBase64Sprites;
 
         private readonly Queue<Action> spriteQueue;
         private readonly object loaderLock;
@@ -18,17 +20,31 @@ namespace MorePlaylists.Utilities
         public SpriteLoader(SiraClient siraClient)
         {
             this.siraClient = siraClient;
-            cachedSprites = new Dictionary<string, Sprite>();
+            cachedURLSprites = new Dictionary<string, Sprite>();
+            cachedBase64Sprites = new Dictionary<string, Sprite>();
 
             spriteQueue = new Queue<Action>();
             loaderLock = new object();
             coroutineRunning = false;
         }
 
+        public void GetSpriteForEntry(IGenericEntry entry, Action<Sprite> onCompletion)
+        {
+            switch (entry.SpriteType)
+            {
+                case SpriteType.URL:
+                    DownloadSpriteAsync(entry.SpriteString, onCompletion);
+                    break;
+                case SpriteType.Base64:
+                    ParseBase64Sprite(entry.SpriteString, onCompletion);
+                    break;
+            }
+        }
+
         public async void DownloadSpriteAsync(string spriteURL, Action<Sprite> onCompletion)
         {
             // Check Cache
-            if (cachedSprites.TryGetValue(spriteURL, out Sprite cachedSprite))
+            if (cachedURLSprites.TryGetValue(spriteURL, out Sprite cachedSprite))
             {
                 onCompletion?.Invoke(cachedSprite);
                 return;
@@ -38,7 +54,7 @@ namespace MorePlaylists.Utilities
             {
                 WebResponse webResponse = await siraClient.GetAsync(spriteURL, CancellationToken.None).ConfigureAwait(false);
                 byte[] imageBytes = webResponse.ContentToBytes();
-                QueueLoadSprite(spriteURL, imageBytes, onCompletion);
+                QueueLoadSprite(spriteURL, cachedURLSprites, imageBytes, onCompletion);
             }
             catch (Exception)
             {
@@ -46,7 +62,29 @@ namespace MorePlaylists.Utilities
             }
         }
 
-        private void QueueLoadSprite(string spriteURL, byte[] imageBytes, Action<Sprite> onCompletion)
+        public void ParseBase64Sprite(string base64, Action<Sprite> onCompletion)
+        {
+            // Check Cache
+            if (cachedBase64Sprites.TryGetValue(base64, out Sprite cachedSprite))
+            {
+                onCompletion?.Invoke(cachedSprite);
+                return;
+            }
+
+            byte[] imageBytes;
+            try
+            {
+                imageBytes = Utils.Base64ToByteArray(base64);
+            }
+            catch (FormatException)
+            {
+                imageBytes = Array.Empty<byte>();
+            }
+
+            QueueLoadSprite(base64, cachedBase64Sprites, imageBytes, onCompletion);
+        }
+
+        private void QueueLoadSprite(string key, Dictionary<string, Sprite> cache, byte[] imageBytes, Action<Sprite> onCompletion)
         {
             spriteQueue.Enqueue(() =>
             {
@@ -54,7 +92,7 @@ namespace MorePlaylists.Utilities
                 {
                     Sprite sprite = BeatSaberMarkupLanguage.Utilities.LoadSpriteRaw(imageBytes);
                     sprite.texture.wrapMode = TextureWrapMode.Clamp;
-                    cachedSprites[spriteURL] = sprite;
+                    cache[key] = sprite;
                     onCompletion?.Invoke(sprite);
                 }
                 catch (Exception)

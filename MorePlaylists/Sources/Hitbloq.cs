@@ -34,10 +34,6 @@ namespace MorePlaylists.Sources
                 {
                     byte[] response = await DownloaderUtils.instance.DownloadFileToBytesAsync(Website + Endpoint, token);
                     _endpointResult = JsonConvert.DeserializeObject<List<HitbloqEntry>>(Encoding.UTF8.GetString(response));
-                    foreach (HitbloqEntry hitbloqEntry in _endpointResult)
-                    {
-                        await hitbloqEntry.DownloadImage(token);
-                    }
                 }
                 catch (Exception e)
                 {

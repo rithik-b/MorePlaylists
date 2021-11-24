@@ -14,7 +14,7 @@ namespace MorePlaylists.UI
     internal class MorePlaylistsDetailViewController : BSMLAutomaticViewController
     {
         private IGenericEntry selectedPlaylistEntry;
-        private IVRPlatformHelper platformHelper;
+        private SpriteLoader spriteLoader;
 
         internal event Action<IGenericEntry, bool> DidPressDownload;
         internal event Action<BeatSaberPlaylistsLib.Types.IPlaylist> DidGoToPlaylist;
@@ -26,9 +26,9 @@ namespace MorePlaylists.UI
         private readonly TextPageScrollView descriptionTextPage;
 
         [Inject]
-        public void Construct(IVRPlatformHelper platformHelper)
+        public void Construct(SpriteLoader spriteLoader)
         {
-            this.platformHelper = platformHelper;
+            this.spriteLoader = spriteLoader;
         }
 
         #region Actions
@@ -42,7 +42,6 @@ namespace MorePlaylists.UI
             rectTransform.anchorMax = new Vector2(0.5f, 1);
 
             ScrollView scrollView = descriptionTextPage;
-            Accessors.PlatformHelperAccessor(ref scrollView) = platformHelper;
         }
 
         [UIAction("download-click")]
@@ -79,7 +78,7 @@ namespace MorePlaylists.UI
             NotifyPropertyChanged(nameof(PlaylistName));
             NotifyPropertyChanged(nameof(PlaylistAuthor));
             NotifyPropertyChanged(nameof(PlaylistDescription));
-            playlistCoverView.sprite = selectedPlaylistEntry.Sprite;
+            spriteLoader.GetSpriteForEntry(selectedPlaylistEntry, (Sprite sprite) => playlistCoverView.sprite = sprite);
             descriptionTextPage.ScrollTo(0, true);
         }
 

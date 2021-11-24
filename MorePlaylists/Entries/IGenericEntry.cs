@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using UnityEngine;
 
 namespace MorePlaylists.Entries
 {
@@ -10,12 +8,12 @@ namespace MorePlaylists.Entries
         string Author { get; }
         string Description { get; }
         string PlaylistURL { get; }
+        string SpriteString { get; }
+        SpriteType SpriteType { get; }
         BeatSaberPlaylistsLib.Types.IPlaylist RemotePlaylist { get; }
         BeatSaberPlaylistsLib.Types.IPlaylist LocalPlaylist { get; set; }
         event Action FinishedDownload;
         DownloadState DownloadState { get; set; }
         bool DownloadBlocked { get; set; }
-        Sprite Sprite { get; }
-        Stream GetCoverStream();
     }
 }
