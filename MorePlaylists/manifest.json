@@ -10,9 +10,8 @@
         "BSIPA": "^4.2.0",
         "SongCore": "^3.8.0",
         "BeatSaberMarkupLanguage": "^1.5.9",
-        "SiraUtil": "^2.5.8",
+        "SiraUtil": "^3.0.0",
         "SongDetailsCache": "^1.1.8",
-        "PlaylistManager": "^1.5.0",
         "BeatSaberPlaylistsLib": "^1.5.0",
         "BeatSaverSharp": "^3.0.2"
     }

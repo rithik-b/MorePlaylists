@@ -1,23 +1,23 @@
-﻿using SiraUtil;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using SiraUtil.Web;
 using UnityEngine;
 
 namespace MorePlaylists.Utilities
 {
     internal class SpriteLoader
     {
-        private readonly SiraClient siraClient;
+        private readonly IHttpService httpService;
         private readonly Dictionary<string, Sprite> cachedSprites;
 
         private readonly Queue<Action> spriteQueue;
         private readonly object loaderLock;
         private bool coroutineRunning;
 
-        public SpriteLoader(SiraClient siraClient)
+        public SpriteLoader(IHttpService httpService)
         {
-            this.siraClient = siraClient;
+            this.httpService = httpService;
             cachedSprites = new Dictionary<string, Sprite>();
 
             spriteQueue = new Queue<Action>();
@@ -36,8 +36,8 @@ namespace MorePlaylists.Utilities
 
             try
             {
-                WebResponse webResponse = await siraClient.GetAsync(spriteURL, CancellationToken.None).ConfigureAwait(false);
-                byte[] imageBytes = webResponse.ContentToBytes();
+                IHttpResponse webResponse = await httpService.GetAsync(spriteURL, cancellationToken: CancellationToken.None).ConfigureAwait(false);
+                byte[] imageBytes = await webResponse.ReadAsByteArrayAsync();
                 QueueLoadSprite(spriteURL, imageBytes, onCompletion);
             }
             catch (Exception)

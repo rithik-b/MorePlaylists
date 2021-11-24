@@ -1,16 +1,7 @@
 ﻿using IPA;
-using IPA.Config;
-using IPA.Config.Stores;
 using MorePlaylists.Installers;
 using MorePlaylists.Utilities;
 using SiraUtil.Zenject;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using UnityEngine;
 using IPALogger = IPA.Logging.Logger;
 
 namespace MorePlaylists
@@ -37,7 +28,8 @@ namespace MorePlaylists
             Instance = this;
             Plugin.Log = logger;
             Plugin.Log?.Debug("MorePlaylists initialized.");
-            zenjector.OnMenu<MorePlaylistsMenuInstaller>();
+            zenjector.UseHttpService();
+            zenjector.Install<MorePlaylistsMenuInstaller>(Location.Menu);
         }
 
         #region BSIPA Config
