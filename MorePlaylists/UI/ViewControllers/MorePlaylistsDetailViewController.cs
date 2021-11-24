@@ -40,8 +40,6 @@ namespace MorePlaylists.UI
             rectTransform.sizeDelta = new Vector2(70, 0);
             rectTransform.anchorMin = new Vector2(0.5f, 0);
             rectTransform.anchorMax = new Vector2(0.5f, 1);
-
-            ScrollView scrollView = descriptionTextPage;
         }
 
         [UIAction("download-click")]

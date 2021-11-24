@@ -24,7 +24,6 @@ namespace MorePlaylists.UI
     {
         private StandardLevelDetailViewController standardLevelDetailViewController;
         private SpriteLoader spriteLoader;
-        private IVRPlatformHelper platformHelper;
 
         private LoadingControl loadingSpinner;
         private IGenericEntry playlistEntry;
@@ -40,11 +39,10 @@ namespace MorePlaylists.UI
         internal BSMLParserParams parserParams;
 
         [Inject]
-        public void Construct(StandardLevelDetailViewController standardLevelDetailViewController, SpriteLoader spriteLoader, IVRPlatformHelper platformHelper)
+        public void Construct(StandardLevelDetailViewController standardLevelDetailViewController, SpriteLoader spriteLoader)
         {
             this.standardLevelDetailViewController = standardLevelDetailViewController;
             this.spriteLoader = spriteLoader;
-            this.platformHelper = platformHelper;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -100,9 +98,6 @@ namespace MorePlaylists.UI
         {
             loadingSpinner = GameObject.Instantiate(Accessors.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
             Destroy(loadingSpinner.GetComponent<Touchable>());
-
-            ScrollView scrollView = customListTableData.tableView.GetComponent<ScrollView>();
-            Accessors.PlatformHelperAccessor(ref scrollView) = platformHelper;
         }
 
         [UIAction("list-select")]

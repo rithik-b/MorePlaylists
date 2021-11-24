@@ -69,8 +69,6 @@ namespace MorePlaylists.UI
             loadingSpinner = GameObject.Instantiate(Accessors.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
             Destroy(loadingSpinner.GetComponent<Touchable>());;
             ShowPlaylists();
-
-            ScrollView scrollView = customListTableData.tableView.GetComponent<ScrollView>();
         }
 
         [UIAction("list-select")]
