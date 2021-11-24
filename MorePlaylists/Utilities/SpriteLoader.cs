@@ -65,7 +65,7 @@ namespace MorePlaylists.Utilities
 
             if (!coroutineRunning)
             {
-                SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
+                IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(SpriteLoadCoroutine);
             }
         }
 
