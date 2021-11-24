@@ -1,21 +1,9 @@
 ﻿using System;
-using HMUI;
-using IPA.Utilities;
-using UnityEngine;
 
 namespace MorePlaylists.Utilities
 {
     internal class Utils
     {
-        private const string Base64Prefix = "base64,";
-
-        public static string ByteArrayToBase64(byte[] byteArray)
-        {
-            if (byteArray == null || byteArray.Length == 0)
-                return string.Empty;
-            return Base64Prefix + Convert.ToBase64String(byteArray);
-        }
-
         public static byte[] Base64ToByteArray(string base64Str)
         {
             if (string.IsNullOrEmpty(base64Str))
@@ -23,13 +11,8 @@ namespace MorePlaylists.Utilities
                 return null;
             }
 
-            int dataIndex = GetBase64DataStartIndex(base64Str);
+            int dataIndex = Math.Max(0, base64Str.IndexOf(',') + 1);
             return Convert.FromBase64String(dataIndex > 0 ? base64Str.Substring(dataIndex) : base64Str);
-        }
-
-        public static int GetBase64DataStartIndex(string base64Str)
-        {
-            return Math.Max(0, base64Str.IndexOf(',') + 1);
         }
     }
 }
