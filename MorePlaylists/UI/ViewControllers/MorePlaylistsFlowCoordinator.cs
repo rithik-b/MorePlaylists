@@ -118,10 +118,10 @@ namespace MorePlaylists.UI
             playlistEntry.DownloadBlocked = true;
             if (playlistEntry.DownloadState == DownloadState.DownloadedPlaylist)
             {
-                BeatSaberPlaylistsLib.Types.IPlaylist playlist = PlaylistLibUtils.SavePlaylist(playlistEntry);
+                DownloadFinished(playlistEntry);
                 if (downloadSongs)
                 {
-                    playlistDownloader.QueuePlaylist(new PlaylistManager.Types.DownloadQueueEntry(playlist, BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetManagerForPlaylist(playlist)));
+                    playlistDownloader.QueuePlaylist(new PlaylistManager.Types.DownloadQueueEntry(playlistEntry.LocalPlaylist, BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetManagerForPlaylist(playlistEntry.LocalPlaylist)));
                 }
             }
             else
@@ -134,6 +134,7 @@ namespace MorePlaylists.UI
         {
             playlistEntry.FinishedDownload -= DownloadFinished;
             PlaylistLibUtils.SavePlaylist(playlistEntry);
+            morePlaylistsDetailViewController.OnPlaylistDownloaded();
         }
 
         #region Go To Playlist
