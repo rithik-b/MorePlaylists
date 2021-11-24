@@ -15,7 +15,7 @@ namespace MorePlaylists.Installers
 
             Container.Bind<MorePlaylistsListViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsSongListViewController>().FromNewComponentAsViewController().AsSingle();
-            Container.BindInterfacesAndSelfTo<MorePlaylistsDownloadQueueViewController>().FromNewComponentAsViewController().AsSingle();
+            Container.BindInterfacesAndSelfTo<MorePlaylistsDownloaderViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsDetailViewController>().FromNewComponentAsViewController().AsSingle();
             Container.Bind<MorePlaylistsNavigationController>().FromNewComponentAsViewController().AsSingle();
 
