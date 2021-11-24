@@ -6,7 +6,6 @@ using UnityEngine;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
 using IPA.Utilities;
-using MorePlaylists.Utilities;
 using PlaylistManager.Utilities;
 using PlaylistLibUtils = MorePlaylists.Utilities.PlaylistLibUtils;
 using SiraUtil;
@@ -54,26 +53,26 @@ namespace MorePlaylists.UI
 
         public void Initialize()
         {
-            sourceModalController.DidSelectSource += SourceModalController_DidSelectSource;
+            sourceModalController.DidSelectSource += SourceSelected;
 
-            morePlaylistsListViewController.DidSelectPlaylist += MorePlaylistsListViewController_DidSelectPlaylist;
-            morePlaylistsListViewController.DidClickSource += MorePlaylistsListViewController_DidClickSource;
-            morePlaylistsListViewController.DidClickSearch += MorePlaylistsListViewController_DidClickSearch;
+            morePlaylistsListViewController.DidSelectPlaylist += PlaylistSelected;
+            morePlaylistsListViewController.DidClickSource += SourceButtonClicked;
+            morePlaylistsListViewController.DidClickSearch += SearchButtonClicked;
 
-            morePlaylistsDetailViewController.DidPressDownload += MorePlaylistsDetailViewController_DidPressDownload;
-            morePlaylistsDetailViewController.DidGoToPlaylist += MorePlaylistsDetailViewController_DidGoToPlaylist;
+            morePlaylistsDetailViewController.DidPressDownload += DownloadButtonClicked;
+            morePlaylistsDetailViewController.DidGoToPlaylist += GoToPlaylistClicked;
         }
 
         public void Dispose()
         {
-            sourceModalController.DidSelectSource -= SourceModalController_DidSelectSource;
+            sourceModalController.DidSelectSource -= SourceSelected;
 
-            morePlaylistsListViewController.DidSelectPlaylist -= MorePlaylistsListViewController_DidSelectPlaylist;
-            morePlaylistsListViewController.DidClickSource -= MorePlaylistsListViewController_DidClickSource;
-            morePlaylistsListViewController.DidClickSearch -= MorePlaylistsListViewController_DidClickSearch;
+            morePlaylistsListViewController.DidSelectPlaylist -= PlaylistSelected;
+            morePlaylistsListViewController.DidClickSource -= SourceButtonClicked;
+            morePlaylistsListViewController.DidClickSearch -= SearchButtonClicked;
 
-            morePlaylistsDetailViewController.DidPressDownload -= MorePlaylistsDetailViewController_DidPressDownload;
-            morePlaylistsDetailViewController.DidGoToPlaylist -= MorePlaylistsDetailViewController_DidGoToPlaylist;
+            morePlaylistsDetailViewController.DidPressDownload -= DownloadButtonClicked;
+            morePlaylistsDetailViewController.DidGoToPlaylist -= GoToPlaylistClicked;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -85,7 +84,7 @@ namespace MorePlaylists.UI
             ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloaderViewController, morePlaylistsSongListViewController);
         }
 
-        private void SourceModalController_DidSelectSource(ISource source)
+        private void SourceSelected(ISource source)
         {
             morePlaylistsListViewController.ShowPlaylistsForSource(source);
             morePlaylistsSongListViewController.ClearList();
@@ -95,7 +94,7 @@ namespace MorePlaylists.UI
             }
         }
 
-        private void MorePlaylistsListViewController_DidSelectPlaylist(GenericEntry selectedPlaylistEntry)
+        private void PlaylistSelected(GenericEntry selectedPlaylistEntry)
         {
             if (selectedPlaylistEntry.DownloadState == DownloadState.None)
             {
@@ -110,11 +109,11 @@ namespace MorePlaylists.UI
             morePlaylistsSongListViewController.SetCurrentPlaylist(selectedPlaylistEntry);
         }
 
-        private void MorePlaylistsListViewController_DidClickSource() => sourceModalController.ShowModal(morePlaylistsListViewController.transform);
+        private void SourceButtonClicked() => sourceModalController.ShowModal(morePlaylistsListViewController.transform);
 
-        private void MorePlaylistsListViewController_DidClickSearch() => popupModalsController.ShowKeyboard(morePlaylistsListViewController.transform, morePlaylistsListViewController.Search);
+        private void SearchButtonClicked() => popupModalsController.ShowKeyboard(morePlaylistsListViewController.transform, morePlaylistsListViewController.Search);
 
-        private void MorePlaylistsDetailViewController_DidPressDownload(IGenericEntry playlistEntry, bool downloadSongs)
+        private void DownloadButtonClicked(IGenericEntry playlistEntry, bool downloadSongs)
         {
             playlistEntry.DownloadBlocked = true;
             if (playlistEntry.DownloadState == DownloadState.DownloadedPlaylist)
@@ -127,19 +126,19 @@ namespace MorePlaylists.UI
             }
             else
             {
-                playlistEntry.FinishedDownload += PlaylistEntry_FinishedDownload;
+                playlistEntry.FinishedDownload += DownloadFinished;
             }
         }
 
-        private void PlaylistEntry_FinishedDownload(IGenericEntry playlistEntry)
+        private void DownloadFinished(IGenericEntry playlistEntry)
         {
-            playlistEntry.FinishedDownload -= PlaylistEntry_FinishedDownload;
+            playlistEntry.FinishedDownload -= DownloadFinished;
             PlaylistLibUtils.SavePlaylist(playlistEntry);
         }
 
         #region Go To Playlist
 
-        private void MorePlaylistsDetailViewController_DidGoToPlaylist(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
+        private void GoToPlaylistClicked(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
         {
             morePlaylistsListViewController.AbortLoading();
             morePlaylistsSongListViewController.SetLoading(false);
