@@ -1,7 +1,6 @@
 ﻿using MorePlaylists.Utilities;
 using System;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace MorePlaylists.Entries
 {
@@ -9,7 +8,7 @@ namespace MorePlaylists.Entries
     {
         private BeatSaberPlaylistsLib.Types.IPlaylist _playlist = null;
         private DownloadState _downloadState = DownloadState.None;
-        public event Action FinishedDownload;
+        public event Action<IGenericEntry> FinishedDownload;
 
         public abstract string Title { get; protected set; }
         public abstract string Author { get; protected set; }
@@ -43,9 +42,9 @@ namespace MorePlaylists.Entries
             set
             {
                 _downloadState = value;
-                if (value == DownloadState.DownloadedPlaylist || value == DownloadState.Error)
+                if (value == DownloadState.DownloadedPlaylist)
                 {
-                    FinishedDownload?.Invoke();
+                    FinishedDownload?.Invoke(this);
                 }
             }
         }
@@ -65,19 +64,12 @@ namespace MorePlaylists.Entries
             }
             catch (Exception e)
             {
-                if (!(e is TaskCanceledException || e.Message.ToUpper().Contains("ABORTED")))
-                {
-                    Plugin.Log.Critical("An exception occurred while acquiring " + PlaylistURL + "\nException: " + e.Message);
-                    DownloadState = DownloadState.Error;
-                }
-                else
-                {
-                    DownloadState = DownloadState.None;
-                }
+                Plugin.Log.Critical("An exception occurred while acquiring " + PlaylistURL + "\nException: " + e.Message);
+                DownloadState = DownloadState.None;
             }
         }
     }
 
-    public enum DownloadState { None, Downloading, DownloadedPlaylist, Downloaded, Error };
+    public enum DownloadState { None, Downloading, DownloadedPlaylist, Downloaded };
     public enum SpriteType { URL, Base64 };
 }

@@ -8,7 +8,6 @@ using HMUI;
 using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
 using SongDetailsCache;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -73,13 +72,13 @@ namespace MorePlaylists.UI
 
             ClearList();
 
-            if (playlistEntry.DownloadState == DownloadState.Error)
+            if (playlistEntry.DownloadState == DownloadState.None)
             {
                 SetLoading(false);
             }
             else if (playlistEntry.DownloadState == DownloadState.DownloadedPlaylist || playlistEntry.DownloadState == DownloadState.Downloaded)
             {
-                InitSongList();
+                InitSongList(playlistEntry);
             }
             else
             {
@@ -106,7 +105,7 @@ namespace MorePlaylists.UI
             customListTableData.tableView.ClearSelection();
         }
 
-        private async void InitSongList()
+        private async void InitSongList(IGenericEntry playlistEntry)
         {
             await songLoadSemaphore.WaitAsync();
             ClearList();

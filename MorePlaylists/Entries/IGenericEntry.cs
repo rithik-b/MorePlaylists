@@ -12,7 +12,7 @@ namespace MorePlaylists.Entries
         SpriteType SpriteType { get; }
         BeatSaberPlaylistsLib.Types.IPlaylist RemotePlaylist { get; }
         BeatSaberPlaylistsLib.Types.IPlaylist LocalPlaylist { get; set; }
-        event Action FinishedDownload;
+        event Action<IGenericEntry> FinishedDownload;
         DownloadState DownloadState { get; set; }
         bool DownloadBlocked { get; set; }
     }

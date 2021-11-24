@@ -1,33 +1,19 @@
 ﻿using MorePlaylists.Entries;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace MorePlaylists.Utilities
 {
     public class PlaylistLibUtils
     {
-        internal static void SavePlaylist(IGenericEntry playlistEntry)
+        internal static BeatSaberPlaylistsLib.Types.IPlaylist SavePlaylist(IGenericEntry playlistEntry)
         {
             BeatSaberPlaylistsLib.Types.IPlaylist playlist = playlistEntry.RemotePlaylist;
             BeatSaberPlaylistsLib.PlaylistManager playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(playlistEntry.GetType().Name.Replace("Entry", ""));
 
             playlistManager.StorePlaylist(playlist);
-        }
-
-        internal static void DeletePlaylistIfExists(IGenericEntry playlistEntry)
-        {
-            BeatSaberPlaylistsLib.Types.IPlaylist playlist = playlistEntry.RemotePlaylist;
-            if (playlist == null)
-            {
-                return;
-            }
-
-            BeatSaberPlaylistsLib.PlaylistManager playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(playlistEntry.GetType().Name.Replace("Entry", ""));
-            if (playlistManager.GetAllPlaylists(false).Contains(playlist))
-            {
-                playlistManager.DeletePlaylist(playlist);
-            }
+            playlistEntry.LocalPlaylist = playlist;
+            return playlist;
         }
 
         internal static void UpdatePlaylistsOwned(List<IGenericEntry> playlistEntries)

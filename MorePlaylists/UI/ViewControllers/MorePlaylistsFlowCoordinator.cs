@@ -6,6 +6,9 @@ using UnityEngine;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
 using IPA.Utilities;
+using MorePlaylists.Utilities;
+using PlaylistManager.Utilities;
+using PlaylistLibUtils = MorePlaylists.Utilities.PlaylistLibUtils;
 
 namespace MorePlaylists.UI
 {
@@ -20,14 +23,15 @@ namespace MorePlaylists.UI
         private SourceModalController sourceModalController;
         private MorePlaylistsNavigationController morePlaylistsNavigationController;
         private MorePlaylistsListViewController morePlaylistsListViewController;
-        private MorePlaylistsDownloaderViewController morePlaylistsDownloadQueueViewController;
+        private MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController;
+        private PlaylistDownloader playlistDownloader;
         private MorePlaylistsDetailViewController morePlaylistsDetailViewController;
         private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
 
         [Inject]
         public void Construct(MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, LevelFilteringNavigationController levelFilteringNavigationController, SelectLevelCategoryViewController selectLevelCategoryViewController,
             PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController, MorePlaylistsListViewController morePlaylistsListViewController, 
-            MorePlaylistsDownloaderViewController morePlaylistsDownloadQueueViewController, MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
+            MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController, PlaylistDownloader playlistDownloader, MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
         {
             this.mainFlowCoordinator = mainFlowCoordinator;
             this.mainMenuViewController = mainMenuViewController;
@@ -38,7 +42,8 @@ namespace MorePlaylists.UI
             this.sourceModalController = sourceModalController;
             this.morePlaylistsNavigationController = morePlaylistsNavigationController;
             this.morePlaylistsListViewController = morePlaylistsListViewController;
-            this.morePlaylistsDownloadQueueViewController = morePlaylistsDownloadQueueViewController;
+            this.morePlaylistsDownloaderViewController = morePlaylistsDownloaderViewController;
+            this.playlistDownloader = playlistDownloader;
             this.morePlaylistsDetailViewController = morePlaylistsDetailViewController;
             this.morePlaylistsSongListViewController = morePlaylistsSongListViewController;
         }
@@ -73,7 +78,7 @@ namespace MorePlaylists.UI
             showBackButton = true;
 
             SetViewControllersToNavigationController(morePlaylistsNavigationController, morePlaylistsListViewController);
-            ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloadQueueViewController, morePlaylistsSongListViewController);
+            ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloaderViewController, morePlaylistsSongListViewController);
         }
 
         private void SourceModalController_DidSelectSource(ISource source)
@@ -88,7 +93,7 @@ namespace MorePlaylists.UI
 
         private void MorePlaylistsListViewController_DidSelectPlaylist(GenericEntry selectedPlaylistEntry)
         {
-            if (selectedPlaylistEntry.DownloadState == DownloadState.None || selectedPlaylistEntry.DownloadState == DownloadState.Error)
+            if (selectedPlaylistEntry.DownloadState == DownloadState.None)
             {
                 _ = selectedPlaylistEntry.RemotePlaylist;
             }
@@ -108,6 +113,24 @@ namespace MorePlaylists.UI
         private void MorePlaylistsDetailViewController_DidPressDownload(IGenericEntry playlistEntry, bool downloadSongs)
         {
             playlistEntry.DownloadBlocked = true;
+            if (playlistEntry.DownloadState == DownloadState.DownloadedPlaylist)
+            {
+                BeatSaberPlaylistsLib.Types.IPlaylist playlist = PlaylistLibUtils.SavePlaylist(playlistEntry);
+                if (downloadSongs)
+                {
+                    playlistDownloader.QueuePlaylist(new PlaylistManager.Types.DownloadQueueEntry(playlist, BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetManagerForPlaylist(playlist)));
+                }
+            }
+            else
+            {
+                playlistEntry.FinishedDownload += PlaylistEntry_FinishedDownload;
+            }
+        }
+
+        private void PlaylistEntry_FinishedDownload(IGenericEntry playlistEntry)
+        {
+            playlistEntry.FinishedDownload -= PlaylistEntry_FinishedDownload;
+            PlaylistLibUtils.SavePlaylist(playlistEntry);
         }
 
         #region Go To Playlist
