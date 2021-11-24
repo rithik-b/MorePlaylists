@@ -2,7 +2,7 @@
 
 namespace MorePlaylists.Entries
 {
-    public class BeastSaberEntry : GenericEntry
+    internal class BeastSaberEntry : GenericEntry
     {
         [JsonProperty("playlistTitle")]
         public override string Title { get; protected set; }

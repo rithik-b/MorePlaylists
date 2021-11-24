@@ -9,11 +9,13 @@ using IPA.Utilities;
 using MorePlaylists.Utilities;
 using PlaylistManager.Utilities;
 using PlaylistLibUtils = MorePlaylists.Utilities.PlaylistLibUtils;
+using SiraUtil;
 
 namespace MorePlaylists.UI
 {
     internal class MorePlaylistsFlowCoordinator : FlowCoordinator, IInitializable, IDisposable
     {
+        private SiraClient siraClient;
         private MainFlowCoordinator mainFlowCoordinator;
         private MainMenuViewController mainMenuViewController;
         private LevelFilteringNavigationController levelFilteringNavigationController;
@@ -29,10 +31,12 @@ namespace MorePlaylists.UI
         private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
 
         [Inject]
-        public void Construct(MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, LevelFilteringNavigationController levelFilteringNavigationController, SelectLevelCategoryViewController selectLevelCategoryViewController,
-            PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController, MorePlaylistsListViewController morePlaylistsListViewController, 
-            MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController, PlaylistDownloader playlistDownloader, MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
+        public void Construct(SiraClient siraClient, MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, LevelFilteringNavigationController levelFilteringNavigationController,
+            SelectLevelCategoryViewController selectLevelCategoryViewController, PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController,
+            MorePlaylistsListViewController morePlaylistsListViewController, MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController, PlaylistDownloader playlistDownloader,
+            MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
         {
+            this.siraClient = siraClient;
             this.mainFlowCoordinator = mainFlowCoordinator;
             this.mainMenuViewController = mainMenuViewController;
             this.levelFilteringNavigationController = levelFilteringNavigationController;
@@ -95,7 +99,7 @@ namespace MorePlaylists.UI
         {
             if (selectedPlaylistEntry.DownloadState == DownloadState.None)
             {
-                _ = selectedPlaylistEntry.RemotePlaylist;
+                selectedPlaylistEntry.DownloadPlaylist(siraClient);
             }
 
             if (!morePlaylistsDetailViewController.isInViewControllerHierarchy)

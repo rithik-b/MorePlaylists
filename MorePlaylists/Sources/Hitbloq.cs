@@ -1,6 +1,6 @@
 ﻿using MorePlaylists.Entries;
-using MorePlaylists.Utilities;
 using Newtonsoft.Json;
+using SiraUtil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,12 +14,18 @@ namespace MorePlaylists.Sources
 {
     internal class Hitbloq : ISource, IInitializable
     {
+        private SiraClient siraClient;
         private static List<HitbloqEntry> _endpointResult = new List<HitbloqEntry>();
         private Sprite _logo;
 
         public string Website => "https://hitbloq.com/";
         public string Endpoint => "api/map_pools_detailed";
         public Sprite Logo => _logo;
+
+        public Hitbloq(SiraClient siraClient)
+        {
+            this.siraClient = siraClient;
+        }
 
         public void Initialize()
         {
@@ -32,12 +38,20 @@ namespace MorePlaylists.Sources
             {
                 try
                 {
-                    byte[] response = await DownloaderUtils.instance.DownloadFileToBytesAsync(Website + Endpoint, token);
-                    _endpointResult = JsonConvert.DeserializeObject<List<HitbloqEntry>>(Encoding.UTF8.GetString(response));
+                    WebResponse webResponse = await siraClient.GetAsync(Website + Endpoint, token);
+                    if (webResponse.IsSuccessStatusCode)
+                    {
+                        byte[] byteResponse = webResponse.ContentToBytes();
+                        _endpointResult = JsonConvert.DeserializeObject<List<HitbloqEntry>>(Encoding.UTF8.GetString(byteResponse));
+                    }
+                    else
+                    {
+                        Plugin.Log.Info($"An error occurred while trying to fetch the HitBloq playlists\nError code: {webResponse.StatusCode}");
+                    }
                 }
                 catch (Exception e)
                 {
-                    Plugin.Log.Warn($"An error occurred while trying to fetch the HitBloq playlists\nException: {e}");
+                    Plugin.Log.Info($"An error occurred while trying to fetch the HitBloq playlists\nException: {e}");
                 }
             }
             return _endpointResult.Cast<GenericEntry>().Reverse().ToList();

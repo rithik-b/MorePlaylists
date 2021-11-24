@@ -1,6 +1,7 @@
-﻿using MorePlaylists.Utilities;
+﻿using SiraUtil;
 using System;
 using System.IO;
+using System.Threading;
 
 namespace MorePlaylists.Entries
 {
@@ -17,16 +18,7 @@ namespace MorePlaylists.Entries
 
         public BeatSaberPlaylistsLib.Types.IPlaylist RemotePlaylist
         {
-            get
-            {
-                if (_playlist == null && DownloadState != DownloadState.Downloading)
-                {
-                    DownloadState = DownloadState.Downloading;
-                    DownloadPlaylist();
-                }
-
-                return _playlist;
-            }
+            get => _playlist;
             private set
             {
                 _playlist = value;
@@ -55,17 +47,25 @@ namespace MorePlaylists.Entries
 
         public abstract SpriteType SpriteType { get; }
 
-        private async void DownloadPlaylist()
+        public async void DownloadPlaylist(SiraClient siraClient)
         {
+            DownloadState = DownloadState.Downloading;
             try
             {
-                Stream playlistStream = new MemoryStream(await DownloaderUtils.instance.DownloadFileToBytesAsync(PlaylistURL));
-                RemotePlaylist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
+                WebResponse webResponse = await siraClient.GetAsync(PlaylistURL, CancellationToken.None);
+                if (webResponse.IsSuccessStatusCode)
+                {
+                    Stream playlistStream = new MemoryStream(webResponse.ContentToBytes());
+                    RemotePlaylist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
+                }
+                else
+                {
+                    Plugin.Log.Info("An error occurred while acquiring " + PlaylistURL + $"\nError code: {webResponse.StatusCode}");
+                }
             }
             catch (Exception e)
             {
-                Plugin.Log.Critical("An exception occurred while acquiring " + PlaylistURL + "\nException: " + e.Message);
-                DownloadState = DownloadState.None;
+                Plugin.Log.Info("An exception occurred while acquiring " + PlaylistURL + $"\nException: {e.Message}");
             }
         }
     }

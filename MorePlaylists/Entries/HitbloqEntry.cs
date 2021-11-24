@@ -2,7 +2,7 @@
 
 namespace MorePlaylists.Entries
 {
-    public class HitbloqEntry : GenericEntry
+    internal class HitbloqEntry : GenericEntry
     {
         [JsonProperty("title")]
         public override string Title { get; protected set; }
