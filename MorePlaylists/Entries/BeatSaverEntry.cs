@@ -18,7 +18,7 @@ namespace MorePlaylists.Entries
         public BeatSaverAuthor Owner { get; protected set; }
 
         [JsonProperty("description")]
-        public override string Description { get; protected set; }
+        public string RawDescription { get; protected set; }
 
         [JsonProperty("playlistId")]
         public string PlaylistID { get; protected set; }
@@ -37,6 +37,12 @@ namespace MorePlaylists.Entries
         public override string PlaylistURL
         {
             get => $"https://api.beatsaver.com/playlists/id/{PlaylistID}/download";
+            protected set { }
+        }
+
+        public override string Description 
+        {
+            get => string.IsNullOrWhiteSpace(RawDescription) ? "No Description available for this playlist." : RawDescription;
             protected set { }
         }
     }
