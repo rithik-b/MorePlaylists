@@ -17,9 +17,9 @@ namespace MorePlaylists.Sources
         private Sprite _logo;
         private int page;
 
-        public string Website => "https://api.beatsaver.com/";
+        public string Website => "https://api.beatsaver.com";
 
-        public string Endpoint => "playlists/search/";
+        public string Endpoint => "playlists/search";
 
         public Sprite Logo
         {
@@ -49,7 +49,7 @@ namespace MorePlaylists.Sources
 
             try
             {
-                WebResponse webResponse = await siraClient.GetAsync(Website + Endpoint + page.ToString(), token);
+                WebResponse webResponse = await siraClient.GetAsync($"{Website}/{Endpoint}/{page}?q={searchQuery}", token);
                 if (webResponse.IsSuccessStatusCode)
                 {
                     byte[] byteResponse = webResponse.ContentToBytes();
