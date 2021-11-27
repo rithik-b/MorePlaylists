@@ -31,22 +31,8 @@ namespace MorePlaylists
         {
             Instance = this;
             Plugin.Log = logger;
-            Plugin.Log?.Debug("MorePlaylists initialized.");
             zenjector.OnMenu<MorePlaylistsMenuInstaller>();
         }
-
-        #region BSIPA Config
-        //Uncomment to use BSIPA's config
-        /*
-        [Init]
-        public void InitWithConfig(Config conf)
-        {
-            Configuration.PluginConfig.Instance = conf.Generated<Configuration.PluginConfig>();
-            Plugin.Log?.Debug("Config loaded");
-        }
-        */
-        #endregion
-
 
         #region Disableable
         [OnEnable, OnDisable]
