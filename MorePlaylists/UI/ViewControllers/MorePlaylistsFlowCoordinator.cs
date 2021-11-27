@@ -111,7 +111,14 @@ namespace MorePlaylists.UI
 
         private void OnPlaylistDownloaded(IGenericEntry playlistEntry)
         {
-            morePlaylistsListViewController.SetEntryAsOwned(playlistEntry);
+            if (playlistEntry.DownloadState == DownloadState.Downloaded)
+            {
+                morePlaylistsListViewController.SetEntryAsOwned(playlistEntry);
+            }
+            else
+            {
+                popupModalsController.ShowOkModal(morePlaylistsListViewController.transform, "An error occured while downloading, please try again later", null);
+            }
             morePlaylistsDetailViewController.OnPlaylistDownloaded();
         }
 

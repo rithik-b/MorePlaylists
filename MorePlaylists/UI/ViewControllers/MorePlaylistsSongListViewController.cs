@@ -76,7 +76,7 @@ namespace MorePlaylists.UI
             {
                 SetLoading(false);
             }
-            else if (playlistEntry.DownloadState == DownloadState.DownloadedPlaylist || playlistEntry.DownloadState == DownloadState.Downloaded)
+            else if (playlistEntry.DownloadState == DownloadState.Downloaded)
             {
                 InitSongList(playlistEntry);
             }

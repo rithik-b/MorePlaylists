@@ -22,7 +22,7 @@ namespace MorePlaylists.Entries
             private set
             {
                 _playlist = value;
-                DownloadState = value == null ? DownloadState.None : DownloadState.DownloadedPlaylist;
+                DownloadState = value == null ? DownloadState.None : DownloadState.Downloaded;
             }
         }
 
@@ -34,7 +34,7 @@ namespace MorePlaylists.Entries
             set
             {
                 _downloadState = value;
-                if (value == DownloadState.DownloadedPlaylist)
+                if (value == DownloadState.Downloaded || value == DownloadState.Error)
                 {
                     FinishedDownload?.Invoke(this);
                 }
@@ -61,15 +61,17 @@ namespace MorePlaylists.Entries
                 else
                 {
                     Plugin.Log.Info("An error occurred while acquiring " + PlaylistURL + $"\nError code: {webResponse.StatusCode}");
+                    DownloadState = DownloadState.Error;
                 }
             }
             catch (Exception e)
             {
                 Plugin.Log.Info("An exception occurred while acquiring " + PlaylistURL + $"\nException: {e.Message}");
+                DownloadState = DownloadState.Error;
             }
         }
     }
 
-    public enum DownloadState { None, Downloading, DownloadedPlaylist, Downloaded };
+    public enum DownloadState { None, Downloading, Downloaded, Error };
     public enum SpriteType { URL, Base64 };
 }

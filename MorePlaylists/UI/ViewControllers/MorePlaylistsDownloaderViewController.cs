@@ -39,7 +39,7 @@ namespace MorePlaylists.UI
                 DownloadSongs.Add(playlistEntry);
             }
 
-            if (playlistEntry.DownloadState == DownloadState.DownloadedPlaylist)
+            if (playlistEntry.DownloadState == DownloadState.Downloaded)
             {
                 DownloadFinished(playlistEntry);
             }
@@ -52,10 +52,18 @@ namespace MorePlaylists.UI
         private void DownloadFinished(IGenericEntry playlistEntry)
         {
             playlistEntry.FinishedDownload -= DownloadFinished;
-            PlaylistLibUtils.SavePlaylist(playlistEntry);
+
+            if (playlistEntry.DownloadState == DownloadState.Downloaded)
+            {
+                PlaylistLibUtils.SavePlaylist(playlistEntry);
+                if (DownloadSongs.Contains(playlistEntry))
+                {
+                    playlistDownloader.QueuePlaylist(new PlaylistManager.Types.DownloadQueueEntry(playlistEntry.LocalPlaylist, BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetManagerForPlaylist(playlistEntry.LocalPlaylist)));
+                }
+            }
+
             if (DownloadSongs.Contains(playlistEntry))
             {
-                playlistDownloader.QueuePlaylist(new PlaylistManager.Types.DownloadQueueEntry(playlistEntry.LocalPlaylist, BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetManagerForPlaylist(playlistEntry.LocalPlaylist)));
                 DownloadSongs.Remove(playlistEntry);
             }
             PlaylistDownloaded?.Invoke(playlistEntry);
