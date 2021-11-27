@@ -5,8 +5,6 @@ using System;
 using UnityEngine;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
-using PlaylistManager.Utilities;
-using PlaylistLibUtils = MorePlaylists.Utilities.PlaylistLibUtils;
 using SiraUtil;
 using MorePlaylists.Utilities;
 
@@ -23,14 +21,13 @@ namespace MorePlaylists.UI
         private MorePlaylistsNavigationController morePlaylistsNavigationController;
         private MorePlaylistsListViewController morePlaylistsListViewController;
         private MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController;
-        private PlaylistDownloader playlistDownloader;
         private MorePlaylistsDetailViewController morePlaylistsDetailViewController;
         private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
 
         [Inject]
         public void Construct(SiraClient siraClient, MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator,
             PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController,
-            MorePlaylistsListViewController morePlaylistsListViewController, MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController, PlaylistDownloader playlistDownloader,
+            MorePlaylistsListViewController morePlaylistsListViewController, MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController,
             MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
         {
             this.siraClient = siraClient;
@@ -42,7 +39,6 @@ namespace MorePlaylists.UI
             this.morePlaylistsNavigationController = morePlaylistsNavigationController;
             this.morePlaylistsListViewController = morePlaylistsListViewController;
             this.morePlaylistsDownloaderViewController = morePlaylistsDownloaderViewController;
-            this.playlistDownloader = playlistDownloader;
             this.morePlaylistsDetailViewController = morePlaylistsDetailViewController;
             this.morePlaylistsSongListViewController = morePlaylistsSongListViewController;
         }
@@ -55,8 +51,10 @@ namespace MorePlaylists.UI
             morePlaylistsListViewController.DidClickSource += SourceButtonClicked;
             morePlaylistsListViewController.DidClickSearch += SearchButtonClicked;
 
-            morePlaylistsDetailViewController.DidPressDownload += DownloadButtonClicked;
+            morePlaylistsDetailViewController.DidPressDownload += morePlaylistsDownloaderViewController.DownloadPlaylist;
             morePlaylistsDetailViewController.DidGoToPlaylist += GoToPlaylistClicked;
+
+            morePlaylistsDownloaderViewController.PlaylistDownloaded += OnPlaylistDownloaded;
         }
 
         public void Dispose()
@@ -67,8 +65,10 @@ namespace MorePlaylists.UI
             morePlaylistsListViewController.DidClickSource -= SourceButtonClicked;
             morePlaylistsListViewController.DidClickSearch -= SearchButtonClicked;
 
-            morePlaylistsDetailViewController.DidPressDownload -= DownloadButtonClicked;
+            morePlaylistsDetailViewController.DidPressDownload -= morePlaylistsDownloaderViewController.DownloadPlaylist;
             morePlaylistsDetailViewController.DidGoToPlaylist -= GoToPlaylistClicked;
+
+            morePlaylistsDownloaderViewController.PlaylistDownloaded -= OnPlaylistDownloaded;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -109,27 +109,9 @@ namespace MorePlaylists.UI
 
         private void SearchButtonClicked() => popupModalsController.ShowKeyboard(morePlaylistsListViewController.transform, morePlaylistsListViewController.Search);
 
-        private void DownloadButtonClicked(IGenericEntry playlistEntry, bool downloadSongs)
+        private void OnPlaylistDownloaded(IGenericEntry playlistEntry)
         {
-            playlistEntry.DownloadBlocked = true;
-            if (playlistEntry.DownloadState == DownloadState.DownloadedPlaylist)
-            {
-                DownloadFinished(playlistEntry);
-                if (downloadSongs)
-                {
-                    playlistDownloader.QueuePlaylist(new PlaylistManager.Types.DownloadQueueEntry(playlistEntry.LocalPlaylist, BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetManagerForPlaylist(playlistEntry.LocalPlaylist)));
-                }
-            }
-            else
-            {
-                playlistEntry.FinishedDownload += DownloadFinished;
-            }
-        }
-
-        private void DownloadFinished(IGenericEntry playlistEntry)
-        {
-            playlistEntry.FinishedDownload -= DownloadFinished;
-            PlaylistLibUtils.SavePlaylist(playlistEntry);
+            morePlaylistsListViewController.SetEntryAsOwned(playlistEntry);
             morePlaylistsDetailViewController.OnPlaylistDownloaded();
         }
 
