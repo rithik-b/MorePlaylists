@@ -21,12 +21,15 @@ namespace MorePlaylists.UI
     {
         private StandardLevelDetailViewController standardLevelDetailViewController;
         private SpriteLoader spriteLoader;
+        private ScrollView scrollView;
 
         private LoadingControl loadingSpinner;
         private CancellationTokenSource tokenSource;
         private ISource currentSource;
         private List<GenericEntry> currentPlaylists;
-        private bool _refreshInteractable = true;
+        private string currentQuery;
+        private float currentScrollPosition;
+        private bool exhaustedPlaylists;
 
         private static SemaphoreSlim listUpdateSemaphore = new SemaphoreSlim(1, 1);
 
@@ -54,11 +57,14 @@ namespace MorePlaylists.UI
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            if (!firstActivation)
-            {
-                ShowPlaylists();
-                RefreshInteractable = true;
-            }
+            ShowPlaylists();
+            scrollView.scrollPositionChangedEvent += OnScrollPositionChanged;
+        }
+
+        protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
+        {
+            base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
+            scrollView.scrollPositionChangedEvent -= OnScrollPositionChanged;
         }
 
         #region Actions
@@ -67,8 +73,8 @@ namespace MorePlaylists.UI
         private void PostParse()
         {
             loadingSpinner = GameObject.Instantiate(Accessors.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
-            Destroy(loadingSpinner.GetComponent<Touchable>());;
-            ShowPlaylists();
+            Destroy(loadingSpinner.GetComponent<Touchable>());
+            scrollView = Accessors.ScrollViewAccessor(ref customListTableData.tableView);
         }
 
         [UIAction("list-select")]
@@ -83,10 +89,6 @@ namespace MorePlaylists.UI
             DidClickSource?.Invoke();
         }
 
-
-        [UIAction("refresh-click")]
-        private void RefreshList() => ShowPlaylists(true);
-
         [UIAction("abort-click")]
         internal void AbortLoading()
         {
@@ -99,7 +101,7 @@ namespace MorePlaylists.UI
 
         #endregion
 
-        internal void Search(string query) => ShowPlaylists(query: query);
+        internal void Search(string query) => ShowPlaylists(true, query);
 
         internal void SetEntryAsOwned(IGenericEntry playlistEntry)
         {
@@ -113,11 +115,6 @@ namespace MorePlaylists.UI
                     customListTableData.tableView.ReloadDataKeepingPosition();
                 });
             }
-        }
-
-        internal void DisableRefresh(bool refreshDisabled)
-        {
-            RefreshInteractable = !refreshDisabled;
         }
 
         #region Show Playlists
@@ -136,7 +133,8 @@ namespace MorePlaylists.UI
             tokenSource = new CancellationTokenSource();
             SetLoading(true);
 
-            currentPlaylists = await currentSource.GetEndpointResultTask(refreshRequested, tokenSource.Token, query);
+            currentQuery = query;
+            currentPlaylists = await currentSource.GetEndpointResultTask(refreshRequested, true, tokenSource.Token, query);
 
             PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IGenericEntry>().ToList());
             SetLoading(true, 100);
@@ -160,6 +158,56 @@ namespace MorePlaylists.UI
             listUpdateSemaphore.Release();
         }
 
+        private async void OnScrollPositionChanged(float newPos)
+        {
+            if (!currentSource.PagingSupport || listUpdateSemaphore.CurrentCount == 0 || exhaustedPlaylists || currentScrollPosition == newPos)
+            {
+                return;
+            }
+
+            currentScrollPosition = newPos;
+            scrollView.RefreshButtons();
+
+            if (!Accessors.PageDownAccessor(ref scrollView).interactable)
+            {
+                await listUpdateSemaphore.WaitAsync();
+                customListTableData.tableView.ClearSelection();
+                tokenSource = new CancellationTokenSource();
+                SetLoading(true);
+
+                List<GenericEntry> playlistsToAdd = await currentSource.GetEndpointResultTask(false, false, tokenSource.Token, currentQuery);
+
+                // If we get an empty result, we can't scroll anymore
+                if (playlistsToAdd.Count == 0)
+                {
+                    exhaustedPlaylists = true;
+                }
+
+                currentPlaylists.AddRange(playlistsToAdd);
+
+                PlaylistLibUtils.UpdatePlaylistsOwned(playlistsToAdd.Cast<IGenericEntry>().ToList());
+                SetLoading(true, 100);
+
+                if (currentPlaylists != null)
+                {
+                    foreach (GenericEntry playlistEntry in playlistsToAdd)
+                    {
+                        CustomListTableData.CustomCellInfo customCellInfo = new CustomListTableData.CustomCellInfo(playlistEntry.DownloadBlocked ? $"<#7F7F7F>{playlistEntry.Title}" : playlistEntry.Title,
+                            playlistEntry.Author);
+                        customListTableData.data.Add(customCellInfo);
+                        spriteLoader.GetSpriteForEntry(playlistEntry, (Sprite sprite) =>
+                        {
+                            customCellInfo.icon = sprite;
+                            customListTableData.tableView.ReloadDataKeepingPosition();
+                        });
+                    }
+                }
+                customListTableData.tableView.ReloadDataKeepingPosition();
+                SetLoading(false);
+                listUpdateSemaphore.Release();
+            }
+        }
+
         #endregion
 
         private void SetLoading(bool value, double progress = 0, string details = "")
@@ -172,17 +220,6 @@ namespace MorePlaylists.UI
             else
             {
                 parserParams.EmitEvent("close-loading-modal");
-            }
-        }
-
-        [UIValue("refresh-interactable")]
-        private bool RefreshInteractable
-        {
-            get => _refreshInteractable;
-            set
-            {
-                _refreshInteractable = value;
-                NotifyPropertyChanged(nameof(RefreshInteractable));
             }
         }
     }

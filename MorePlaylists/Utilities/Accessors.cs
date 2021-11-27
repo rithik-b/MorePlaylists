@@ -1,10 +1,15 @@
 ﻿using HMUI;
 using IPA.Utilities;
+using UnityEngine.UI;
 
 namespace MorePlaylists.Utilities
 {
     internal class Accessors
     {
+        public static readonly FieldAccessor<TableView, ScrollView>.Accessor ScrollViewAccessor = FieldAccessor<TableView, ScrollView>.GetAccessor("_scrollView");
+
+        public static readonly FieldAccessor<ScrollView, Button>.Accessor PageDownAccessor = FieldAccessor<ScrollView, Button>.GetAccessor("_pageDownButton");
+
         public static readonly FieldAccessor<StandardLevelDetailViewController, LoadingControl>.Accessor LoadingControlAccessor =
             FieldAccessor<StandardLevelDetailViewController, LoadingControl>.GetAccessor("_loadingControl");
 

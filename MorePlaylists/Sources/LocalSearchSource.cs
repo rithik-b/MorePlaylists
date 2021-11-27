@@ -18,8 +18,9 @@ namespace MorePlaylists.Sources
         public abstract string Website { get; }
         public abstract string Endpoint { get; }
         public abstract Sprite Logo { get; }
+        public bool PagingSupport => false;
 
-        public async Task<List<GenericEntry>> GetEndpointResultTask(bool refreshRequested, CancellationToken token, string searchQuery)
+        public async Task<List<GenericEntry>> GetEndpointResultTask(bool refreshRequested, bool resetPage, CancellationToken token, string searchQuery)
         {
             if (cachedResult.Count == 0 || refreshRequested)
             {

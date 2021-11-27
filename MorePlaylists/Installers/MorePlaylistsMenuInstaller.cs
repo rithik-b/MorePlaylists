@@ -10,6 +10,7 @@ namespace MorePlaylists.Installers
     {
         public override void InstallBindings()
         {
+            Container.BindInterfacesTo<BeatSaver>().AsSingle();
             Container.BindInterfacesTo<BeastSaber>().AsSingle();
             Container.BindInterfacesTo<Hitbloq>().AsSingle();
 
