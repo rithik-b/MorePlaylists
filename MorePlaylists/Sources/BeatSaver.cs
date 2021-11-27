@@ -15,10 +15,11 @@ namespace MorePlaylists.Sources
     {
         private SiraClient siraClient;
         private Sprite _logo;
+        private int page;
 
         public string Website => "https://api.beatsaver.com/";
 
-        public string Endpoint => "playlists/search/0";
+        public string Endpoint => "playlists/search/";
 
         public Sprite Logo
         {
@@ -32,6 +33,8 @@ namespace MorePlaylists.Sources
             }
         }
 
+        public bool PagingSupport => true;
+
         public BeatSaver(SiraClient siraClient)
         {
             this.siraClient = siraClient;
@@ -39,13 +42,20 @@ namespace MorePlaylists.Sources
 
         public async Task<List<GenericEntry>> GetEndpointResultTask(bool refreshRequested, CancellationToken token, string searchQuery)
         {
+            if (refreshRequested)
+            {
+                page = 0;
+            }
+
             try
             {
-                WebResponse webResponse = await siraClient.GetAsync(Website + Endpoint, token);
+                WebResponse webResponse = await siraClient.GetAsync(Website + Endpoint + page.ToString(), token);
                 if (webResponse.IsSuccessStatusCode)
                 {
                     byte[] byteResponse = webResponse.ContentToBytes();
-                    return JsonConvert.DeserializeObject<BeatSaverResponse>(Encoding.UTF8.GetString(byteResponse)).Entries.Cast<GenericEntry>().ToList();
+                    List<GenericEntry> returnVal = JsonConvert.DeserializeObject<BeatSaverResponse>(Encoding.UTF8.GetString(byteResponse)).Entries.Cast<GenericEntry>().ToList();
+                    page++;
+                    return returnVal;
                 }
                 else
                 {
