@@ -136,13 +136,7 @@ namespace MorePlaylists.UI
             tokenSource = new CancellationTokenSource();
             SetLoading(true);
 
-            currentPlaylists = await currentSource.GetEndpointResultTask(refreshRequested, tokenSource.Token);
-
-            if (query != null)
-            {
-                currentPlaylists = currentPlaylists.Where(p => p.Title.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    p.Author.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 || p.Description.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
-            }
+            currentPlaylists = await currentSource.GetEndpointResultTask(refreshRequested, tokenSource.Token, query);
 
             PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IGenericEntry>().ToList());
             SetLoading(true, 100);
