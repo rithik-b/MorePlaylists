@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MorePlaylists.Entries;
 using Newtonsoft.Json;
-using SiraUtil;
+using SiraUtil.Web;
 using UnityEngine;
 
 namespace MorePlaylists.Sources
@@ -14,7 +13,7 @@ namespace MorePlaylists.Sources
     internal abstract class LocalSearchSource<T> : ISource
     {
         private List<T> cachedResult = new List<T>();
-        protected abstract SiraClient SiraClient { get; }
+        protected abstract IHttpService SiraHttpService { get; }
         public abstract string Website { get; }
         public abstract string Endpoint { get; }
         public abstract Sprite Logo { get; }
@@ -26,15 +25,14 @@ namespace MorePlaylists.Sources
             {
                 try
                 {
-                    WebResponse webResponse = await SiraClient.GetAsync(Website + Endpoint, token);
-                    if (webResponse.IsSuccessStatusCode)
+                    IHttpResponse webResponse = await SiraHttpService.GetAsync(Website + Endpoint, cancellationToken: token);
+                    if (webResponse.Successful)
                     {
-                        byte[] byteResponse = webResponse.ContentToBytes();
-                        cachedResult = JsonConvert.DeserializeObject<List<T>>(Encoding.UTF8.GetString(byteResponse));
+                        cachedResult = JsonConvert.DeserializeObject<List<T>>(await webResponse.ReadAsStringAsync());
                     }
                     else
                     {
-                        Plugin.Log.Info($"An error occurred while trying to fetch the {typeof(T)} playlists\nError code: {webResponse.StatusCode}");
+                        Plugin.Log.Info($"An error occurred while trying to fetch the {typeof(T)} playlists\nError code: {webResponse.Code}");
                     }
                 }
                 catch (Exception e)

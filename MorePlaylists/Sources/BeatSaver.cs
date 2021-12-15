@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MorePlaylists.Entries;
 using Newtonsoft.Json;
-using SiraUtil;
+using SiraUtil.Web;
 using UnityEngine;
 
 namespace MorePlaylists.Sources
 {
     internal class BeatSaver : ISource
     {
-        private SiraClient siraClient;
+        private IHttpService _siraHttpService;
         private Sprite _logo;
         private int page;
 
@@ -35,9 +34,9 @@ namespace MorePlaylists.Sources
 
         public bool PagingSupport => true;
 
-        public BeatSaver(SiraClient siraClient)
+        public BeatSaver(IHttpService siraHttpService)
         {
-            this.siraClient = siraClient;
+            _siraHttpService = siraHttpService;
         }
 
         public async Task<List<GenericEntry>> GetEndpointResultTask(bool refreshRequested, bool resetPage, CancellationToken token, string searchQuery)
@@ -49,17 +48,16 @@ namespace MorePlaylists.Sources
 
             try
             {
-                WebResponse webResponse = await siraClient.GetAsync($"{Website}/{Endpoint}/{page}?q={searchQuery}", token);
-                if (webResponse.IsSuccessStatusCode)
+                IHttpResponse webResponse = await _siraHttpService.GetAsync($"{Website}/{Endpoint}/{page}?q={searchQuery}", cancellationToken: token);
+                if (webResponse.Successful)
                 {
-                    byte[] byteResponse = webResponse.ContentToBytes();
-                    List<GenericEntry> returnVal = JsonConvert.DeserializeObject<BeatSaverResponse>(Encoding.UTF8.GetString(byteResponse)).Entries.Cast<GenericEntry>().ToList();
+                    List<GenericEntry> returnVal = JsonConvert.DeserializeObject<BeatSaverResponse>(await webResponse.ReadAsStringAsync()).Entries.Cast<GenericEntry>().ToList();
                     page++;
                     return returnVal;
                 }
                 else
                 {
-                    Plugin.Log.Info($"An error occurred while trying to fetch the {nameof(BeatSaver)} playlists\nError code: {webResponse.StatusCode}");
+                    Plugin.Log.Info($"An error occurred while trying to fetch the {nameof(BeatSaver)} playlists\nError code: {webResponse.Code}");
                 }
             }
             catch (Exception e)

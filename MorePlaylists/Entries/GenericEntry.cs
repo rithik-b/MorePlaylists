@@ -1,6 +1,5 @@
-﻿using SiraUtil;
+﻿using SiraUtil.Web;
 using System;
-using System.IO;
 using System.Threading;
 
 namespace MorePlaylists.Entries
@@ -47,20 +46,19 @@ namespace MorePlaylists.Entries
 
         public abstract SpriteType SpriteType { get; }
 
-        public async void DownloadPlaylist(SiraClient siraClient)
+        public async void DownloadPlaylist(IHttpService siraHttpService)
         {
             DownloadState = DownloadState.Downloading;
             try
             {
-                WebResponse webResponse = await siraClient.GetAsync(PlaylistURL, CancellationToken.None);
-                if (webResponse.IsSuccessStatusCode)
+                IHttpResponse webResponse = await siraHttpService.GetAsync(PlaylistURL, cancellationToken: CancellationToken.None);
+                if (webResponse.Successful)
                 {
-                    Stream playlistStream = new MemoryStream(webResponse.ContentToBytes());
-                    RemotePlaylist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
+                    RemotePlaylist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(await webResponse.ReadAsStreamAsync());
                 }
                 else
                 {
-                    Plugin.Log.Info("An error occurred while acquiring " + PlaylistURL + $"\nError code: {webResponse.StatusCode}");
+                    Plugin.Log.Info("An error occurred while acquiring " + PlaylistURL + $"\nError code: {webResponse.Code}");
                     DownloadState = DownloadState.Error;
                 }
             }

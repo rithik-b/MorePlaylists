@@ -1,25 +1,17 @@
 ﻿using MorePlaylists.Entries;
-using Newtonsoft.Json;
-using SiraUtil;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using SiraUtil.Web;
 using UnityEngine;
-using Zenject;
 
 namespace MorePlaylists.Sources
 {
     internal class Hitbloq : LocalSearchSource<HitbloqEntry>
     {
-        private SiraClient _siraClient;
+        private IHttpService _siraHttpService;
         private Sprite _logo;
 
         public override string Website => "https://hitbloq.com/";
         public override string Endpoint => "api/map_pools_detailed";
-        protected override SiraClient SiraClient => _siraClient;
+        protected override IHttpService SiraHttpService => _siraHttpService;
 
         public override Sprite Logo
         {
@@ -33,9 +25,9 @@ namespace MorePlaylists.Sources
             }
         }
 
-        public Hitbloq(SiraClient siraClient)
+        public Hitbloq(IHttpService siraHttpService)
         {
-            _siraClient = siraClient;
+            _siraHttpService = siraHttpService;
         }
     }
 }

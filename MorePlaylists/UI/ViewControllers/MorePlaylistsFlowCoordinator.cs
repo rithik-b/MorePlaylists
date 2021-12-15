@@ -5,14 +5,14 @@ using System;
 using UnityEngine;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
-using SiraUtil;
 using MorePlaylists.Utilities;
+using SiraUtil.Web;
 
 namespace MorePlaylists.UI
 {
     internal class MorePlaylistsFlowCoordinator : FlowCoordinator, IInitializable, IDisposable
     {
-        private SiraClient siraClient;
+        private IHttpService siraHttpService;
         private MainFlowCoordinator mainFlowCoordinator;
         private MainMenuViewController mainMenuViewController;
         private SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator;
@@ -25,12 +25,12 @@ namespace MorePlaylists.UI
         private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
 
         [Inject]
-        public void Construct(SiraClient siraClient, MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator,
+        public void Construct(IHttpService siraHttpService, MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator,
             PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController,
             MorePlaylistsListViewController morePlaylistsListViewController, MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController,
             MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
         {
-            this.siraClient = siraClient;
+            this.siraHttpService = siraHttpService;
             this.mainFlowCoordinator = mainFlowCoordinator;
             this.mainMenuViewController = mainMenuViewController;
             this.soloFreePlayFlowCoordinator = soloFreePlayFlowCoordinator;
@@ -94,7 +94,7 @@ namespace MorePlaylists.UI
         {
             if (selectedPlaylistEntry.DownloadState == DownloadState.None)
             {
-                selectedPlaylistEntry.DownloadPlaylist(siraClient);
+                selectedPlaylistEntry.DownloadPlaylist(siraHttpService);
             }
 
             if (!morePlaylistsDetailViewController.isInViewControllerHierarchy)

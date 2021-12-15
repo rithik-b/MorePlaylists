@@ -1,21 +1,17 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Text;
-using UnityEngine;
-using SiraUtil;
+﻿using UnityEngine;
 using MorePlaylists.Entries;
+using SiraUtil.Web;
 
 namespace MorePlaylists.Sources
 {
     internal class BeastSaber : LocalSearchSource<BeastSaberEntry>
     {
-        private SiraClient _siraClient;
+        private readonly IHttpService _siraHttpService;
         private Sprite _logo;
 
         public override string Website => "https://bsaber.com/";
         public override string Endpoint => "PlaylistAPI/playlistAPI.json";
-        protected override SiraClient SiraClient => _siraClient;
+        protected override IHttpService SiraHttpService => _siraHttpService;
 
         public override Sprite Logo
         {
@@ -29,9 +25,9 @@ namespace MorePlaylists.Sources
             }
         }
 
-        public BeastSaber(SiraClient siraClient)
+        public BeastSaber(IHttpService siraHttpService)
         {
-            _siraClient = siraClient;
+            _siraHttpService = siraHttpService;
         }
     }
 }

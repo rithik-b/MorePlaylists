@@ -1,6 +1,8 @@
 ﻿using MorePlaylists.Entries;
 using SiraUtil;
+using SiraUtil.Web;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -9,23 +11,19 @@ namespace MorePlaylists.Utilities
 {
     internal class SpriteLoader
     {
-        private readonly SiraClient siraClient;
+        private readonly IHttpService siraHttpService;
         private readonly Dictionary<string, Sprite> cachedURLSprites;
         private readonly Dictionary<string, Sprite> cachedBase64Sprites;
 
-        private readonly Queue<Action> spriteQueue;
-        private readonly object loaderLock;
-        private bool coroutineRunning;
+        private readonly ConcurrentQueue<Action> spriteQueue;
 
-        public SpriteLoader(SiraClient siraClient)
+        public SpriteLoader(IHttpService siraHttpService)
         {
-            this.siraClient = siraClient;
+            this.siraHttpService = siraHttpService;
             cachedURLSprites = new Dictionary<string, Sprite>();
             cachedBase64Sprites = new Dictionary<string, Sprite>();
 
-            spriteQueue = new Queue<Action>();
-            loaderLock = new object();
-            coroutineRunning = false;
+            spriteQueue = new ConcurrentQueue<Action>();
         }
 
         public void GetSpriteForEntry(IGenericEntry entry, Action<Sprite> onCompletion)
@@ -52,8 +50,8 @@ namespace MorePlaylists.Utilities
 
             try
             {
-                WebResponse webResponse = await siraClient.GetAsync(spriteURL, CancellationToken.None).ConfigureAwait(false);
-                byte[] imageBytes = webResponse.ContentToBytes();
+                IHttpResponse webResponse = await siraHttpService.GetAsync(spriteURL, cancellationToken: CancellationToken.None).ConfigureAwait(false);
+                byte[] imageBytes = await webResponse.ReadAsByteArrayAsync();
                 QueueLoadSprite(spriteURL, cachedURLSprites, imageBytes, onCompletion);
             }
             catch (Exception)
@@ -100,35 +98,17 @@ namespace MorePlaylists.Utilities
                     onCompletion?.Invoke(BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
                 }
             });
-
-            if (!coroutineRunning)
-            {
-                SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
-            }
+            SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
         }
 
         public static YieldInstruction LoadWait = new WaitForEndOfFrame();
 
         private IEnumerator<YieldInstruction> SpriteLoadCoroutine()
         {
-            lock (loaderLock)
-            {
-                if (coroutineRunning)
-                    yield break;
-                coroutineRunning = true;
-            }
-
-            while (spriteQueue.Count > 0)
+            while (spriteQueue.TryDequeue(out var loader))
             {
                 yield return LoadWait;
-                var loader = spriteQueue.Dequeue();
                 loader?.Invoke();
-            }
-
-            coroutineRunning = false;
-            if (spriteQueue.Count > 0)
-            {
-                SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
             }
         }
     }
