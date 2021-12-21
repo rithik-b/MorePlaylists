@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using SiraUtil.Web;
 
 namespace MorePlaylists.Entries
 {
@@ -15,5 +18,7 @@ namespace MorePlaylists.Entries
         event Action<IGenericEntry> FinishedDownload;
         DownloadState DownloadState { get; set; }
         bool DownloadBlocked { get; set; }
+        Task DownloadPlaylist(IHttpService siraHttpService);
+        Task<List<Song>> GetSongs(IHttpService siraHttpService);
     }
 }

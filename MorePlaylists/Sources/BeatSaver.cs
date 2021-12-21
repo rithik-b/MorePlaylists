@@ -39,7 +39,7 @@ namespace MorePlaylists.Sources
             _siraHttpService = siraHttpService;
         }
 
-        public async Task<List<GenericEntry>> GetEndpointResultTask(bool refreshRequested, bool resetPage, CancellationToken token, string searchQuery)
+        public async Task<List<GenericEntry>> GetEndpointResult(bool refreshRequested, bool resetPage, CancellationToken token, string searchQuery)
         {
             if (resetPage)
             {

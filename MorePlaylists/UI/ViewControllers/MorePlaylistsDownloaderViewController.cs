@@ -4,6 +4,7 @@ using HMUI;
 using MorePlaylists.Entries;
 using PlaylistManager.UI;
 using PlaylistManager.Utilities;
+using SiraUtil.Web;
 using Zenject;
 using PlaylistLibUtils = MorePlaylists.Utilities.PlaylistLibUtils;
 
@@ -11,14 +12,16 @@ namespace MorePlaylists.UI
 {
     internal class MorePlaylistsDownloaderViewController : ViewController
     {
+        private IHttpService siraHttpService;
         private PlaylistDownloader playlistDownloader;
         private PlaylistDownloaderViewController playlistDownloaderViewController;
         private HashSet<IGenericEntry> DownloadSongs;
         public Action<IGenericEntry> PlaylistDownloaded;
 
         [Inject]
-        public void Construct(PlaylistDownloader playlistDownloader, PlaylistDownloaderViewController playlistDownloaderViewController)
+        public void Construct(IHttpService siraHttpService, PlaylistDownloader playlistDownloader, PlaylistDownloaderViewController playlistDownloaderViewController)
         {
+            this.siraHttpService = siraHttpService;
             this.playlistDownloader = playlistDownloader;
             this.playlistDownloaderViewController = playlistDownloaderViewController;
             DownloadSongs = new HashSet<IGenericEntry>();
@@ -46,6 +49,10 @@ namespace MorePlaylists.UI
             else
             {
                 playlistEntry.FinishedDownload += DownloadFinished;
+                if (playlistEntry.DownloadState == DownloadState.None)
+                {
+                    playlistEntry.DownloadPlaylist(siraHttpService);
+                }
             }
         }
 

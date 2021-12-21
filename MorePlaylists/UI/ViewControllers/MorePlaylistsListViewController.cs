@@ -134,7 +134,7 @@ namespace MorePlaylists.UI
             SetLoading(true);
 
             currentQuery = query;
-            currentPlaylists = await currentSource.GetEndpointResultTask(refreshRequested, true, tokenSource.Token, query);
+            currentPlaylists = await currentSource.GetEndpointResult(refreshRequested, true, tokenSource.Token, query);
 
             PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IGenericEntry>().ToList());
             SetLoading(true, 100);
@@ -175,7 +175,7 @@ namespace MorePlaylists.UI
                 tokenSource = new CancellationTokenSource();
                 SetLoading(true);
 
-                List<GenericEntry> playlistsToAdd = await currentSource.GetEndpointResultTask(false, false, tokenSource.Token, currentQuery);
+                List<GenericEntry> playlistsToAdd = await currentSource.GetEndpointResult(false, false, tokenSource.Token, currentQuery);
 
                 // If we get an empty result, we can't scroll anymore
                 if (playlistsToAdd.Count == 0)

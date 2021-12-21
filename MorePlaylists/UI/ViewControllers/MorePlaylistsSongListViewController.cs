@@ -2,16 +2,12 @@
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.Parser;
 using BeatSaberMarkupLanguage.ViewControllers;
-using BeatSaberPlaylistsLib.Legacy;
-using BeatSaberPlaylistsLib.Types;
 using HMUI;
 using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
-using SongDetailsCache;
+using SiraUtil.Web;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 
@@ -22,10 +18,10 @@ namespace MorePlaylists.UI
     internal class MorePlaylistsSongListViewController : BSMLAutomaticViewController
     {
         private StandardLevelDetailViewController standardLevelDetailViewController;
+        private IHttpService siraHttpService;
         private SpriteLoader spriteLoader;
 
         private LoadingControl loadingSpinner;
-        private IGenericEntry playlistEntry;
         private static SemaphoreSlim songLoadSemaphore = new SemaphoreSlim(1, 1);
 
         [UIComponent("list")]
@@ -38,9 +34,10 @@ namespace MorePlaylists.UI
         internal BSMLParserParams parserParams;
 
         [Inject]
-        public void Construct(StandardLevelDetailViewController standardLevelDetailViewController, SpriteLoader spriteLoader)
+        public void Construct(StandardLevelDetailViewController standardLevelDetailViewController, IHttpService siraHttpService, SpriteLoader spriteLoader)
         {
             this.standardLevelDetailViewController = standardLevelDetailViewController;
+            this.siraHttpService = siraHttpService;
             this.spriteLoader = spriteLoader;
         }
 
@@ -57,32 +54,9 @@ namespace MorePlaylists.UI
 
         internal void SetCurrentPlaylist(IGenericEntry playlistEntry)
         {
-            if (customListTableData == null)
-            {
-                return;
-            }
-
-            SetLoading(true, 0);
-
-            if (this.playlistEntry != null)
-            {
-                this.playlistEntry.FinishedDownload -= InitSongList;
-            }
-            this.playlistEntry = playlistEntry;
-
-            ClearList();
-
-            if (playlistEntry.DownloadState == DownloadState.None)
-            {
-                SetLoading(false);
-            }
-            else if (playlistEntry.DownloadState == DownloadState.Downloaded)
+            if (customListTableData != null)
             {
                 InitSongList(playlistEntry);
-            }
-            else
-            {
-                playlistEntry.FinishedDownload += InitSongList;
             }
         }
 
@@ -113,29 +87,20 @@ namespace MorePlaylists.UI
 
             if (customListTableData.data.Count == 0)
             {
-                if (playlistEntry.RemotePlaylist is LegacyPlaylist playlist)
+                List<Song> songs = await playlistEntry.GetSongs(siraHttpService);
+                foreach (Song song in songs)
                 {
-                    SongDetails songDetails = await SongDetails.Init();
-                    List<IPlaylistSong> playlistSongs = playlist.Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
-                    SetLoading(true, 100);
-                    for (int i = 0; i < playlistSongs.Count; i++)
+                    CustomListTableData.CustomCellInfo customCellInfo = new CustomListTableData.CustomCellInfo(song.name, song.subName, BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
+                    spriteLoader.DownloadSpriteAsync(song.coverURL, (Sprite sprite) =>
                     {
-                        if (songDetails.songs.FindByHash(playlistSongs[i].Hash, out SongDetailsCache.Structs.Song song))
-                        {
-                            CustomListTableData.CustomCellInfo customCellInfo = new CustomListTableData.CustomCellInfo(song.songName, $"{song.songAuthorName} [{song.levelAuthorName}]", BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
-                            spriteLoader.DownloadSpriteAsync(song.coverURL, (Sprite sprite) =>
-                            {
-                                customCellInfo.icon = sprite;
-                                customListTableData.tableView.ReloadDataKeepingPosition();
-                            });
-                            customListTableData.data.Add(customCellInfo);
-                        }
-                    }
+                        customCellInfo.icon = sprite;
+                        customListTableData.tableView.ReloadDataKeepingPosition();
+                    });
+                    customListTableData.data.Add(customCellInfo);
                 }
                 customListTableData.tableView.ReloadData();
             }
-            // I am sorry
-            await Task.Delay(500);
+
             SetLoading(false);
             songLoadSemaphore.Release();
         }

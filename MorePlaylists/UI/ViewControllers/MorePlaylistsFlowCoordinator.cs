@@ -12,7 +12,6 @@ namespace MorePlaylists.UI
 {
     internal class MorePlaylistsFlowCoordinator : FlowCoordinator, IInitializable, IDisposable
     {
-        private IHttpService siraHttpService;
         private MainFlowCoordinator mainFlowCoordinator;
         private MainMenuViewController mainMenuViewController;
         private SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator;
@@ -25,12 +24,11 @@ namespace MorePlaylists.UI
         private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
 
         [Inject]
-        public void Construct(IHttpService siraHttpService, MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator,
+        public void Construct(MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator,
             PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController,
             MorePlaylistsListViewController morePlaylistsListViewController, MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController,
             MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
         {
-            this.siraHttpService = siraHttpService;
             this.mainFlowCoordinator = mainFlowCoordinator;
             this.mainMenuViewController = mainMenuViewController;
             this.soloFreePlayFlowCoordinator = soloFreePlayFlowCoordinator;
@@ -92,11 +90,6 @@ namespace MorePlaylists.UI
 
         private void PlaylistSelected(GenericEntry selectedPlaylistEntry)
         {
-            if (selectedPlaylistEntry.DownloadState == DownloadState.None)
-            {
-                selectedPlaylistEntry.DownloadPlaylist(siraHttpService);
-            }
-
             if (!morePlaylistsDetailViewController.isInViewControllerHierarchy)
             {
                 PushViewControllerToNavigationController(morePlaylistsNavigationController, morePlaylistsDetailViewController, DetailViewPushed, true);

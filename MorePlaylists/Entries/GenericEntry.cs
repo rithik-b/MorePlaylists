@@ -1,6 +1,8 @@
 ﻿using SiraUtil.Web;
 using System;
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MorePlaylists.Entries
 {
@@ -46,7 +48,9 @@ namespace MorePlaylists.Entries
 
         public abstract SpriteType SpriteType { get; }
 
-        public async void DownloadPlaylist(IHttpService siraHttpService)
+        public abstract Task<List<Song>> GetSongs(IHttpService siraHttpService);
+
+        public async Task DownloadPlaylist(IHttpService siraHttpService)
         {
             DownloadState = DownloadState.Downloading;
             try

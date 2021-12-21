@@ -12,6 +12,6 @@ namespace MorePlaylists.Sources
         string Endpoint { get; }
         Sprite Logo { get; }
         bool PagingSupport { get; }
-        Task<List<GenericEntry>> GetEndpointResultTask(bool refreshRequested, bool resetPage, CancellationToken token, string searchQuery);
+        Task<List<GenericEntry>> GetEndpointResult(bool refreshRequested, bool resetPage, CancellationToken token, string searchQuery);
     }
 }

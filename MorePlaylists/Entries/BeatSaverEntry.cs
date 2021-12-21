@@ -9,7 +9,7 @@ namespace MorePlaylists.Entries
         public List<BeatSaverEntry> Entries { get; protected set; }
     }
 
-    internal class BeatSaverEntry : GenericEntry
+    internal class BeatSaverEntry : SongDetailsEntry
     {
         [JsonProperty("name")]
         public override string Title { get; protected set; }
