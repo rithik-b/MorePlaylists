@@ -4,7 +4,7 @@ using SiraUtil.Web;
 
 namespace MorePlaylists.Sources
 {
-    internal class BeastSaber : LocalSearchSource<BeastSaberEntry>
+    internal class BeastSaber : SinglePageSource<BeastSaberEntry>
     {
         private readonly IHttpService _siraHttpService;
         private Sprite _logo;

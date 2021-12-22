@@ -1,4 +1,5 @@
-﻿using MorePlaylists.Entries;
+﻿using BeatSaberPlaylistsLib.Types;
+using MorePlaylists.Entries;
 using SiraUtil;
 using SiraUtil.Web;
 using System;
@@ -35,6 +36,9 @@ namespace MorePlaylists.Utilities
                     break;
                 case SpriteType.Base64:
                     ParseBase64Sprite(entry.SpriteString, onCompletion);
+                    break;
+                case SpriteType.Playlist:
+                    GetPlaylistSprite(entry.RemotePlaylist as IDeferredSpriteLoad, onCompletion);
                     break;
             }
         }
@@ -80,6 +84,22 @@ namespace MorePlaylists.Utilities
             }
 
             QueueLoadSprite(base64, cachedBase64Sprites, imageBytes, onCompletion);
+        }
+
+        public void GetPlaylistSprite(IDeferredSpriteLoad playlist, Action<Sprite> onCompletion)
+        {
+            if (playlist.SpriteWasLoaded)
+            {
+                onCompletion?.Invoke(playlist.Sprite);
+            }
+            else
+            {
+                playlist.SpriteLoaded += (sender, args) =>
+                {
+                    onCompletion?.Invoke(playlist.Sprite);
+                };
+                _ = playlist.Sprite;
+            }
         }
 
         private void QueueLoadSprite(string key, Dictionary<string, Sprite> cache, byte[] imageBytes, Action<Sprite> onCompletion)

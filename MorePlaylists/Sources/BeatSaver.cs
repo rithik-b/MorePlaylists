@@ -16,10 +16,6 @@ namespace MorePlaylists.Sources
         private Sprite _logo;
         private int page;
 
-        public string Website => "https://api.beatsaver.com";
-
-        public string Endpoint => "playlists/search";
-
         public Sprite Logo
         {
             get
@@ -48,7 +44,7 @@ namespace MorePlaylists.Sources
 
             try
             {
-                IHttpResponse webResponse = await _siraHttpService.GetAsync($"{Website}/{Endpoint}/{page}?q={searchQuery}", progress, token);
+                IHttpResponse webResponse = await _siraHttpService.GetAsync($"https://api.beatsaver.com/playlists/search/{page}?q={searchQuery}", progress, token);
                 if (webResponse.Successful)
                 {
                     List<GenericEntry> returnVal = JsonConvert.DeserializeObject<BeatSaverResponse>(await webResponse.ReadAsStringAsync()).Entries.Cast<GenericEntry>().ToList();

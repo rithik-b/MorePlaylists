@@ -75,5 +75,5 @@ namespace MorePlaylists.Entries
     }
 
     public enum DownloadState { None, Downloading, Downloaded, Error };
-    public enum SpriteType { URL, Base64 };
+    public enum SpriteType { URL, Base64, Playlist };
 }

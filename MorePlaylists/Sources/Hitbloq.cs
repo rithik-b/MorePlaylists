@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace MorePlaylists.Sources
 {
-    internal class Hitbloq : LocalSearchSource<HitbloqEntry>
+    internal class Hitbloq : SinglePageSource<HitbloqEntry>
     {
         private IHttpService _siraHttpService;
         private Sprite _logo;
