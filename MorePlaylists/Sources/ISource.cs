@@ -1,4 +1,5 @@
 ﻿using MorePlaylists.Entries;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,6 @@ namespace MorePlaylists.Sources
         string Endpoint { get; }
         Sprite Logo { get; }
         bool PagingSupport { get; }
-        Task<List<GenericEntry>> GetEndpointResult(bool refreshRequested, bool resetPage, CancellationToken token, string searchQuery);
+        Task<List<GenericEntry>> GetEndpointResult(bool refreshRequested, bool resetPage, IProgress<float> progress, CancellationToken token, string searchQuery);
     }
 }

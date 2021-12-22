@@ -17,7 +17,7 @@ namespace MorePlaylists.UI
 {
     [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsListView.bsml")]
     [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsListView.bsml")]
-    internal class MorePlaylistsListViewController : BSMLAutomaticViewController
+    internal class MorePlaylistsListViewController : BSMLAutomaticViewController, IProgress<float>
     {
         private StandardLevelDetailViewController standardLevelDetailViewController;
         private SpriteLoader spriteLoader;
@@ -134,7 +134,7 @@ namespace MorePlaylists.UI
             SetLoading(true);
 
             currentQuery = query;
-            currentPlaylists = await currentSource.GetEndpointResult(refreshRequested, true, tokenSource.Token, query);
+            currentPlaylists = await currentSource.GetEndpointResult(refreshRequested, true, this, tokenSource.Token, query);
 
             PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IGenericEntry>().ToList());
             SetLoading(true, 100);
@@ -175,7 +175,7 @@ namespace MorePlaylists.UI
                 tokenSource = new CancellationTokenSource();
                 SetLoading(true);
 
-                List<GenericEntry> playlistsToAdd = await currentSource.GetEndpointResult(false, false, tokenSource.Token, currentQuery);
+                List<GenericEntry> playlistsToAdd = await currentSource.GetEndpointResult(false, false, this, tokenSource.Token, currentQuery);
 
                 // If we get an empty result, we can't scroll anymore
                 if (playlistsToAdd.Count == 0)
@@ -210,17 +210,22 @@ namespace MorePlaylists.UI
 
         #endregion
 
-        private void SetLoading(bool value, double progress = 0, string details = "")
+        private void SetLoading(bool value, float progress = 0)
         {
             if (value && isActiveAndEnabled)
             {
                 parserParams.EmitEvent("open-loading-modal");
-                loadingSpinner.ShowDownloadingProgress("Fetching More Playlists... " + details, (float)progress);
+                loadingSpinner.ShowDownloadingProgress("Fetching More Playlists... ", progress);
             }
             else
             {
                 parserParams.EmitEvent("close-loading-modal");
             }
+        }
+
+        public void Report(float progress)
+        {
+            loadingSpinner.ShowDownloadingProgress("Fetching More Playlists... ", progress);
         }
     }
 }

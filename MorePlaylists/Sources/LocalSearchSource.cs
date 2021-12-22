@@ -19,13 +19,13 @@ namespace MorePlaylists.Sources
         public abstract Sprite Logo { get; }
         public bool PagingSupport => false;
 
-        public async Task<List<GenericEntry>> GetEndpointResult(bool refreshRequested, bool resetPage, CancellationToken token, string searchQuery)
+        public async Task<List<GenericEntry>> GetEndpointResult(bool refreshRequested, bool resetPage, IProgress<float> progress, CancellationToken token, string searchQuery)
         {
             if (cachedResult.Count == 0 || refreshRequested)
             {
                 try
                 {
-                    IHttpResponse webResponse = await SiraHttpService.GetAsync(Website + Endpoint, cancellationToken: token);
+                    IHttpResponse webResponse = await SiraHttpService.GetAsync(Website + Endpoint, progress, token);
                     if (webResponse.Successful)
                     {
                         cachedResult = JsonConvert.DeserializeObject<List<T>>(await webResponse.ReadAsStringAsync());

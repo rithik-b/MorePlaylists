@@ -39,7 +39,7 @@ namespace MorePlaylists.Sources
             _siraHttpService = siraHttpService;
         }
 
-        public async Task<List<GenericEntry>> GetEndpointResult(bool refreshRequested, bool resetPage, CancellationToken token, string searchQuery)
+        public async Task<List<GenericEntry>> GetEndpointResult(bool refreshRequested, bool resetPage, IProgress<float> progress, CancellationToken token, string searchQuery)
         {
             if (resetPage)
             {
@@ -48,7 +48,7 @@ namespace MorePlaylists.Sources
 
             try
             {
-                IHttpResponse webResponse = await _siraHttpService.GetAsync($"{Website}/{Endpoint}/{page}?q={searchQuery}", cancellationToken: token);
+                IHttpResponse webResponse = await _siraHttpService.GetAsync($"{Website}/{Endpoint}/{page}?q={searchQuery}", progress, token);
                 if (webResponse.Successful)
                 {
                     List<GenericEntry> returnVal = JsonConvert.DeserializeObject<BeatSaverResponse>(await webResponse.ReadAsStringAsync()).Entries.Cast<GenericEntry>().ToList();
