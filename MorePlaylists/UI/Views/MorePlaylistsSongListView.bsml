@@ -1,9 +1,11 @@
 ﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
-    <vertical anchor-pos-x='-8' vertical-fit='PreferredSize' anchor-pos-y='2'>
+    <vertical anchor-pos-x='-8' vertical-fit='MinSize' min-height='80' anchor-pos-y='2'>
         <horizontal anchor-min-y='1'  bg='panel-top' pad-left='10' pad-right='10' horizontal-fit='PreferredSize'>
-            <text text='Songs' align='Center' font-size='8'></text>
+            <text text='Songs' align='Center' font-size='8' />
         </horizontal>
-        <modal id='loading-modal' show-event='open-loading-modal' hide-event='close-loading-modal,close-all-modals' move-to-center='true' size-delta-y='35' size-delta-x='48' />
-        <list id='list' expand-cell='true' select-cell='list-select' list-width='62' show-scrollbar='true' stick-scrolling='true' />
+        <horizontal/>
+        <loading-indicator active='~is-loading' preserve-aspect='true' pref-width='10' pref-height='10' />
+        <horizontal/>
+        <list id='list' active='~loaded' expand-cell='true' select-cell='list-select' list-width='62' show-scrollbar='true' stick-scrolling='true' />
     </vertical>
 </bg>

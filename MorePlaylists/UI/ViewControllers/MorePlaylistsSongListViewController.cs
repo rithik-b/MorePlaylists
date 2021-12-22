@@ -17,26 +17,37 @@ namespace MorePlaylists.UI
     [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsSongListView.bsml")]
     internal class MorePlaylistsSongListViewController : BSMLAutomaticViewController
     {
-        private StandardLevelDetailViewController standardLevelDetailViewController;
         private IHttpService siraHttpService;
         private SpriteLoader spriteLoader;
 
-        private LoadingControl loadingSpinner;
         private static SemaphoreSlim songLoadSemaphore = new SemaphoreSlim(1, 1);
+
+        private bool _loaded;
+
+        [UIValue("is-loading")]
+        public bool IsLoading => !Loaded;
+
+        [UIValue("loaded")]
+        public bool Loaded
+        {
+            get => _loaded;
+            set
+            {
+                _loaded = value;
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(IsLoading));
+            }
+        }
 
         [UIComponent("list")]
         private readonly CustomListTableData customListTableData;
-
-        [UIComponent("loading-modal")]
-        public RectTransform loadingModal;
 
         [UIParams]
         internal BSMLParserParams parserParams;
 
         [Inject]
-        public void Construct(StandardLevelDetailViewController standardLevelDetailViewController, IHttpService siraHttpService, SpriteLoader spriteLoader)
+        public void Construct(IHttpService siraHttpService, SpriteLoader spriteLoader)
         {
-            this.standardLevelDetailViewController = standardLevelDetailViewController;
             this.siraHttpService = siraHttpService;
             this.spriteLoader = spriteLoader;
         }
@@ -46,8 +57,6 @@ namespace MorePlaylists.UI
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             if (!firstActivation)
             {
-                SetLoading(false);
-                loadingModal.gameObject.SetActive(false);
                 ClearList();
             }
         }
@@ -62,15 +71,11 @@ namespace MorePlaylists.UI
 
         internal void ClearList()
         {
-            customListTableData.data.Clear();
-            customListTableData.tableView.ReloadData();
-        }
-
-        [UIAction("#post-parse")]
-        private void PostParse()
-        {
-            loadingSpinner = GameObject.Instantiate(Accessors.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
-            Destroy(loadingSpinner.GetComponent<Touchable>());
+            if (customListTableData != null)
+            {
+                customListTableData.data.Clear();
+                customListTableData.tableView.ReloadData();
+            }
         }
 
         [UIAction("list-select")]
@@ -83,7 +88,7 @@ namespace MorePlaylists.UI
         {
             await songLoadSemaphore.WaitAsync();
             ClearList();
-            SetLoading(true, 0);
+            Loaded = false;
 
             if (customListTableData.data.Count == 0)
             {
@@ -101,21 +106,8 @@ namespace MorePlaylists.UI
                 customListTableData.tableView.ReloadData();
             }
 
-            SetLoading(false);
+            Loaded = true;
             songLoadSemaphore.Release();
-        }
-
-        internal void SetLoading(bool value, double progress = 0, string details = "Loading Songs")
-        {
-            if (value && isActiveAndEnabled)
-            {
-                parserParams.EmitEvent("open-loading-modal");
-                loadingSpinner.ShowDownloadingProgress(details, (float)progress);
-            }
-            else
-            {
-                parserParams.EmitEvent("close-loading-modal");
-            }
         }
     }
 }

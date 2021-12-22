@@ -75,7 +75,7 @@ namespace MorePlaylists.UI
             showBackButton = true;
 
             SetViewControllersToNavigationController(morePlaylistsNavigationController, morePlaylistsListViewController);
-            ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloaderViewController, morePlaylistsSongListViewController);
+            ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloaderViewController);
         }
 
         private void SourceSelected(ISource source)
@@ -95,6 +95,7 @@ namespace MorePlaylists.UI
                 PushViewControllerToNavigationController(morePlaylistsNavigationController, morePlaylistsDetailViewController, DetailViewPushed, true);
             }
             morePlaylistsDetailViewController.ShowDetail(selectedPlaylistEntry);
+            SetRightScreenViewController(morePlaylistsSongListViewController, ViewController.AnimationType.In);
             morePlaylistsSongListViewController.SetCurrentPlaylist(selectedPlaylistEntry);
         }
 
@@ -120,7 +121,6 @@ namespace MorePlaylists.UI
         private void GoToPlaylistClicked(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
         {
             morePlaylistsListViewController.AbortLoading();
-            morePlaylistsSongListViewController.SetLoading(false);
             mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
             soloFreePlayFlowCoordinator.Setup(Utils.GetStateForPlaylist(playlist));
             mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
@@ -135,7 +135,6 @@ namespace MorePlaylists.UI
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
             morePlaylistsListViewController.AbortLoading();
-            morePlaylistsSongListViewController.SetLoading(false);
             mainFlowCoordinator.DismissFlowCoordinator(this);
         }
 
