@@ -9,8 +9,6 @@ namespace MorePlaylists.Sources
 {
     public interface ISource
     {
-        string Website { get; }
-        string Endpoint { get; }
         Sprite Logo { get; }
         bool PagingSupport { get; }
         Task<List<GenericEntry>> GetEndpointResult(bool refreshRequested, bool resetPage, IProgress<float> progress, CancellationToken token, string searchQuery);
