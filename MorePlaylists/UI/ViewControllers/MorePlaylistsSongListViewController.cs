@@ -90,8 +90,8 @@ namespace MorePlaylists.UI
                 List<Song> songs = await playlistEntry.GetSongs(siraHttpService);
                 foreach (Song song in songs)
                 {
-                    CustomListTableData.CustomCellInfo customCellInfo = new CustomListTableData.CustomCellInfo(song.name, song.subName, BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
-                    spriteLoader.DownloadSpriteAsync(song.coverURL, (Sprite sprite) =>
+                    CustomListTableData.CustomCellInfo customCellInfo = new CustomListTableData.CustomCellInfo(song.Name, song.SubName, BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
+                    spriteLoader.DownloadSpriteAsync(song.CoverURL, (Sprite sprite) =>
                     {
                         customCellInfo.icon = sprite;
                         customListTableData.tableView.ReloadDataKeepingPosition();

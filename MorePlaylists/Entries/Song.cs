@@ -2,15 +2,17 @@
 {
     public class Song
     {
-        public readonly string name;
-        public readonly string subName;
-        public readonly string coverURL;
+        public virtual string Name { get; protected set; }
+        public virtual string SubName { get; protected set; }
+        public virtual string CoverURL { get; protected set; }
 
         public Song(string name, string subName, string coverURL)
         {
-            this.name = name;
-            this.subName = subName;
-            this.coverURL = coverURL;
+            Name = name;
+            SubName = subName;
+            CoverURL = coverURL;
         }
+
+        public Song() { }
     }
 }
