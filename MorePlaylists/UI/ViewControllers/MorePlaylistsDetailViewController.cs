@@ -96,7 +96,7 @@ namespace MorePlaylists.UI
         public string PlaylistAuthor => selectedPlaylistEntry?.Author ?? " ";
 
         [UIValue("playlist-description")]
-        private string PlaylistDescription => selectedPlaylistEntry?.Description ?? "";
+        private string PlaylistDescription => string.IsNullOrWhiteSpace(selectedPlaylistEntry?.Description) ? "No Description available for this playlist." : selectedPlaylistEntry?.Description;
 
         [UIValue("download-interactable")]
         public bool DownloadInteractable => selectedPlaylistEntry is {DownloadBlocked: false};
