@@ -2,7 +2,7 @@
 
 namespace MorePlaylists.Entries
 {
-    public class BeastSaberEntry : Base64Entry
+    internal class BeastSaberEntry : SongDetailsEntry
     {
         [JsonProperty("playlistTitle")]
         public override string Title { get; protected set; }
@@ -20,11 +20,8 @@ namespace MorePlaylists.Entries
         public override string PlaylistURL { get; protected set; }
 
         [JsonProperty("image")]
-        protected override string CoverString
-        {
-            get => base.CoverString;
-            set => base.CoverString = value;
-        }
+        public override string SpriteString { get; protected set; }
+        public override SpriteType SpriteType => SpriteType.Base64;
 
         public override string Description
         {

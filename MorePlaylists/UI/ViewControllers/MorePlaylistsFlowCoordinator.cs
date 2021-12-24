@@ -2,11 +2,11 @@
 using Zenject;
 using BeatSaberMarkupLanguage;
 using System;
-using System.Linq;
 using UnityEngine;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
-using IPA.Utilities;
+using MorePlaylists.Utilities;
+using SiraUtil.Web;
 
 namespace MorePlaylists.UI
 {
@@ -14,64 +14,59 @@ namespace MorePlaylists.UI
     {
         private MainFlowCoordinator mainFlowCoordinator;
         private MainMenuViewController mainMenuViewController;
-        private LevelFilteringNavigationController levelFilteringNavigationController;
-        private SelectLevelCategoryViewController selectLevelCategoryViewController;
-        private IconSegmentedControl levelCategorySegmentedControl;
+        private SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator;
         private PopupModalsController popupModalsController;
         private SourceModalController sourceModalController;
         private MorePlaylistsNavigationController morePlaylistsNavigationController;
         private MorePlaylistsListViewController morePlaylistsListViewController;
-        private MorePlaylistsDownloadQueueViewController morePlaylistsDownloadQueueViewController;
+        private MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController;
         private MorePlaylistsDetailViewController morePlaylistsDetailViewController;
         private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
 
         [Inject]
-        public void Construct(MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, LevelFilteringNavigationController levelFilteringNavigationController, SelectLevelCategoryViewController selectLevelCategoryViewController,
-            PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController, MorePlaylistsListViewController morePlaylistsListViewController, 
-            MorePlaylistsDownloadQueueViewController morePlaylistsDownloadQueueViewController, MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
+        public void Construct(MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator,
+            PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController,
+            MorePlaylistsListViewController morePlaylistsListViewController, MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController,
+            MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
         {
             this.mainFlowCoordinator = mainFlowCoordinator;
             this.mainMenuViewController = mainMenuViewController;
-            this.levelFilteringNavigationController = levelFilteringNavigationController;
-            this.selectLevelCategoryViewController = selectLevelCategoryViewController;
-            levelCategorySegmentedControl = FieldAccessor<SelectLevelCategoryViewController, IconSegmentedControl>.Get(ref selectLevelCategoryViewController, "_levelFilterCategoryIconSegmentedControl");
+            this.soloFreePlayFlowCoordinator = soloFreePlayFlowCoordinator;
             this.popupModalsController = popupModalsController;
             this.sourceModalController = sourceModalController;
             this.morePlaylistsNavigationController = morePlaylistsNavigationController;
             this.morePlaylistsListViewController = morePlaylistsListViewController;
-            this.morePlaylistsDownloadQueueViewController = morePlaylistsDownloadQueueViewController;
+            this.morePlaylistsDownloaderViewController = morePlaylistsDownloaderViewController;
             this.morePlaylistsDetailViewController = morePlaylistsDetailViewController;
             this.morePlaylistsSongListViewController = morePlaylistsSongListViewController;
         }
 
         public void Initialize()
         {
-            sourceModalController.DidSelectSource += SourceModalController_DidSelectSource;
+            sourceModalController.DidSelectSource += SourceSelected;
 
-            morePlaylistsListViewController.DidSelectPlaylist += MorePlaylistsListViewController_DidSelectPlaylist;
-            morePlaylistsListViewController.DidClickSource += MorePlaylistsListViewController_DidClickSource;
-            morePlaylistsListViewController.DidClickSearch += MorePlaylistsListViewController_DidClickSearch;
+            morePlaylistsListViewController.DidSelectPlaylist += PlaylistSelected;
+            morePlaylistsListViewController.DidClickSource += SourceButtonClicked;
+            morePlaylistsListViewController.DidClickSearch += SearchButtonClicked;
 
-            morePlaylistsDetailViewController.DidPressDownload += MorePlaylistsDetailViewController_DidPressDownload;
-            morePlaylistsDetailViewController.DidGoToPlaylist += MorePlaylistsDetailViewController_DidGoToPlaylist;
+            morePlaylistsDetailViewController.DidPressDownload += morePlaylistsDownloaderViewController.DownloadPlaylist;
+            morePlaylistsDetailViewController.DidGoToPlaylist += GoToPlaylistClicked;
 
-            MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem += MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
-            morePlaylistsDownloadQueueViewController.DidFillQueue += MorePlaylistsDownloadQueueViewController_DidFillQueue;
+            morePlaylistsDownloaderViewController.PlaylistDownloaded += OnPlaylistDownloaded;
         }
 
         public void Dispose()
         {
-            sourceModalController.DidSelectSource -= SourceModalController_DidSelectSource;
+            sourceModalController.DidSelectSource -= SourceSelected;
 
-            morePlaylistsListViewController.DidSelectPlaylist -= MorePlaylistsListViewController_DidSelectPlaylist;
-            morePlaylistsListViewController.DidClickSource -= MorePlaylistsListViewController_DidClickSource;
-            morePlaylistsListViewController.DidClickSearch -= MorePlaylistsListViewController_DidClickSearch;
+            morePlaylistsListViewController.DidSelectPlaylist -= PlaylistSelected;
+            morePlaylistsListViewController.DidClickSource -= SourceButtonClicked;
+            morePlaylistsListViewController.DidClickSearch -= SearchButtonClicked;
 
-            morePlaylistsDetailViewController.DidPressDownload -= MorePlaylistsDetailViewController_DidPressDownload;
-            morePlaylistsDetailViewController.DidGoToPlaylist -= MorePlaylistsDetailViewController_DidGoToPlaylist;
+            morePlaylistsDetailViewController.DidPressDownload -= morePlaylistsDownloaderViewController.DownloadPlaylist;
+            morePlaylistsDetailViewController.DidGoToPlaylist -= GoToPlaylistClicked;
 
-            MorePlaylistsDownloadQueueViewController.DidFinishDownloadingItem -= MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem;
-            morePlaylistsDownloadQueueViewController.DidFillQueue -= MorePlaylistsDownloadQueueViewController_DidFillQueue;
+            morePlaylistsDownloaderViewController.PlaylistDownloaded -= OnPlaylistDownloaded;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -80,10 +75,10 @@ namespace MorePlaylists.UI
             showBackButton = true;
 
             SetViewControllersToNavigationController(morePlaylistsNavigationController, morePlaylistsListViewController);
-            ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloadQueueViewController, morePlaylistsSongListViewController);
+            ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloaderViewController);
         }
 
-        private void SourceModalController_DidSelectSource(ISource source)
+        private void SourceSelected(ISource source)
         {
             morePlaylistsListViewController.ShowPlaylistsForSource(source);
             morePlaylistsSongListViewController.ClearList();
@@ -93,83 +88,45 @@ namespace MorePlaylists.UI
             }
         }
 
-        private void MorePlaylistsListViewController_DidSelectPlaylist(GenericEntry selectedPlaylistEntry)
+        private void PlaylistSelected(GenericEntry selectedPlaylistEntry)
         {
-            if (selectedPlaylistEntry.DownloadState == DownloadState.None || selectedPlaylistEntry.DownloadState == DownloadState.Error)
-            {
-                _ = selectedPlaylistEntry.RemotePlaylist;
-            }
-
             if (!morePlaylistsDetailViewController.isInViewControllerHierarchy)
             {
                 PushViewControllerToNavigationController(morePlaylistsNavigationController, morePlaylistsDetailViewController, DetailViewPushed, true);
             }
             morePlaylistsDetailViewController.ShowDetail(selectedPlaylistEntry);
+            SetRightScreenViewController(morePlaylistsSongListViewController, ViewController.AnimationType.In);
             morePlaylistsSongListViewController.SetCurrentPlaylist(selectedPlaylistEntry);
         }
 
-        private void MorePlaylistsListViewController_DidClickSource() => sourceModalController.ShowModal(morePlaylistsListViewController.transform);
+        private void SourceButtonClicked() => sourceModalController.ShowModal(morePlaylistsListViewController.transform);
 
-        private void MorePlaylistsListViewController_DidClickSearch() => popupModalsController.ShowKeyboard(morePlaylistsListViewController.transform, morePlaylistsListViewController.Search);
+        private void SearchButtonClicked() => popupModalsController.ShowKeyboard(morePlaylistsListViewController.transform, morePlaylistsListViewController.Search);
 
-        private void MorePlaylistsDetailViewController_DidPressDownload(IGenericEntry playlistEntry, bool downloadSongs)
+        private void OnPlaylistDownloaded(IGenericEntry playlistEntry)
         {
-            playlistEntry.DownloadBlocked = true;
-            morePlaylistsDownloadQueueViewController.EnqueuePlaylist(playlistEntry, downloadSongs);
-        }
-
-        #region Go To Playlist
-
-        private void MorePlaylistsDetailViewController_DidGoToPlaylist(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
-        {
-            if (morePlaylistsDownloadQueueViewController.queueItems.Count != 0)
+            if (playlistEntry.DownloadState == DownloadState.Downloaded)
             {
-                popupModalsController.ShowYesNoModal(morePlaylistsListViewController.transform, "There are still items in the download queue. Are you sure you want to cancel and exit?", () => GoToPlaylistAndClear(playlist));
-                return;
+                morePlaylistsListViewController.SetEntryAsOwned(playlistEntry);
             }
-
-            morePlaylistsListViewController.AbortLoading();
-            morePlaylistsSongListViewController.SetLoading(false);
-            mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
-            mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
-            levelCategorySegmentedControl.SelectCellWithNumber(1);
-            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 1);
-            levelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(playlist);
-        }
-
-        private void GoToPlaylistAndClear(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
-        {
-            morePlaylistsListViewController.AbortLoading();
-            morePlaylistsSongListViewController.SetLoading(false);
-            morePlaylistsDownloadQueueViewController.queueItems.OfType<DownloadQueueItem>().ToList().ForEach(x => x.tokenSource.Cancel());
-            morePlaylistsDownloadQueueViewController.queueItems.Clear();
-
-            mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
-            mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
-            levelCategorySegmentedControl.SelectCellWithNumber(1);
-            selectLevelCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(levelCategorySegmentedControl, 1);
-            levelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(playlist);
-        }
-
-        #endregion
-
-        private void MorePlaylistsDownloadQueueViewController_DidFinishDownloadingItem(DownloadQueueItem item)
-        {
-            if (item.playlistEntry.DownloadState == DownloadState.Error)
+            else
             {
                 popupModalsController.ShowOkModal(morePlaylistsListViewController.transform, "An error occured while downloading, please try again later", null);
-            }
-            else if(item.playlistEntry.DownloadState == DownloadState.Downloaded)
-            {
-                morePlaylistsListViewController.SetEntryAsOwned(item.playlistEntry);
             }
             morePlaylistsDetailViewController.OnPlaylistDownloaded();
         }
 
-        private void MorePlaylistsDownloadQueueViewController_DidFillQueue(bool filled)
+        #region Go To Playlist
+
+        private void GoToPlaylistClicked(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
         {
-            morePlaylistsListViewController.DisableRefresh(filled);
+            morePlaylistsListViewController.AbortLoading();
+            mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
+            soloFreePlayFlowCoordinator.Setup(Utils.GetStateForPlaylist(playlist));
+            mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
         }
+
+        #endregion
 
         private void DetailViewPushed() => morePlaylistsDetailViewController.transform.localPosition = new Vector3(45, 0, 0);
 
@@ -177,22 +134,7 @@ namespace MorePlaylists.UI
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            if (morePlaylistsDownloadQueueViewController.queueItems.Count != 0)
-            {
-                popupModalsController.ShowYesNoModal(morePlaylistsListViewController.transform, "There are still items in the download queue. Are you sure you want to cancel and exit?", ExitAndClear);
-                return;
-            }
             morePlaylistsListViewController.AbortLoading();
-            morePlaylistsSongListViewController.SetLoading(false);
-            mainFlowCoordinator.DismissFlowCoordinator(this);
-        }
-
-        private void ExitAndClear()
-        {
-            morePlaylistsListViewController.AbortLoading();
-            morePlaylistsSongListViewController.SetLoading(false);
-            morePlaylistsDownloadQueueViewController.queueItems.OfType<DownloadQueueItem>().ToList().ForEach(x => x.tokenSource.Cancel());
-            morePlaylistsDownloadQueueViewController.queueItems.Clear();
             mainFlowCoordinator.DismissFlowCoordinator(this);
         }
 

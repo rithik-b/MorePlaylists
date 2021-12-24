@@ -2,7 +2,7 @@
 
 namespace MorePlaylists.Entries
 {
-    public class HitbloqEntry : ImageFileEntry
+    internal class HitbloqEntry : SongDetailsEntry
     {
         [JsonProperty("title")]
         public override string Title { get; protected set; }
@@ -17,10 +17,8 @@ namespace MorePlaylists.Entries
         public override string PlaylistURL { get; protected set; }
 
         [JsonProperty("image")]
-        protected override string CoverURL
-        {
-            get => base.CoverURL;
-            set => base.CoverURL = value;
-        }
+        public override string SpriteString { get; protected set; }
+
+        public override SpriteType SpriteType => SpriteType.URL;
     }
 }

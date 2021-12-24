@@ -2,7 +2,9 @@
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Parser;
 using HMUI;
-using IPA.Utilities;
+using MorePlaylists.Utilities;
+using PlaylistManager.Types;
+using System;
 using System.ComponentModel;
 using System.Reflection;
 using UnityEngine;
@@ -11,20 +13,23 @@ namespace MorePlaylists.UI
 {
     internal class PopupModalsController : INotifyPropertyChanged
     {
+        private readonly MorePlaylistsListViewController morePlaylistsListViewController;
         private bool parsed;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public delegate void ButtonPressed();
-        private ButtonPressed yesButtonPressed;
-        private ButtonPressed noButtonPressed;
-        private ButtonPressed okButtonPressed;
+        private Action yesButtonPressed;
+        private Action noButtonPressed;
+        private Action okButtonPressed;
 
-        public delegate void KeyboardPressed(string keyboardText);
-        private KeyboardPressed keyboardPressed;
+        private Action<string> keyboardPressed;
 
         private string _yesNoText = "";
+        private string _checkboxText = "";
         private string _yesButtonText = "Yes";
         private string _noButtonText = "No";
+
+        private bool _checkboxValue = false;
+        private bool _checkboxActive = false;
 
         private string _okText = "";
         private string _okButtonText = "Ok";
@@ -59,14 +64,31 @@ namespace MorePlaylists.UI
         [UIParams]
         private readonly BSMLParserParams parserParams;
 
-        private void Parse(Transform parent)
+        public PopupModalsController(MorePlaylistsListViewController morePlaylistsListViewController)
+        {
+            this.morePlaylistsListViewController = morePlaylistsListViewController;
+        }
+
+        private void Parse()
         {
             if (!parsed)
             {
-                BSMLParser.instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "MorePlaylists.UI.Views.PopupModals.bsml"), parent.gameObject, this);
-                yesNoModalPosition = yesNoModalTransform.position;
-                okModalPosition = okModalTransform.position;
+                BSMLParser.instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "MorePlaylists.UI.Views.PopupModals.bsml"), morePlaylistsListViewController.gameObject, this);
+                yesNoModalPosition = yesNoModalTransform.localPosition;
+                okModalPosition = okModalTransform.localPosition;
                 parsed = true;
+            }
+        }
+        
+        internal void ShowModal(PopupContents popupContents)
+        {
+            if (popupContents is OkPopupContents okPopupContents)
+            {
+                ShowOkModal(okPopupContents);
+            }
+            else if (popupContents is YesNoPopupContents yesNoPopupContents)
+            {
+                ShowYesNoModal(yesNoPopupContents);
             }
         }
 
@@ -74,21 +96,37 @@ namespace MorePlaylists.UI
 
         // Methods
 
-        internal void ShowYesNoModal(Transform parent, string text, ButtonPressed yesButtonPressedCallback, string yesButtonText = "Yes", string noButtonText = "No", ButtonPressed noButtonPressedCallback = null, bool animateParentCanvas = true)
+        private void ShowYesNoModal(YesNoPopupContents popupContents)
         {
-            Parse(parent);
-            yesNoModalTransform.position = yesNoModalPosition;
+            ShowYesNoModal(popupContents.parent, popupContents.message, popupContents.yesButtonPressedCallback, popupContents.yesButtonText,
+                popupContents.noButtonText, popupContents.noButtonPressedCallback, popupContents.animateParentCanvas, popupContents.checkboxText);
+        }
+
+        internal void ShowYesNoModal(Transform parent, string text, Action yesButtonPressedCallback, string yesButtonText = "Yes", string noButtonText = "No", Action noButtonPressedCallback = null, bool animateParentCanvas = true, string checkboxText = "")
+        {
+            Parse();
+            yesNoModalTransform.localPosition = yesNoModalPosition;
             keyboardTransform.transform.SetParent(rootTransform);
             yesNoModalTransform.transform.SetParent(parent);
+
             YesNoText = text;
             YesButtonText = yesButtonText;
             NoButtonText = noButtonText;
+
             yesButtonPressed = yesButtonPressedCallback;
             noButtonPressed = noButtonPressedCallback;
-            FieldAccessor<ModalView, bool>.Set(ref yesNoModalView, "_animateParentCanvas", animateParentCanvas);
+
+            CheckboxText = checkboxText;
+            CheckboxValue = false;
+            CheckboxActive = !string.IsNullOrEmpty(checkboxText);
+
+            Accessors.AnimateCanvasAccessor(ref yesNoModalView) = animateParentCanvas;
+
             parserParams.EmitEvent("close-yes-no");
             parserParams.EmitEvent("open-yes-no");
         }
+
+        internal void HideYesNoModal() => parserParams.EmitEvent("close-yes-no");
 
         [UIAction("yes-button-pressed")]
         private void YesButtonPressed()
@@ -105,6 +143,9 @@ namespace MorePlaylists.UI
             noButtonPressed = null;
             yesNoModalTransform.transform.SetParent(rootTransform);
         }
+
+        [UIAction("toggle-checkbox")]
+        private void ToggleCheckbox() => CheckboxValue = !CheckboxValue;
 
         // Values
 
@@ -141,22 +182,65 @@ namespace MorePlaylists.UI
             }
         }
 
+        [UIValue("checkbox-text")]
+        private string CheckboxText
+        {
+            get => _checkboxText;
+            set
+            {
+                _checkboxText = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CheckboxText)));
+            }
+        }
+
+        [UIValue("checkbox-active")]
+        private bool CheckboxActive
+        {
+            get => _checkboxActive;
+            set
+            {
+                _checkboxActive = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CheckboxActive)));
+            }
+        }
+
+        [UIValue("checkbox")]
+        private string Checkbox => CheckboxValue ? "☑" : "⬜";
+
+        public bool CheckboxValue
+        {
+            get => _checkboxValue;
+            private set
+            {
+                _checkboxValue = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Checkbox)));
+            }
+        }
+
         #endregion
 
         #region Ok Modal
 
         // Methods
 
-        internal void ShowOkModal(Transform parent, string text, ButtonPressed buttonPressedCallback, string okButtonText = "Ok", bool animateParentCanvas = true)
+        private void ShowOkModal(OkPopupContents popupContents)
         {
-            Parse(parent);
-            okModalTransform.position = okModalPosition;
+            ShowOkModal(popupContents.parent, popupContents.message, popupContents.buttonPressedCallback, popupContents.okButtonText, popupContents.animateParentCanvas);
+        }
+
+        internal void ShowOkModal(Transform parent, string text, Action buttonPressedCallback, string okButtonText = "Ok", bool animateParentCanvas = true)
+        {
+            Parse();
+            okModalTransform.localPosition = okModalPosition;
             keyboardTransform.transform.SetParent(rootTransform);
             okModalTransform.transform.SetParent(parent);
+
             OkText = text;
             OkButtonText = okButtonText;
             okButtonPressed = buttonPressedCallback;
-            FieldAccessor<ModalView, bool>.Set(ref okModalView, "_animateParentCanvas", animateParentCanvas);
+
+            Accessors.AnimateCanvasAccessor(ref okModalView) = animateParentCanvas;
+
             parserParams.EmitEvent("close-ok");
             parserParams.EmitEvent("open-ok");
         }
@@ -199,14 +283,18 @@ namespace MorePlaylists.UI
 
         // Methods
 
-        internal void ShowKeyboard(Transform parent, KeyboardPressed keyboardPressedCallback, string keyboardText = "", bool animateParentCanvas = true)
+        internal void ShowKeyboard(Transform parent, Action<string> keyboardPressedCallback, string keyboardText = "", bool animateParentCanvas = true)
         {
-            Parse(parent);
+            Parse(); 
             keyboardTransform.transform.SetParent(rootTransform);
             keyboardTransform.transform.SetParent(parent);
-            keyboardPressed = keyboardPressedCallback;
-            FieldAccessor<ModalView, bool>.Set(ref keyboardModalView, "_animateParentCanvas", animateParentCanvas);
+
             KeyboardText = keyboardText;
+
+            keyboardPressed = keyboardPressedCallback;
+
+            Accessors.AnimateCanvasAccessor(ref keyboardModalView) = animateParentCanvas;
+
             parserParams.EmitEvent("close-keyboard");
             parserParams.EmitEvent("open-keyboard");
         }

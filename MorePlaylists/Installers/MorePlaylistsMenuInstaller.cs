@@ -1,7 +1,6 @@
 ﻿using MorePlaylists.Sources;
 using MorePlaylists.UI;
 using MorePlaylists.Utilities;
-using SiraUtil;
 using Zenject;
 
 namespace MorePlaylists.Installers
@@ -10,12 +9,14 @@ namespace MorePlaylists.Installers
     {
         public override void InstallBindings()
         {
+            Container.BindInterfacesTo<BeatSaver>().AsSingle();
             Container.BindInterfacesTo<BeastSaber>().AsSingle();
             Container.BindInterfacesTo<Hitbloq>().AsSingle();
+            Container.BindInterfacesTo<AccSaber>().AsSingle();
 
             Container.Bind<MorePlaylistsListViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsSongListViewController>().FromNewComponentAsViewController().AsSingle();
-            Container.BindInterfacesAndSelfTo<MorePlaylistsDownloadQueueViewController>().FromNewComponentAsViewController().AsSingle();
+            Container.BindInterfacesAndSelfTo<MorePlaylistsDownloaderViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsDetailViewController>().FromNewComponentAsViewController().AsSingle();
             Container.Bind<MorePlaylistsNavigationController>().FromNewComponentAsViewController().AsSingle();
 
