@@ -9,15 +9,15 @@ using UnityEngine;
 
 namespace MorePlaylists.Sources
 {
-    internal class AccSaber : LocalSearchSource
+    internal class AccSaber : SinglePageSource<AccSaberEntry>
     {
-        private List<AccSaberEntry> cachedResult = new List<AccSaberEntry>();
         private readonly IHttpService siraHttpService;
         private Sprite _logo;
-
-        public const string website = "https://api.accsaber.com/playlists/";
-        public readonly string[] playlists = new string[] { "true", "standard", "tech", "overall" };
-
+        
+        public override string Website => "https://api.accsaber.com/";
+        public override string Endpoint => "playlists/";
+        protected override IHttpService SiraHttpService => siraHttpService;
+        
         public override Sprite Logo
         {
             get
@@ -33,23 +33,6 @@ namespace MorePlaylists.Sources
         public AccSaber(IHttpService siraHttpService)
         {
             this.siraHttpService = siraHttpService;
-        }
-
-        public override async Task<List<GenericEntry>> GetEndpointResult(bool refreshRequested, bool resetPage, IProgress<float> progress, CancellationToken token, string searchQuery)
-        {
-            if (cachedResult.Count == 0 || refreshRequested)
-            {
-                for (var i = 0; i < playlists.Length; i++)
-                {
-                    var accSaberEntry = await AccSaberEntry.GetAccSaberPlaylist(website + playlists[i], siraHttpService);
-                    if (accSaberEntry != null)
-                    {
-                        cachedResult.Add(accSaberEntry);
-                    }
-                    progress.Report(((float)i + 1) / playlists.Length);
-                }
-            }
-            return Search(cachedResult.Cast<GenericEntry>().ToList(), searchQuery);
         }
     }
 }
