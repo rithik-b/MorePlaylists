@@ -11,13 +11,13 @@ namespace MorePlaylists.Utilities
                 return null;
             }
 
-            int dataIndex = Math.Max(0, base64Str.IndexOf(',') + 1);
+            var dataIndex = Math.Max(0, base64Str.IndexOf(',') + 1);
             return Convert.FromBase64String(dataIndex > 0 ? base64Str.Substring(dataIndex) : base64Str);
         }
 
         public static LevelSelectionFlowCoordinator.State GetStateForPlaylist(IBeatmapLevelPack beatmapLevelPack)
         {
-            LevelSelectionFlowCoordinator.State state = new LevelSelectionFlowCoordinator.State(beatmapLevelPack);
+            var state = new LevelSelectionFlowCoordinator.State(beatmapLevelPack);
             Accessors.LevelCategoryAccessor(ref state) = SelectLevelCategoryViewController.LevelCategory.CustomSongs;
             return state;
         }

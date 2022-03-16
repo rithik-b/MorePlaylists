@@ -52,19 +52,19 @@ namespace MorePlaylists.Entries
             if (songs == null)
             {
                 songs = new List<Song>();
-                int page = 0;
-                bool limitReached = false;
+                var page = 0;
+                var limitReached = false;
                 while (!limitReached)
                 {
                     try
                     {
-                        IHttpResponse webResponse = await siraHttpService.GetAsync($"https://api.beatsaver.com/playlists/id/{PlaylistID}/{page}", cancellationToken: CancellationToken.None);
+                        var webResponse = await siraHttpService.GetAsync($"https://api.beatsaver.com/playlists/id/{PlaylistID}/{page}", cancellationToken: CancellationToken.None);
                         if (webResponse.Successful)
                         {
-                            BeatSaverDetailEntry detailEntry = JsonConvert.DeserializeObject<BeatSaverDetailEntry>(await webResponse.ReadAsStringAsync());
+                            var detailEntry = JsonConvert.DeserializeObject<BeatSaverDetailEntry>(await webResponse.ReadAsStringAsync());
                             if (detailEntry.maps.Count != 0)
                             {
-                                foreach (BeatSaverMapDetailWithOrder map in detailEntry.maps)
+                                foreach (var map in detailEntry.maps)
                                 {
                                     songs.Add(new Song(map.map.Metadata.SongName, $"{map.map.Metadata.SongAuthorName} [{map.map.Metadata.LevelAuthorName}]", map.map.LatestVersion.CoverURL));
                                 }

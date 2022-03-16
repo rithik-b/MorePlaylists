@@ -14,7 +14,7 @@ namespace MorePlaylists.Entries
 
         public static async Task<AccSaberEntry> GetAccSaberPlaylist(string playlistURL, IHttpService siraHttpService)
         {
-            AccSaberEntry accSaberEntry = new AccSaberEntry();
+            var accSaberEntry = new AccSaberEntry();
             accSaberEntry.PlaylistURL = playlistURL;
             await accSaberEntry.DownloadPlaylist(siraHttpService);
             if (accSaberEntry.RemotePlaylist != null)

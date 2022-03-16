@@ -26,11 +26,11 @@ namespace MorePlaylists.Entries
 
                 if (DownloadState == DownloadState.Downloaded && RemotePlaylist is LegacyPlaylist playlist)
                 {
-                    SongDetails songDetails = await SongDetails.Init();
-                    List<IPlaylistSong> playlistSongs = playlist.Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
-                    for (int i = 0; i < playlistSongs.Count; i++)
+                    var songDetails = await SongDetails.Init();
+                    var playlistSongs = playlist.Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
+                    for (var i = 0; i < playlistSongs.Count; i++)
                     {
-                        if (songDetails.songs.FindByHash(playlistSongs[i].Hash, out SongDetailsCache.Structs.Song song))
+                        if (songDetails.songs.FindByHash(playlistSongs[i].Hash, out var song))
                         {
                             songs.Add(new Song(song.songName, $"{song.songAuthorName} [{song.levelAuthorName}]", song.coverURL));
                         }

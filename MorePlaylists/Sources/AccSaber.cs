@@ -39,9 +39,9 @@ namespace MorePlaylists.Sources
         {
             if (cachedResult.Count == 0 || refreshRequested)
             {
-                for (int i = 0; i < playlists.Length; i++)
+                for (var i = 0; i < playlists.Length; i++)
                 {
-                    AccSaberEntry accSaberEntry = await AccSaberEntry.GetAccSaberPlaylist(website + playlists[i], siraHttpService);
+                    var accSaberEntry = await AccSaberEntry.GetAccSaberPlaylist(website + playlists[i], siraHttpService);
                     if (accSaberEntry != null)
                     {
                         cachedResult.Add(accSaberEntry);

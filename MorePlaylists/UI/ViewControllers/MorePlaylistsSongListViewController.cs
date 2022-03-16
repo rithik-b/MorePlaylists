@@ -92,10 +92,10 @@ namespace MorePlaylists.UI
 
             if (customListTableData.data.Count == 0)
             {
-                List<Song> songs = await playlistEntry.GetSongs(siraHttpService);
-                foreach (Song song in songs)
+                var songs = await playlistEntry.GetSongs(siraHttpService);
+                foreach (var song in songs)
                 {
-                    CustomListTableData.CustomCellInfo customCellInfo = new CustomListTableData.CustomCellInfo(song.Name, song.SubName, BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
+                    var customCellInfo = new CustomListTableData.CustomCellInfo(song.Name, song.SubName, BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
                     spriteLoader.DownloadSpriteAsync(song.CoverURL, (Sprite sprite) =>
                     {
                         customCellInfo.icon = sprite;

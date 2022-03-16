@@ -55,7 +55,7 @@ namespace MorePlaylists.Entries
             DownloadState = DownloadState.Downloading;
             try
             {
-                IHttpResponse webResponse = await siraHttpService.GetAsync(PlaylistURL, cancellationToken: CancellationToken.None);
+                var webResponse = await siraHttpService.GetAsync(PlaylistURL, cancellationToken: CancellationToken.None);
                 if (webResponse.Successful)
                 {
                     RemotePlaylist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(await webResponse.ReadAsStreamAsync());

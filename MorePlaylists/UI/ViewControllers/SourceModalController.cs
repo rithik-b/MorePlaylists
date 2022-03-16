@@ -61,7 +61,7 @@ namespace MorePlaylists.UI
         private void PostParse()
         {
             customListTableData.data.Clear();
-            foreach (ISource source in sources)
+            foreach (var source in sources)
             {
                 customListTableData.data.Add(new CustomListTableData.CustomCellInfo(source.GetType().Name, "", source.Logo));
             }

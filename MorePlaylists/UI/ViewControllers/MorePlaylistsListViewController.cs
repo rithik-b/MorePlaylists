@@ -105,7 +105,7 @@ namespace MorePlaylists.UI
 
         internal void SetEntryAsOwned(IGenericEntry playlistEntry)
         {
-            int index = currentPlaylists.IndexOf(playlistEntry);
+            var index = currentPlaylists.IndexOf(playlistEntry);
             if (index >= 0)
             {
                 customListTableData.data[index] = new CustomListTableData.CustomCellInfo($"<#7F7F7F>{playlistEntry.Title}", playlistEntry.Author);
@@ -141,9 +141,9 @@ namespace MorePlaylists.UI
 
             if (currentPlaylists != null)
             {
-                foreach (GenericEntry playlistEntry in currentPlaylists)
+                foreach (var playlistEntry in currentPlaylists)
                 {
-                    CustomListTableData.CustomCellInfo customCellInfo = new CustomListTableData.CustomCellInfo(playlistEntry.DownloadBlocked ? $"<#7F7F7F>{playlistEntry.Title}" : playlistEntry.Title,
+                    var customCellInfo = new CustomListTableData.CustomCellInfo(playlistEntry.DownloadBlocked ? $"<#7F7F7F>{playlistEntry.Title}" : playlistEntry.Title,
                         playlistEntry.Author);
                     customListTableData.data.Add(customCellInfo);
                     spriteLoader.GetSpriteForEntry(playlistEntry, (Sprite sprite) =>
@@ -175,7 +175,7 @@ namespace MorePlaylists.UI
                 tokenSource = new CancellationTokenSource();
                 SetLoading(true);
 
-                List<GenericEntry> playlistsToAdd = await currentSource.GetEndpointResult(false, false, this, tokenSource.Token, currentQuery);
+                var playlistsToAdd = await currentSource.GetEndpointResult(false, false, this, tokenSource.Token, currentQuery);
 
                 // If we get an empty result, we can't scroll anymore
                 if (playlistsToAdd.Count == 0)
@@ -190,9 +190,9 @@ namespace MorePlaylists.UI
 
                 if (currentPlaylists != null)
                 {
-                    foreach (GenericEntry playlistEntry in playlistsToAdd)
+                    foreach (var playlistEntry in playlistsToAdd)
                     {
-                        CustomListTableData.CustomCellInfo customCellInfo = new CustomListTableData.CustomCellInfo(playlistEntry.DownloadBlocked ? $"<#7F7F7F>{playlistEntry.Title}" : playlistEntry.Title,
+                        var customCellInfo = new CustomListTableData.CustomCellInfo(playlistEntry.DownloadBlocked ? $"<#7F7F7F>{playlistEntry.Title}" : playlistEntry.Title,
                             playlistEntry.Author);
                         customListTableData.data.Add(customCellInfo);
                         spriteLoader.GetSpriteForEntry(playlistEntry, (Sprite sprite) =>

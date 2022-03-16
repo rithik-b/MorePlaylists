@@ -22,7 +22,7 @@ namespace MorePlaylists.Sources
             {
                 try
                 {
-                    IHttpResponse webResponse = await SiraHttpService.GetAsync(Website + Endpoint, progress, token);
+                    var webResponse = await SiraHttpService.GetAsync(Website + Endpoint, progress, token);
                     if (webResponse.Successful)
                     {
                         cachedResult = JsonConvert.DeserializeObject<List<T>>(await webResponse.ReadAsStringAsync());

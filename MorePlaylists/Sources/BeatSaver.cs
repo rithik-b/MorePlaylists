@@ -44,10 +44,10 @@ namespace MorePlaylists.Sources
 
             try
             {
-                IHttpResponse webResponse = await _siraHttpService.GetAsync($"https://api.beatsaver.com/playlists/search/{page}?q={searchQuery}", progress, token);
+                var webResponse = await _siraHttpService.GetAsync($"https://api.beatsaver.com/playlists/search/{page}?q={searchQuery}", progress, token);
                 if (webResponse.Successful)
                 {
-                    List<GenericEntry> returnVal = JsonConvert.DeserializeObject<BeatSaverResponse>(await webResponse.ReadAsStringAsync()).Entries.Cast<GenericEntry>().ToList();
+                    var returnVal = JsonConvert.DeserializeObject<BeatSaverResponse>(await webResponse.ReadAsStringAsync()).Entries.Cast<GenericEntry>().ToList();
                     page++;
                     return returnVal;
                 }
