@@ -25,6 +25,7 @@ namespace MorePlaylists.Installers
             Container.BindInterfacesTo<MenuButtonUI>().AsSingle();
 
             Container.Bind<SpriteLoader>().AsSingle();
+            Container.Bind<InputFieldGrabber>().AsSingle();
         }
     }
 }

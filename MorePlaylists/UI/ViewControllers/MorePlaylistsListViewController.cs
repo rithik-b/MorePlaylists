@@ -18,7 +18,7 @@ namespace MorePlaylists.UI
 {
     [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsListView.bsml")]
     [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsListView.bsml")]
-    internal class MorePlaylistsListViewController : BSMLAutomaticViewController, IListViewController, IProgress<float>
+    internal class MorePlaylistsListViewController : BSMLAutomaticViewController, IListViewController
     {
         [Inject]
         private StandardLevelDetailViewController standardLevelDetailViewController = null!;
@@ -26,9 +26,13 @@ namespace MorePlaylists.UI
         [Inject]
         private readonly SpriteLoader spriteLoader = null!;
         
+        [Inject]
+        private readonly InputFieldGrabber inputFieldGrabber = null!;
+        
         private readonly SemaphoreSlim playlistLoadSemaphore = new(1, 1);
 
         private LoadingControl? loadingSpinner;
+        private InputFieldView? inputFieldView;
         private CancellationTokenSource? cancellationTokenSource;
         private List<IBasicEntry>? currentPlaylists;
         private IBasicSource? currentSource;
@@ -36,6 +40,12 @@ namespace MorePlaylists.UI
         public ViewController ViewController => this;
         public event Action<IEntry>? DidSelectPlaylist;
         public event Action? DidClickSource;
+
+        [UIComponent("filter-bar")] 
+        private readonly RectTransform filterBarTransform = null!;
+        
+        [UIComponent("source-button")]
+        private readonly ButtonIconImage? sourceButton = null!;
         
         [UIComponent("list")]
         private readonly CustomListTableData? customListTableData = null!;
@@ -43,14 +53,12 @@ namespace MorePlaylists.UI
         [UIComponent("loading-modal")]
         private readonly RectTransform? loadingModal = null!;
 
-        [UIParams] 
-        private readonly BSMLParserParams parserParams = null!;
-
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            if (currentSource != null && customListTableData != null)
+            if (currentSource != null && customListTableData != null && sourceButton != null)
             {
+                sourceButton.image.sprite = currentSource.Logo;
                 cancellationTokenSource?.Cancel();
                 cancellationTokenSource = new CancellationTokenSource();
                 _ = ShowPlaylists(currentSource, cancellationTokenSource.Token);
@@ -64,6 +72,14 @@ namespace MorePlaylists.UI
         {
             rectTransform.anchorMin = new Vector2(0.5f, 0);
             rectTransform.localPosition = Vector3.zero;
+            
+            inputFieldView = inputFieldGrabber.GetNewInputField(filterBarTransform);
+            if (inputFieldView.transform is RectTransform inputFieldTransform)
+            {
+                inputFieldView.transform.SetSiblingIndex(0);
+                inputFieldTransform.sizeDelta = new Vector2(50, 8);
+            }
+            
             loadingSpinner = Instantiate(Accessors.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
             Destroy(loadingSpinner.GetComponent<Touchable>());
         }
@@ -74,11 +90,10 @@ namespace MorePlaylists.UI
         [UIAction("source-click")]
         private void DisplaySources() => DidClickSource?.Invoke();
         
-        [UIAction("abort-click")]
         public void AbortLoading()
         {
             cancellationTokenSource?.Cancel();
-            SetLoading(false);
+            Loaded = true;
         }
 
         #endregion
@@ -89,7 +104,7 @@ namespace MorePlaylists.UI
             if (index >= 0 && customListTableData != null)
             {
                 customListTableData.data[index] = new CustomListTableData.CustomCellInfo($"<#7F7F7F>{playlistEntry.Title}", playlistEntry.Author);
-                spriteLoader.GetSpriteForEntry(playlistEntry, (Sprite sprite) =>
+                spriteLoader.GetSpriteForEntry(playlistEntry, sprite =>
                 {
                     customListTableData.data[index].icon = sprite;
                     customListTableData.tableView.ReloadDataKeepingPosition();
@@ -126,7 +141,7 @@ namespace MorePlaylists.UI
                 {
                     customListTableData.tableView.ClearSelection();
                     customListTableData.data.Clear();
-                    SetLoading(true);
+                    Loaded = false;
                 });
 
                 // We check the cancellationtoken at each interval instead of running everything with a single token
@@ -136,7 +151,7 @@ namespace MorePlaylists.UI
                     return;
                 }
 
-                currentPlaylists = await source.GetEndpointResult(refreshRequested, this, cancellationToken);
+                currentPlaylists = await source.GetEndpointResult(refreshRequested, cancellationToken);
 
                 if (cancellationToken.IsCancellationRequested || currentPlaylists == null)
                 {
@@ -171,8 +186,8 @@ namespace MorePlaylists.UI
 
                 await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
+                    Loaded = true;
                     customListTableData.tableView.ReloadData();
-                    SetLoading(false);
                 });
             }
             finally
@@ -182,26 +197,25 @@ namespace MorePlaylists.UI
         }
 
         #endregion
+        
+        #region Loading
 
-        private void SetLoading(bool value, float progress = 0)
+        private bool loaded;
+        [UIValue("is-loading")]
+        private bool IsLoading => !Loaded;
+
+        [UIValue("has-loaded")]
+        private bool Loaded
         {
-            if (value && isActiveAndEnabled && loadingSpinner != null)
+            get => loaded;
+            set
             {
-                parserParams.EmitEvent("open-loading-modal");
-                loadingSpinner.ShowDownloadingProgress("Fetching More Playlists... ", progress);
-            }
-            else
-            {
-                parserParams.EmitEvent("close-loading-modal");
+                loaded = value;
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(IsLoading));
             }
         }
 
-        public void Report(float progress)
-        {
-            if (loadingSpinner != null)
-            {
-                loadingSpinner.ShowDownloadingProgress("Fetching More Playlists... ", progress);
-            }
-        }
+        #endregion
     }
 }

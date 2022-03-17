@@ -26,23 +26,7 @@ namespace MorePlaylists.UI
 
         private CancellationTokenSource? cancellationTokenSource;
         
-        private bool loaded;
         private readonly SemaphoreSlim songLoadSemaphore = new(1, 1);
-
-        [UIValue("is-loading")]
-        public bool IsLoading => !Loaded;
-
-        [UIValue("has-loaded")]
-        public bool Loaded
-        {
-            get => loaded;
-            set
-            {
-                loaded = value;
-                NotifyPropertyChanged();
-                NotifyPropertyChanged(nameof(IsLoading));
-            }
-        }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -134,8 +118,8 @@ namespace MorePlaylists.UI
 
                 await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
-                    customListTableData.tableView.ReloadData();
                     Loaded = true;
+                    customListTableData.tableView.ReloadData();
                 });
             }
             finally
@@ -143,5 +127,25 @@ namespace MorePlaylists.UI
                 songLoadSemaphore.Release();
             }
         }
+        
+        #region Loading
+
+        private bool loaded;
+        [UIValue("is-loading")]
+        private bool IsLoading => !Loaded;
+
+        [UIValue("has-loaded")]
+        private bool Loaded
+        {
+            get => loaded;
+            set
+            {
+                loaded = value;
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(IsLoading));
+            }
+        }
+
+        #endregion
     }
 }

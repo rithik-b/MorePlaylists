@@ -29,13 +29,13 @@ namespace MorePlaylists.Sources
             DetailViewController = detailViewController;
         }
         
-        public async Task<List<IBasicEntry>?> GetEndpointResult(bool refreshRequested, IProgress<float> progress, CancellationToken token)
+        public async Task<List<IBasicEntry>?> GetEndpointResult(bool refreshRequested, CancellationToken token)
         {
             if (cachedResult == null || refreshRequested)
             {
                 try
                 {
-                    var webResponse = await SiraHttpService.GetAsync(Website + Endpoint, progress, token);
+                    var webResponse = await SiraHttpService.GetAsync(Website + Endpoint, cancellationToken: token);
                     if (webResponse.Successful)
                     {
                         cachedResult = JsonConvert.DeserializeObject<List<T>>(await webResponse.ReadAsStringAsync());

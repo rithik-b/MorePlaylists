@@ -8,6 +8,6 @@ namespace MorePlaylists.Sources
 {
     public interface IBasicSource : ISource
     {
-        Task<List<IBasicEntry>?> GetEndpointResult(bool refreshRequested, IProgress<float> progress, CancellationToken token);
+        Task<List<IBasicEntry>?> GetEndpointResult(bool refreshRequested, CancellationToken token);
     }
 }
