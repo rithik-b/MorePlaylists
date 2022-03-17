@@ -6,6 +6,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace MorePlaylists.Utilities
@@ -13,40 +14,22 @@ namespace MorePlaylists.Utilities
     internal class SpriteLoader
     {
         private readonly IHttpService siraHttpService;
-        private readonly Dictionary<string, Sprite> cachedURLSprites;
-        private readonly Dictionary<string, Sprite> cachedBase64Sprites;
-
+        private readonly Dictionary<string, Sprite> cachedSprites;
         private readonly ConcurrentQueue<Action> spriteQueue;
 
         public SpriteLoader(IHttpService siraHttpService)
         {
             this.siraHttpService = siraHttpService;
-            cachedURLSprites = new Dictionary<string, Sprite>();
-            cachedBase64Sprites = new Dictionary<string, Sprite>();
-
+            cachedSprites = new Dictionary<string, Sprite>();
             spriteQueue = new ConcurrentQueue<Action>();
         }
-
-        public void GetSpriteForEntry(IGenericEntry entry, Action<Sprite> onCompletion)
-        {
-            switch (entry.SpriteType)
-            {
-                case SpriteType.URL:
-                    DownloadSpriteAsync(entry.SpriteString, onCompletion);
-                    break;
-                case SpriteType.Base64:
-                    ParseBase64Sprite(entry.SpriteString, onCompletion);
-                    break;
-                case SpriteType.Playlist:
-                    GetPlaylistSprite(entry.RemotePlaylist as IDeferredSpriteLoad, onCompletion);
-                    break;
-            }
-        }
-
-        public async void DownloadSpriteAsync(string spriteURL, Action<Sprite> onCompletion)
+        
+        public void GetSpriteForEntry(IEntry entry, Action<Sprite> onCompletion) => _ = DownloadSpriteAsync(entry.SpriteURL, onCompletion);
+        
+        public async Task DownloadSpriteAsync(string spriteURL, Action<Sprite> onCompletion)
         {
             // Check Cache
-            if (cachedURLSprites.TryGetValue(spriteURL, out var cachedSprite))
+            if (cachedSprites.TryGetValue(spriteURL, out var cachedSprite))
             {
                 onCompletion?.Invoke(cachedSprite);
                 return;
@@ -56,7 +39,7 @@ namespace MorePlaylists.Utilities
             {
                 var webResponse = await siraHttpService.GetAsync(spriteURL, cancellationToken: CancellationToken.None).ConfigureAwait(false);
                 var imageBytes = await webResponse.ReadAsByteArrayAsync();
-                QueueLoadSprite(spriteURL, cachedURLSprites, imageBytes, onCompletion);
+                QueueLoadSprite(spriteURL, imageBytes, onCompletion);
             }
             catch (Exception)
             {
@@ -64,45 +47,7 @@ namespace MorePlaylists.Utilities
             }
         }
 
-        public void ParseBase64Sprite(string base64, Action<Sprite> onCompletion)
-        {
-            // Check Cache
-            if (cachedBase64Sprites.TryGetValue(base64, out var cachedSprite))
-            {
-                onCompletion?.Invoke(cachedSprite);
-                return;
-            }
-
-            byte[] imageBytes;
-            try
-            {
-                imageBytes = Utils.Base64ToByteArray(base64);
-            }
-            catch (FormatException)
-            {
-                imageBytes = Array.Empty<byte>();
-            }
-
-            QueueLoadSprite(base64, cachedBase64Sprites, imageBytes, onCompletion);
-        }
-
-        public void GetPlaylistSprite(IDeferredSpriteLoad playlist, Action<Sprite> onCompletion)
-        {
-            if (playlist.SpriteWasLoaded)
-            {
-                onCompletion?.Invoke(playlist.Sprite);
-            }
-            else
-            {
-                playlist.SpriteLoaded += (sender, args) =>
-                {
-                    onCompletion?.Invoke(playlist.Sprite);
-                };
-                _ = playlist.Sprite;
-            }
-        }
-
-        private void QueueLoadSprite(string key, Dictionary<string, Sprite> cache, byte[] imageBytes, Action<Sprite> onCompletion)
+        private void QueueLoadSprite(string key, byte[] imageBytes, Action<Sprite> onCompletion)
         {
             spriteQueue.Enqueue(() =>
             {
@@ -110,7 +55,7 @@ namespace MorePlaylists.Utilities
                 {
                     var sprite = BeatSaberMarkupLanguage.Utilities.LoadSpriteRaw(imageBytes);
                     sprite.texture.wrapMode = TextureWrapMode.Clamp;
-                    cache[key] = sprite;
+                    cachedSprites[key] = sprite;
                     onCompletion?.Invoke(sprite);
                 }
                 catch (Exception)
@@ -120,9 +65,8 @@ namespace MorePlaylists.Utilities
             });
             SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
         }
-
-        public static YieldInstruction LoadWait = new WaitForEndOfFrame();
-
+        
+        private static readonly YieldInstruction LoadWait = new WaitForEndOfFrame();
         private IEnumerator<YieldInstruction> SpriteLoadCoroutine()
         {
             while (spriteQueue.TryDequeue(out var loader))

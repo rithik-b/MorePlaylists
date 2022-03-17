@@ -6,6 +6,6 @@
         <horizontal/>
         <loading-indicator active='~is-loading' preserve-aspect='true' pref-width='10' pref-height='10' />
         <horizontal/>
-        <list id='list' active='~loaded' expand-cell='true' select-cell='list-select' list-width='62' show-scrollbar='true' stick-scrolling='true' />
+        <list id='list' active='~has-loaded' expand-cell='true' select-cell='list-select' list-width='62' show-scrollbar='true' stick-scrolling='true' />
     </vertical>
 </bg>

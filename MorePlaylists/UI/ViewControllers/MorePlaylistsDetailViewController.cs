@@ -4,6 +4,7 @@ using HMUI;
 using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
 using System;
+using BeatSaberPlaylistsLib.Types;
 using UnityEngine;
 using Zenject;
 
@@ -11,13 +12,14 @@ namespace MorePlaylists.UI
 {
     [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsDetailView.bsml")]
     [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml")]
-    internal class MorePlaylistsDetailViewController : BSMLAutomaticViewController
+    internal class MorePlaylistsDetailViewController : BSMLAutomaticViewController, IDetailViewController
     {
-        private IGenericEntry selectedPlaylistEntry;
+        private IEntry? selectedPlaylistEntry;
         private SpriteLoader spriteLoader;
-
-        internal event Action<IGenericEntry, bool> DidPressDownload;
-        internal event Action<BeatSaberPlaylistsLib.Types.IPlaylist> DidGoToPlaylist;
+        
+        public ViewController ViewController => this;
+        public event Action<IEntry, bool>? DidPressDownload;
+        public event Action<IPlaylist>? DidGoToPlaylist;
 
         [UIComponent("playlist-cover")]
         private readonly ImageView playlistCoverView;
@@ -67,7 +69,7 @@ namespace MorePlaylists.UI
 
         #endregion
 
-        internal void ShowDetail(IGenericEntry selectedPlaylistEntry)
+        public void ShowDetail(IEntry selectedPlaylistEntry)
         {
             this.selectedPlaylistEntry = selectedPlaylistEntry;
             NotifyPropertyChanged(nameof(DownloadInteractable));
@@ -80,7 +82,7 @@ namespace MorePlaylists.UI
             descriptionTextPage.ScrollTo(0, true);
         }
 
-        internal void OnPlaylistDownloaded()
+        public void OnPlaylistDownloaded()
         {
             NotifyPropertyChanged(nameof(DownloadInteractable));
             NotifyPropertyChanged(nameof(DownloadActive));

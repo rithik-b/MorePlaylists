@@ -20,7 +20,7 @@ namespace MorePlaylists
         public Plugin(IPALogger logger, Zenjector zenjector)
         {
             Instance = this;
-            Plugin.Log = logger;
+            Log = logger;
             zenjector.UseHttpService();
             zenjector.Install<MorePlaylistsMenuInstaller>(Location.Menu);
         }

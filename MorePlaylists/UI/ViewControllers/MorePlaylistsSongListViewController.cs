@@ -1,14 +1,12 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
-using BeatSaberMarkupLanguage.Parser;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
 using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
 using SiraUtil.Web;
-using System.Collections.Generic;
 using System.Threading;
-using UnityEngine;
+using System.Threading.Tasks;
 using Zenject;
 
 namespace MorePlaylists.UI
@@ -17,39 +15,32 @@ namespace MorePlaylists.UI
     [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsSongListView.bsml")]
     internal class MorePlaylistsSongListViewController : BSMLAutomaticViewController
     {
-        private IHttpService siraHttpService;
-        private SpriteLoader spriteLoader;
+        [Inject]
+        private readonly IHttpService siraHttpService = null!;
+        
+        [Inject]
+        private readonly SpriteLoader spriteLoader = null!;
+        
+        [UIComponent("list")]
+        private readonly CustomListTableData? customListTableData = null!;
 
-        private static SemaphoreSlim songLoadSemaphore = new SemaphoreSlim(1, 1);
-
-        private bool _loaded;
-
+        private CancellationTokenSource? cancellationTokenSource;
+        
+        private bool loaded;
+        
         [UIValue("is-loading")]
         public bool IsLoading => !Loaded;
 
-        [UIValue("loaded")]
+        [UIValue("has-loaded")]
         public bool Loaded
         {
-            get => _loaded;
+            get => loaded;
             set
             {
-                _loaded = value;
+                loaded = value;
                 NotifyPropertyChanged();
                 NotifyPropertyChanged(nameof(IsLoading));
             }
-        }
-
-        [UIComponent("list")]
-        private readonly CustomListTableData customListTableData;
-
-        [UIParams]
-        internal BSMLParserParams parserParams;
-
-        [Inject]
-        public void Construct(IHttpService siraHttpService, SpriteLoader spriteLoader)
-        {
-            this.siraHttpService = siraHttpService;
-            this.spriteLoader = spriteLoader;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -61,15 +52,9 @@ namespace MorePlaylists.UI
             }
         }
 
-        internal void SetCurrentPlaylist(IGenericEntry playlistEntry)
-        {
-            if (customListTableData != null)
-            {
-                InitSongList(playlistEntry);
-            }
-        }
+        public void SetCurrentPlaylist(IEntry entry) => _ = InitSongList(entry);
 
-        internal void ClearList()
+        public void ClearList()
         {
             if (customListTableData != null)
             {
@@ -79,35 +64,50 @@ namespace MorePlaylists.UI
         }
 
         [UIAction("list-select")]
-        private void Select(TableView _, int __)
-        {
-            customListTableData.tableView.ClearSelection();
-        }
+        private void Select(TableView _, int __) => customListTableData!.tableView.ClearSelection();
 
-        private async void InitSongList(IGenericEntry playlistEntry)
+        private async Task InitSongList(IEntry entry)
         {
-            await songLoadSemaphore.WaitAsync();
-            ClearList();
-            Loaded = false;
-
-            if (customListTableData.data.Count == 0)
+            if (customListTableData == null)
             {
-                var songs = await playlistEntry.GetSongs(siraHttpService);
-                foreach (var song in songs)
-                {
-                    var customCellInfo = new CustomListTableData.CustomCellInfo(song.Name, song.SubName, BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
-                    spriteLoader.DownloadSpriteAsync(song.CoverURL, (Sprite sprite) =>
-                    {
-                        customCellInfo.icon = sprite;
-                        customListTableData.tableView.ReloadDataKeepingPosition();
-                    });
-                    customListTableData.data.Add(customCellInfo);
-                }
-                customListTableData.tableView.ReloadData();
+                return;
             }
+            
+            cancellationTokenSource?.Cancel();
+            cancellationTokenSource = new CancellationTokenSource();
 
-            Loaded = true;
-            songLoadSemaphore.Release();
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(ClearList);
+                    
+                    Loaded = false;
+                    var songs = await entry.GetSongs(siraHttpService, cancellationTokenSource.Token);
+
+                    if (songs != null)
+                    {
+                        await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                        {
+                            foreach (var song in songs)
+                            {
+                                var customCellInfo = new CustomListTableData.CustomCellInfo(song.Name, song.SubName,
+                                    BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
+                                _ = spriteLoader.DownloadSpriteAsync(song.CoverURL, sprite =>
+                                {
+                                    customCellInfo.icon = sprite;
+                                    customListTableData.tableView.ReloadDataKeepingPosition();
+                                });
+                                customListTableData.data.Add(customCellInfo);
+                            }
+                            customListTableData.tableView.ReloadData();
+                        });
+                    }
+
+                    await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() => Loaded = true);
+                }, cancellationTokenSource.Token);
+            }
+            catch (TaskCanceledException) {}
         }
     }
 }

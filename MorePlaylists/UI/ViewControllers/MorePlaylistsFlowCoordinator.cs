@@ -6,66 +6,48 @@ using UnityEngine;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
 using MorePlaylists.Utilities;
-using SiraUtil.Web;
 
 namespace MorePlaylists.UI
 {
     internal class MorePlaylistsFlowCoordinator : FlowCoordinator, IInitializable, IDisposable
     {
-        private MainFlowCoordinator mainFlowCoordinator;
-        private MainMenuViewController mainMenuViewController;
-        private SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator;
-        private PopupModalsController popupModalsController;
-        private SourceModalController sourceModalController;
-        private MorePlaylistsNavigationController morePlaylistsNavigationController;
-        private MorePlaylistsListViewController morePlaylistsListViewController;
-        private MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController;
-        private MorePlaylistsDetailViewController morePlaylistsDetailViewController;
-        private MorePlaylistsSongListViewController morePlaylistsSongListViewController;
+        [Inject]
+        private readonly MainFlowCoordinator mainFlowCoordinator = null!;
 
         [Inject]
-        public void Construct(MainFlowCoordinator mainFlowCoordinator, MainMenuViewController mainMenuViewController, SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator,
-            PopupModalsController popupModalsController, SourceModalController sourceModalController, MorePlaylistsNavigationController morePlaylistsNavigationController,
-            MorePlaylistsListViewController morePlaylistsListViewController, MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController,
-            MorePlaylistsDetailViewController morePlaylistsDetailViewController, MorePlaylistsSongListViewController morePlaylistsSongListViewController)
-        {
-            this.mainFlowCoordinator = mainFlowCoordinator;
-            this.mainMenuViewController = mainMenuViewController;
-            this.soloFreePlayFlowCoordinator = soloFreePlayFlowCoordinator;
-            this.popupModalsController = popupModalsController;
-            this.sourceModalController = sourceModalController;
-            this.morePlaylistsNavigationController = morePlaylistsNavigationController;
-            this.morePlaylistsListViewController = morePlaylistsListViewController;
-            this.morePlaylistsDownloaderViewController = morePlaylistsDownloaderViewController;
-            this.morePlaylistsDetailViewController = morePlaylistsDetailViewController;
-            this.morePlaylistsSongListViewController = morePlaylistsSongListViewController;
-        }
+        private readonly MainMenuViewController mainMenuViewController = null!;
+
+        [Inject] 
+        private readonly SoloFreePlayFlowCoordinator soloFreePlayFlowCoordinator = null!;
+        
+        [Inject]
+        private readonly PopupModalsController popupModalsController = null!;
+        
+        [Inject]
+        private readonly SourceModalController sourceModalController = null!;
+        
+        [Inject]
+        private readonly MorePlaylistsNavigationController morePlaylistsNavigationController = null!;
+
+        [Inject]
+        private readonly MorePlaylistsDownloaderViewController morePlaylistsDownloaderViewController = null!;
+
+        [Inject]
+        private readonly MorePlaylistsSongListViewController morePlaylistsSongListViewController = null!;
+
+        private IListViewController ListViewController => sourceModalController.SelectedSource.ListViewController;
+        private IDetailViewController DetailViewController => sourceModalController.SelectedSource.DetailViewController;
 
         public void Initialize()
         {
             sourceModalController.DidSelectSource += SourceSelected;
-
-            morePlaylistsListViewController.DidSelectPlaylist += PlaylistSelected;
-            morePlaylistsListViewController.DidClickSource += SourceButtonClicked;
-            morePlaylistsListViewController.DidClickSearch += SearchButtonClicked;
-
-            morePlaylistsDetailViewController.DidPressDownload += morePlaylistsDownloaderViewController.DownloadPlaylist;
-            morePlaylistsDetailViewController.DidGoToPlaylist += GoToPlaylistClicked;
-
             morePlaylistsDownloaderViewController.PlaylistDownloaded += OnPlaylistDownloaded;
         }
 
         public void Dispose()
         {
             sourceModalController.DidSelectSource -= SourceSelected;
-
-            morePlaylistsListViewController.DidSelectPlaylist -= PlaylistSelected;
-            morePlaylistsListViewController.DidClickSource -= SourceButtonClicked;
-            morePlaylistsListViewController.DidClickSearch -= SearchButtonClicked;
-
-            morePlaylistsDetailViewController.DidPressDownload -= morePlaylistsDownloaderViewController.DownloadPlaylist;
-            morePlaylistsDetailViewController.DidGoToPlaylist -= GoToPlaylistClicked;
-
+            UnsubFromEvents(sourceModalController.SelectedSource);
             morePlaylistsDownloaderViewController.PlaylistDownloaded -= OnPlaylistDownloaded;
         }
 
@@ -73,72 +55,78 @@ namespace MorePlaylists.UI
         {
             SetTitle("Download Playlists");
             showBackButton = true;
-
-            SetViewControllersToNavigationController(morePlaylistsNavigationController, morePlaylistsListViewController);
+            SourceSelected(sourceModalController.SelectedSource);
             ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloaderViewController);
         }
 
         private void SourceSelected(ISource source)
         {
-            morePlaylistsListViewController.ShowPlaylistsForSource(source);
+            UnsubFromEvents(sourceModalController.SelectedSource);
+            SubToEvents(source);
+            source.ListViewController.ShowPlaylistsForSource(source);
+            SetViewControllersToNavigationController(morePlaylistsNavigationController, source.ListViewController.ViewController);
             morePlaylistsSongListViewController.ClearList();
-            if (morePlaylistsDetailViewController.isInViewControllerHierarchy)
-            {
-                PopViewControllerFromNavigationController(morePlaylistsNavigationController, immediately: true);
-            }
         }
 
-        private void PlaylistSelected(GenericEntry selectedPlaylistEntry)
+        private void PlaylistSelected(IEntry selectedPlaylistEntry)
         {
-            if (!morePlaylistsDetailViewController.isInViewControllerHierarchy)
+            if (!DetailViewController.ViewController.isInViewControllerHierarchy)
             {
-                PushViewControllerToNavigationController(morePlaylistsNavigationController, morePlaylistsDetailViewController, DetailViewPushed, true);
+                PushViewControllerToNavigationController(morePlaylistsNavigationController, DetailViewController.ViewController, DetailViewPushed, true);
             }
-            morePlaylistsDetailViewController.ShowDetail(selectedPlaylistEntry);
+            DetailViewController.ShowDetail(selectedPlaylistEntry);
             SetRightScreenViewController(morePlaylistsSongListViewController, ViewController.AnimationType.In);
             morePlaylistsSongListViewController.SetCurrentPlaylist(selectedPlaylistEntry);
         }
 
-        private void SourceButtonClicked() => sourceModalController.ShowModal(morePlaylistsListViewController.transform);
-
-        private void SearchButtonClicked() => popupModalsController.ShowKeyboard(morePlaylistsListViewController.transform, morePlaylistsListViewController.Search);
-
-        private void OnPlaylistDownloaded(IGenericEntry playlistEntry)
+        private void SourceButtonClicked() => sourceModalController.ShowModal(ListViewController.ViewController.transform);
+        
+        private void OnPlaylistDownloaded(IEntry playlistEntry)
         {
-            if (playlistEntry.DownloadState == DownloadState.Downloaded)
+            if (playlistEntry.DownloadBlocked)
             {
-                morePlaylistsListViewController.SetEntryAsOwned(playlistEntry);
+                ListViewController.SetEntryAsOwned(playlistEntry);
             }
             else
             {
-                popupModalsController.ShowOkModal(morePlaylistsListViewController.transform, "An error occured while downloading, please try again later", null);
+                popupModalsController.ShowOkModal(ListViewController.ViewController.transform, "An error occured while downloading, please try again later", null);
             }
-            morePlaylistsDetailViewController.OnPlaylistDownloaded();
+            DetailViewController.OnPlaylistDownloaded();
         }
-
-        #region Go To Playlist
 
         private void GoToPlaylistClicked(BeatSaberPlaylistsLib.Types.IPlaylist playlist)
         {
-            morePlaylistsListViewController.AbortLoading();
+            ListViewController.AbortLoading();
             mainFlowCoordinator.DismissFlowCoordinator(this, immediately: true);
             soloFreePlayFlowCoordinator.Setup(Utils.GetStateForPlaylist(playlist));
             mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
         }
 
-        #endregion
-
-        private void DetailViewPushed() => morePlaylistsDetailViewController.transform.localPosition = new Vector3(45, 0, 0);
-
-        #region Back Button Pressed
-
+        private void DetailViewPushed() => DetailViewController.ViewController.transform.localPosition = new Vector3(45, 0, 0);
+        
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            morePlaylistsListViewController.AbortLoading();
+            ListViewController.AbortLoading();
             mainFlowCoordinator.DismissFlowCoordinator(this);
         }
 
-        #endregion
+        private void SubToEvents(ISource source)
+        {
+            source.ListViewController.DidSelectPlaylist += PlaylistSelected;
+            source.ListViewController.DidClickSource += SourceButtonClicked;
+            
+            source.DetailViewController.DidPressDownload += morePlaylistsDownloaderViewController.DownloadPlaylist;
+            source.DetailViewController.DidGoToPlaylist += GoToPlaylistClicked;
+        }
+
+        private void UnsubFromEvents(ISource source)
+        {
+            source.ListViewController.DidSelectPlaylist -= PlaylistSelected;
+            source.ListViewController.DidClickSource -= SourceButtonClicked;
+            
+            source.DetailViewController.DidPressDownload -= morePlaylistsDownloaderViewController.DownloadPlaylist;
+            source.DetailViewController.DidGoToPlaylist -= GoToPlaylistClicked;
+        }
     }
 
     public class MorePlaylistsNavigationController : NavigationController
