@@ -4,6 +4,7 @@ using HMUI;
 using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
 using System;
+using System.Linq;
 using BeatSaberPlaylistsLib.Types;
 using UnityEngine;
 using Zenject;
@@ -33,10 +34,8 @@ namespace MorePlaylists.UI
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            var rectTransform = (RectTransform) transform;
-            rectTransform.sizeDelta = new Vector2(70, 0);
-            rectTransform.anchorMin = new Vector2(0.5f, 0);
             rectTransform.anchorMax = new Vector2(0.5f, 1);
+            playlistCoverView.material = Resources.FindObjectsOfTypeAll<Material>().First(m => m.name == "UINoGlowRoundEdge");
         }
 
         [UIAction("download-click")]

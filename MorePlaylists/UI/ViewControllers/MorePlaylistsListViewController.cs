@@ -58,6 +58,8 @@ namespace MorePlaylists.UI
         [UIAction("#post-parse")]
         private void PostParse()
         {
+            rectTransform.anchorMin = new Vector2(0.5f, 0);
+            rectTransform.localPosition = Vector3.zero;
             loadingSpinner = Instantiate(Accessors.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
             Destroy(loadingSpinner.GetComponent<Touchable>());
         }

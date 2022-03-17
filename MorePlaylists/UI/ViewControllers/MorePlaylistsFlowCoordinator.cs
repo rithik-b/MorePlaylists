@@ -72,7 +72,7 @@ namespace MorePlaylists.UI
         {
             if (!DetailViewController.ViewController.isInViewControllerHierarchy)
             {
-                PushViewControllerToNavigationController(morePlaylistsNavigationController, DetailViewController.ViewController, DetailViewPushed, true);
+                PushViewControllerToNavigationController(morePlaylistsNavigationController, DetailViewController.ViewController);
             }
             DetailViewController.ShowDetail(selectedPlaylistEntry);
             SetRightScreenViewController(morePlaylistsSongListViewController, ViewController.AnimationType.In);
@@ -101,8 +101,6 @@ namespace MorePlaylists.UI
             soloFreePlayFlowCoordinator.Setup(Utils.GetStateForPlaylist(playlist));
             mainMenuViewController.HandleMenuButton(MainMenuViewController.MenuButton.SoloFreePlay);
         }
-
-        private void DetailViewPushed() => DetailViewController.ViewController.transform.localPosition = new Vector3(45, 0, 0);
         
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
