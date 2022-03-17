@@ -13,7 +13,7 @@ namespace MorePlaylists.UI
 {
     internal class PopupModalsController : INotifyPropertyChanged
     {
-        private readonly MorePlaylistsListViewController morePlaylistsListViewController;
+        private readonly BasicListViewController morePlaylistsListViewController;
         private bool parsed;
         public event PropertyChangedEventHandler? PropertyChanged;
         
@@ -35,7 +35,7 @@ namespace MorePlaylists.UI
         [UIParams]
         private readonly BSMLParserParams parserParams = null!;
 
-        public PopupModalsController(MorePlaylistsListViewController morePlaylistsListViewController)
+        public PopupModalsController(BasicListViewController morePlaylistsListViewController)
         {
             this.morePlaylistsListViewController = morePlaylistsListViewController;
         }

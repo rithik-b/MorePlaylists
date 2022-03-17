@@ -22,7 +22,7 @@ namespace MorePlaylists.Hitbloq
                 return logo;
             }
         }
-        public Hitbloq(IHttpService siraHttpService, MorePlaylistsListViewController listViewController, MorePlaylistsDetailViewController detailViewController) : base(siraHttpService, listViewController, detailViewController)
+        public Hitbloq(IHttpService siraHttpService, BasicListViewController listViewController, BasicDetailViewController detailViewController) : base(siraHttpService, listViewController, detailViewController)
         {
         }
     }

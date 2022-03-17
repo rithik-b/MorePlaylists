@@ -22,7 +22,7 @@ namespace MorePlaylists.AccSaber
             }
         }
 
-        public AccSaber(IHttpService siraHttpService, MorePlaylistsListViewController listViewController, MorePlaylistsDetailViewController detailViewController) : base(siraHttpService, listViewController, detailViewController)
+        public AccSaber(IHttpService siraHttpService, BasicListViewController listViewController, BasicDetailViewController detailViewController) : base(siraHttpService, listViewController, detailViewController)
         {
         }
     }

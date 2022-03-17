@@ -11,9 +11,9 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsDetailView.bsml")]
-    [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml")]
-    internal class MorePlaylistsDetailViewController : BSMLAutomaticViewController, IDetailViewController
+    [HotReload(RelativePathToLayout = @"..\Views\BasicDetailView.bsml")]
+    [ViewDefinition("MorePlaylists.UI.Views.BasicDetailView.bsml")]
+    internal class BasicDetailViewController : BSMLAutomaticViewController, IDetailViewController
     {
         [Inject]
         private readonly SpriteLoader spriteLoader = null!;

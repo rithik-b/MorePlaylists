@@ -16,9 +16,9 @@ using Zenject;
 
 namespace MorePlaylists.UI
 {
-    [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsListView.bsml")]
-    [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsListView.bsml")]
-    internal class MorePlaylistsListViewController : BSMLAutomaticViewController, IListViewController, IDisposable
+    [HotReload(RelativePathToLayout = @"..\Views\BasicListView.bsml")]
+    [ViewDefinition("MorePlaylists.UI.Views.BasicListView.bsml")]
+    internal class BasicListViewController : BSMLAutomaticViewController, IListViewController, IDisposable
     {
         [Inject]
         private readonly SpriteLoader spriteLoader = null!;

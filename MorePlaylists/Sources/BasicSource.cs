@@ -22,7 +22,7 @@ namespace MorePlaylists.Sources
         public IListViewController ListViewController { get; }
         public IDetailViewController DetailViewController { get; }
 
-        protected BasicSource(IHttpService siraHttpService, MorePlaylistsListViewController listViewController, MorePlaylistsDetailViewController detailViewController)
+        protected BasicSource(IHttpService siraHttpService, BasicListViewController listViewController, BasicDetailViewController detailViewController)
         {
             SiraHttpService = siraHttpService;
             ListViewController = listViewController;
