@@ -2,9 +2,9 @@
 {
     public class Song
     {
-        public virtual string Name { get; protected set; }
-        public virtual string SubName { get; protected set; }
-        public virtual string CoverURL { get; protected set; }
+        public string Name { get; }
+        public string SubName { get; }
+        public string CoverURL { get; }
 
         public Song(string name, string subName, string coverURL)
         {
@@ -12,7 +12,5 @@
             SubName = subName;
             CoverURL = coverURL;
         }
-
-        public Song() { }
     }
 }

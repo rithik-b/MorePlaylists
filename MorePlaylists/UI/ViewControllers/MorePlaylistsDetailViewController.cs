@@ -14,24 +14,19 @@ namespace MorePlaylists.UI
     [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsDetailView.bsml")]
     internal class MorePlaylistsDetailViewController : BSMLAutomaticViewController, IDetailViewController
     {
-        private IEntry? selectedPlaylistEntry;
-        private SpriteLoader spriteLoader;
+        [Inject]
+        private readonly SpriteLoader spriteLoader = null!;
         
+        private IEntry? selectedPlaylistEntry;
         public ViewController ViewController => this;
         public event Action<IEntry, bool>? DidPressDownload;
         public event Action<IPlaylist>? DidGoToPlaylist;
 
         [UIComponent("playlist-cover")]
-        private readonly ImageView playlistCoverView;
+        private readonly ImageView playlistCoverView = null!;
 
         [UIComponent("text-page")]
-        private readonly TextPageScrollView descriptionTextPage;
-
-        [Inject]
-        public void Construct(SpriteLoader spriteLoader)
-        {
-            this.spriteLoader = spriteLoader;
-        }
+        private readonly TextPageScrollView descriptionTextPage = null!;
 
         #region Actions
 
@@ -47,21 +42,27 @@ namespace MorePlaylists.UI
         [UIAction("download-click")]
         private void DownloadPressed()
         {
-            DidPressDownload?.Invoke(selectedPlaylistEntry, false);
-            NotifyPropertyChanged(nameof(DownloadInteractable));
+            if (selectedPlaylistEntry != null)
+            {
+                DidPressDownload?.Invoke(selectedPlaylistEntry, false);
+                NotifyPropertyChanged(nameof(DownloadInteractable));
+            }
         }
 
         [UIAction("download-all-click")]
         private void DownloadAllPressed()
         {
-            DidPressDownload?.Invoke(selectedPlaylistEntry, true);
-            NotifyPropertyChanged(nameof(DownloadInteractable));
+            if (selectedPlaylistEntry != null)
+            {
+                DidPressDownload?.Invoke(selectedPlaylistEntry, true);
+                NotifyPropertyChanged(nameof(DownloadInteractable));
+            }
         }
 
         [UIAction("go-to-playlist")]
         private void GoToPlaylist()
         {
-            if (selectedPlaylistEntry.LocalPlaylist != null)
+            if (selectedPlaylistEntry?.LocalPlaylist != null)
             {
                 DidGoToPlaylist?.Invoke(selectedPlaylistEntry.LocalPlaylist);
             }
@@ -78,7 +79,7 @@ namespace MorePlaylists.UI
             NotifyPropertyChanged(nameof(PlaylistName));
             NotifyPropertyChanged(nameof(PlaylistAuthor));
             NotifyPropertyChanged(nameof(PlaylistDescription));
-            spriteLoader.GetSpriteForEntry(selectedPlaylistEntry, (Sprite sprite) => playlistCoverView.sprite = sprite);
+            spriteLoader.GetSpriteForEntry(selectedPlaylistEntry, sprite => playlistCoverView.sprite = sprite);
             descriptionTextPage.ScrollTo(0, true);
         }
 
@@ -98,7 +99,7 @@ namespace MorePlaylists.UI
         public string PlaylistAuthor => selectedPlaylistEntry?.Author ?? " ";
 
         [UIValue("playlist-description")]
-        private string PlaylistDescription => string.IsNullOrWhiteSpace(selectedPlaylistEntry?.Description) ? "No Description available for this playlist." : selectedPlaylistEntry?.Description;
+        private string PlaylistDescription => string.IsNullOrWhiteSpace(selectedPlaylistEntry?.Description) ? "No Description available for this playlist." : selectedPlaylistEntry?.Description ?? "";
 
         [UIValue("download-interactable")]
         public bool DownloadInteractable => selectedPlaylistEntry is {DownloadBlocked: false};

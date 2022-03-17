@@ -35,14 +35,14 @@ namespace MorePlaylists.Entries
                 }
                 else if (!cancellationToken.IsCancellationRequested)
                 {
-                    Plugin.Log.Error("An error occurred while acquiring " + PlaylistURL + $"\nError code: {webResponse.Code}");
+                    Plugin.Log?.Error("An error occurred while acquiring " + PlaylistURL + $"\nError code: {webResponse.Code}");
                 }
             }
             catch (Exception e)
             {
                 if (e is not TaskCanceledException)
                 {
-                    Plugin.Log.Error("An exception occurred while acquiring " + PlaylistURL + $"\nException: {e.Message}");
+                    Plugin.Log?.Error("An exception occurred while acquiring " + PlaylistURL + $"\nException: {e.Message}");
                 }
             }
             isCaching = false;

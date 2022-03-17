@@ -42,12 +42,12 @@ namespace MorePlaylists.Sources
                     }
                     else
                     {
-                        Plugin.Log.Info($"An error occurred while trying to fetch the {typeof(T)} playlists\nError code: {webResponse.Code}");
+                        Plugin.Log?.Info($"An error occurred while trying to fetch the {typeof(T)} playlists\nError code: {webResponse.Code}");
                     }
                 }
                 catch (Exception e)
                 {
-                    Plugin.Log.Info($"An error occurred while trying to fetch the {typeof(T)} playlists\nException: {e}");
+                    Plugin.Log?.Info($"An error occurred while trying to fetch the {typeof(T)} playlists\nException: {e}");
                 }
             }
             return cachedResult?.Cast<IBasicEntry>().ToList();
