@@ -26,28 +26,41 @@ namespace MorePlaylists.Utilities
         
         public void GetSpriteForEntry(IEntry entry, Action<Sprite> onCompletion) => _ = DownloadSpriteAsync(entry.SpriteURL, onCompletion);
         
-        public async Task DownloadSpriteAsync(string spriteURL, Action<Sprite> onCompletion)
+        public async Task DownloadSpriteAsync(string spriteURL, Action<Sprite> onCompletion, CancellationToken cancellationToken = default)
         {
             // Check Cache
             if (cachedSprites.TryGetValue(spriteURL, out var cachedSprite))
             {
-                onCompletion?.Invoke(cachedSprite);
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    onCompletion?.Invoke(cachedSprite);
+                }
                 return;
             }
 
             try
             {
-                var webResponse = await siraHttpService.GetAsync(spriteURL, cancellationToken: CancellationToken.None).ConfigureAwait(false);
-                var imageBytes = await webResponse.ReadAsByteArrayAsync();
-                QueueLoadSprite(spriteURL, imageBytes, onCompletion);
+                var webResponse = await siraHttpService.GetAsync(spriteURL, cancellationToken: cancellationToken).ConfigureAwait(false);
+                if (webResponse.Successful)
+                {
+                    var imageBytes = await webResponse.ReadAsByteArrayAsync();
+                    QueueLoadSprite(spriteURL, imageBytes, onCompletion, cancellationToken);
+                }
+                else if (!cancellationToken.IsCancellationRequested)
+                {
+                    onCompletion?.Invoke(BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
+                }
             }
             catch (Exception)
             {
-                onCompletion?.Invoke(BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    onCompletion?.Invoke(BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
+                }
             }
         }
 
-        private void QueueLoadSprite(string key, byte[] imageBytes, Action<Sprite> onCompletion)
+        private void QueueLoadSprite(string key, byte[] imageBytes, Action<Sprite> onCompletion, CancellationToken cancellationToken)
         {
             spriteQueue.Enqueue(() =>
             {
@@ -56,11 +69,17 @@ namespace MorePlaylists.Utilities
                     var sprite = BeatSaberMarkupLanguage.Utilities.LoadSpriteRaw(imageBytes);
                     sprite.texture.wrapMode = TextureWrapMode.Clamp;
                     cachedSprites[key] = sprite;
-                    onCompletion?.Invoke(sprite);
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        onCompletion?.Invoke(sprite);
+                    }
                 }
                 catch (Exception)
                 {
-                    onCompletion?.Invoke(BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        onCompletion?.Invoke(BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
+                    }
                 }
             });
             SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
