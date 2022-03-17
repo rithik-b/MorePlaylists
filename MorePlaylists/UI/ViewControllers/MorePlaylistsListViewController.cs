@@ -106,8 +106,10 @@ namespace MorePlaylists.UI
         {
             loadCancellationTokenSource?.Cancel();
             loadCancellationTokenSource?.Dispose();
+            loadCancellationTokenSource = null;
             searchCancellationTokenSource?.Cancel();
             searchCancellationTokenSource?.Dispose();
+            searchCancellationTokenSource = null;
             Loaded = true;
         }
 

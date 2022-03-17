@@ -33,7 +33,7 @@ namespace MorePlaylists.UI
 
         private void MenuButtonClicked()
         {
-            mainFlowCoordinator.PresentFlowCoordinator(morePlaylistsFlowCoordinator, immediately: true);
+            mainFlowCoordinator.PresentFlowCoordinator(morePlaylistsFlowCoordinator);
         }
     }
 }
