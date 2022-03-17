@@ -18,11 +18,8 @@ namespace MorePlaylists.UI
 {
     [HotReload(RelativePathToLayout = @"..\Views\MorePlaylistsListView.bsml")]
     [ViewDefinition("MorePlaylists.UI.Views.MorePlaylistsListView.bsml")]
-    internal class MorePlaylistsListViewController : BSMLAutomaticViewController, IListViewController
+    internal class MorePlaylistsListViewController : BSMLAutomaticViewController, IListViewController, IDisposable
     {
-        [Inject]
-        private StandardLevelDetailViewController standardLevelDetailViewController = null!;
-        
         [Inject]
         private readonly SpriteLoader spriteLoader = null!;
         
@@ -31,10 +28,11 @@ namespace MorePlaylists.UI
         
         private readonly SemaphoreSlim playlistLoadSemaphore = new(1, 1);
 
-        private LoadingControl? loadingSpinner;
         private InputFieldView? inputFieldView;
-        private CancellationTokenSource? cancellationTokenSource;
-        private List<IBasicEntry>? currentPlaylists;
+        private CancellationTokenSource? loadCancellationTokenSource;
+        private CancellationTokenSource? searchCancellationTokenSource;
+        private readonly List<IBasicEntry> currentPlaylists = new();
+        private List<IBasicEntry>? allPlaylists;
         private IBasicSource? currentSource;
         
         public ViewController ViewController => this;
@@ -50,18 +48,27 @@ namespace MorePlaylists.UI
         [UIComponent("list")]
         private readonly CustomListTableData? customListTableData = null!;
 
-        [UIComponent("loading-modal")]
-        private readonly RectTransform? loadingModal = null!;
-
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            if (currentSource != null && customListTableData != null && sourceButton != null)
+            if (currentSource != null && customListTableData != null && sourceButton != null && inputFieldView != null)
             {
                 sourceButton.image.sprite = currentSource.Logo;
-                cancellationTokenSource?.Cancel();
-                cancellationTokenSource = new CancellationTokenSource();
-                _ = ShowPlaylists(currentSource, cancellationTokenSource.Token);
+                inputFieldView.ClearInput();
+                loadCancellationTokenSource?.Cancel();
+                loadCancellationTokenSource = new CancellationTokenSource();
+                _ = LoadPlaylists(currentSource, loadCancellationTokenSource.Token);
+            }
+        }
+        
+        public void Dispose()
+        {
+            playlistLoadSemaphore.Dispose();
+            loadCancellationTokenSource?.Dispose();
+            searchCancellationTokenSource?.Dispose();
+            if (inputFieldView != null)
+            {
+                inputFieldView.onValueChanged.RemoveAllListeners();
             }
         }
 
@@ -79,9 +86,12 @@ namespace MorePlaylists.UI
                 inputFieldView.transform.SetSiblingIndex(0);
                 inputFieldTransform.sizeDelta = new Vector2(50, 8);
             }
-            
-            loadingSpinner = Instantiate(Accessors.LoadingControlAccessor(ref standardLevelDetailViewController), loadingModal);
-            Destroy(loadingSpinner.GetComponent<Touchable>());
+            inputFieldView.onValueChanged.AddListener(inputFieldView =>
+            {
+                searchCancellationTokenSource?.Cancel();
+                searchCancellationTokenSource = new CancellationTokenSource();
+                _ = SearchAsync(searchCancellationTokenSource.Token);
+            });
         }
 
         [UIAction("list-select")]
@@ -92,7 +102,7 @@ namespace MorePlaylists.UI
         
         public void AbortLoading()
         {
-            cancellationTokenSource?.Cancel();
+            loadCancellationTokenSource?.Cancel();
             Loaded = true;
         }
 
@@ -122,7 +132,7 @@ namespace MorePlaylists.UI
             }
         }
 
-        private async Task ShowPlaylists(IBasicSource source, CancellationToken cancellationToken, bool refreshRequested = false)
+        private async Task LoadPlaylists(IBasicSource source, CancellationToken cancellationToken, bool refreshRequested = false)
         {
             if (customListTableData == null)
             {
@@ -151,39 +161,23 @@ namespace MorePlaylists.UI
                     return;
                 }
 
-                currentPlaylists = await source.GetEndpointResult(refreshRequested, cancellationToken);
+                allPlaylists = await source.GetEndpointResult(refreshRequested, cancellationToken);
 
-                if (cancellationToken.IsCancellationRequested || currentPlaylists == null)
+                if (cancellationToken.IsCancellationRequested || allPlaylists == null)
                 {
                     return;
                 }
-
+                
+                currentPlaylists.Clear();
+                currentPlaylists.AddRange(allPlaylists);
                 PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IEntry>().ToList());
-
-                foreach (var playlistEntry in currentPlaylists)
+                
+                await ShowPlaylists(cancellationToken);
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    var customCellInfo = new CustomListTableData.CustomCellInfo(playlistEntry.DownloadBlocked
-                            ? $"<#7F7F7F>{playlistEntry.Title}"
-                            : playlistEntry.Title,
-                        playlistEntry.Author);
-
-                    await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-                    {
-                        _ = spriteLoader.DownloadSpriteAsync(playlistEntry.SpriteURL, sprite =>
-                        {
-                            customCellInfo.icon = sprite;
-                            customListTableData.tableView.ReloadDataKeepingPosition();
-                        }, cancellationToken);
-                    });
-
-                    customListTableData.data.Add(customCellInfo);
-
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
+                    return;
                 }
-
+                
                 await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     Loaded = true;
@@ -196,8 +190,116 @@ namespace MorePlaylists.UI
             }
         }
 
+        private async Task ShowPlaylists(CancellationToken cancellationToken)
+        {
+            if (customListTableData == null)
+            {
+                return;
+            }
+            
+            foreach (var playlistEntry in currentPlaylists)
+            {
+                var customCellInfo = new CustomListTableData.CustomCellInfo(playlistEntry.DownloadBlocked
+                        ? $"<#7F7F7F>{playlistEntry.Title}"
+                        : playlistEntry.Title,
+                    playlistEntry.Author);
+
+                await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                {
+                    _ = spriteLoader.DownloadSpriteAsync(playlistEntry.SpriteURL, sprite =>
+                    {
+                        customCellInfo.icon = sprite;
+                        customListTableData.tableView.ReloadDataKeepingPosition();
+                    }, cancellationToken);
+                });
+
+                customListTableData.data.Add(customCellInfo);
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+            }
+        }
+
+        private async Task SearchAsync(CancellationToken cancellationToken)
+        {
+            if (customListTableData == null)
+            {
+                return;
+            }
+            
+            await playlistLoadSemaphore.WaitAsync(cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            try
+            {
+                if (allPlaylists == null)
+                {
+                    return;
+                }
+
+                await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                {
+                    customListTableData.tableView.ClearSelection();
+                    customListTableData.data.Clear();
+                    Loaded = false;
+                });
+                
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                
+                var searchQuery = inputFieldView != null ? inputFieldView.text : "";
+                currentPlaylists.Clear();
+                if (string.IsNullOrWhiteSpace(searchQuery))
+                {
+                    currentPlaylists.AddRange(allPlaylists);
+                }
+                else
+                {
+                    await Task.Run(() =>
+                    {
+                        foreach (var playlist in allPlaylists)
+                        {
+                            if (playlist.Title.IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                playlist.Author.IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                playlist.Description.IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                currentPlaylists.Add(playlist);
+                            }
+                        }
+                    }, cancellationToken);
+                }
+                
+                await ShowPlaylists(cancellationToken);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                
+                await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                {
+                    Loaded = true;
+                    customListTableData.tableView.ReloadData();
+                });
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+            finally
+            {
+                playlistLoadSemaphore.Release();
+            }
+        }
+
         #endregion
-        
+
         #region Loading
 
         private bool loaded;
