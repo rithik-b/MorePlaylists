@@ -27,7 +27,7 @@ namespace MorePlaylists.UI
         private CancellationTokenSource? cancellationTokenSource;
         
         private bool loaded;
-        private readonly SemaphoreSlim songLoadSemaphore = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim songLoadSemaphore = new(1, 1);
 
         [UIValue("is-loading")]
         public bool IsLoading => !Loaded;
@@ -90,6 +90,7 @@ namespace MorePlaylists.UI
             {
                 return;
             }
+            
             try
             {
                 await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(ClearList);
@@ -129,11 +130,6 @@ namespace MorePlaylists.UI
                     {
                         return;
                     }
-                }
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
                 }
 
                 await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>

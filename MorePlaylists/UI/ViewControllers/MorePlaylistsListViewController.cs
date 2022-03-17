@@ -26,6 +26,8 @@ namespace MorePlaylists.UI
         [Inject]
         private readonly SpriteLoader spriteLoader = null!;
         
+        private readonly SemaphoreSlim playlistLoadSemaphore = new(1, 1);
+
         private LoadingControl? loadingSpinner;
         private CancellationTokenSource? cancellationTokenSource;
         private List<IBasicEntry>? currentPlaylists;
@@ -47,9 +49,11 @@ namespace MorePlaylists.UI
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            if (currentSource != null)
+            if (currentSource != null && customListTableData != null)
             {
-                _ = ShowPlaylists(currentSource);
+                cancellationTokenSource?.Cancel();
+                cancellationTokenSource = new CancellationTokenSource();
+                _ = ShowPlaylists(currentSource, cancellationTokenSource.Token);
             }
         }
 
@@ -103,54 +107,78 @@ namespace MorePlaylists.UI
             }
         }
 
-        private async Task ShowPlaylists(IBasicSource source, bool refreshRequested = false)
+        private async Task ShowPlaylists(IBasicSource source, CancellationToken cancellationToken, bool refreshRequested = false)
         {
             if (customListTableData == null)
             {
                 return;
             }
             
-            cancellationTokenSource?.Cancel();
-            cancellationTokenSource = new CancellationTokenSource();
+            await playlistLoadSemaphore.WaitAsync(cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
 
             try
             {
-                await Task.Run(async () =>
+                await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
+                    customListTableData.tableView.ClearSelection();
+                    customListTableData.data.Clear();
+                    SetLoading(true);
+                });
+
+                // We check the cancellationtoken at each interval instead of running everything with a single token
+                // due to unity not liking it
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                currentPlaylists = await source.GetEndpointResult(refreshRequested, this, cancellationToken);
+
+                if (cancellationToken.IsCancellationRequested || currentPlaylists == null)
+                {
+                    return;
+                }
+
+                PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IEntry>().ToList());
+
+                foreach (var playlistEntry in currentPlaylists)
+                {
+                    var customCellInfo = new CustomListTableData.CustomCellInfo(playlistEntry.DownloadBlocked
+                            ? $"<#7F7F7F>{playlistEntry.Title}"
+                            : playlistEntry.Title,
+                        playlistEntry.Author);
+
                     await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
-                        customListTableData.tableView.ClearSelection();
-                        customListTableData.data.Clear();
-                        SetLoading(true);
+                        _ = spriteLoader.DownloadSpriteAsync(playlistEntry.SpriteURL, sprite =>
+                        {
+                            customCellInfo.icon = sprite;
+                            customListTableData.tableView.ReloadDataKeepingPosition();
+                        }, cancellationToken);
                     });
 
-                    currentPlaylists = await source.GetEndpointResult(refreshRequested, this, cancellationTokenSource.Token);
-                    if (currentPlaylists != null)
+                    customListTableData.data.Add(customCellInfo);
+
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IEntry>().ToList());
-                        await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-                        {
-                            foreach (var playlistEntry in currentPlaylists)
-                            {
-                                var customCellInfo = new CustomListTableData.CustomCellInfo(
-                                    playlistEntry.DownloadBlocked
-                                        ? $"<#7F7F7F>{playlistEntry.Title}"
-                                        : playlistEntry.Title,
-                                    playlistEntry.Author);
-                                customListTableData.data.Add(customCellInfo);
-                                spriteLoader.GetSpriteForEntry(playlistEntry, sprite =>
-                                {
-                                    customCellInfo.icon = sprite;
-                                    customListTableData.tableView.ReloadDataKeepingPosition();
-                                });
-                            }
-                            customListTableData.tableView.ReloadData();
-                        });
+                        return;
                     }
-                }, cancellationTokenSource.Token);
+                }
+
+                await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                {
+                    customListTableData.tableView.ReloadData();
+                    SetLoading(false);
+                });
             }
-            catch (TaskCanceledException) {}
-            await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() => SetLoading(false));
+            finally
+            {
+                playlistLoadSemaphore.Release();
+            }
         }
 
         #endregion
