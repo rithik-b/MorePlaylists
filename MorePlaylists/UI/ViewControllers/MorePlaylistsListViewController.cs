@@ -56,6 +56,7 @@ namespace MorePlaylists.UI
                 sourceButton.image.sprite = currentSource.Logo;
                 inputFieldView.ClearInput();
                 loadCancellationTokenSource?.Cancel();
+                loadCancellationTokenSource?.Dispose();
                 loadCancellationTokenSource = new CancellationTokenSource();
                 _ = LoadPlaylists(currentSource, loadCancellationTokenSource.Token);
             }
@@ -89,6 +90,7 @@ namespace MorePlaylists.UI
             inputFieldView.onValueChanged.AddListener(inputFieldView =>
             {
                 searchCancellationTokenSource?.Cancel();
+                searchCancellationTokenSource?.Dispose();
                 searchCancellationTokenSource = new CancellationTokenSource();
                 _ = SearchAsync(searchCancellationTokenSource.Token);
             });
@@ -103,6 +105,9 @@ namespace MorePlaylists.UI
         public void AbortLoading()
         {
             loadCancellationTokenSource?.Cancel();
+            loadCancellationTokenSource?.Dispose();
+            searchCancellationTokenSource?.Cancel();
+            searchCancellationTokenSource?.Dispose();
             Loaded = true;
         }
 

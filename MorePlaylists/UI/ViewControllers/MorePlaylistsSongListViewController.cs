@@ -45,6 +45,7 @@ namespace MorePlaylists.UI
             }
             
             cancellationTokenSource?.Cancel();
+            cancellationTokenSource?.Dispose();
             cancellationTokenSource = new CancellationTokenSource();
 
             _ = InitSongList(entry, cancellationTokenSource.Token);
