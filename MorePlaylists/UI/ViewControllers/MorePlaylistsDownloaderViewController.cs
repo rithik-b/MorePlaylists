@@ -68,10 +68,10 @@ namespace MorePlaylists.UI
                 if (downloadSongs.Contains(playlistEntry))
                 {
                     playlistDownloader.QueuePlaylist(new PlaylistManager.Types.DownloadQueueEntry(playlist, BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetManagerForPlaylist(playlist)));
+                    downloadSongs.Remove(playlistEntry);
                 }
             }
-
-            if (downloadSongs.Contains(playlistEntry))
+            else if (downloadSongs.Contains(playlistEntry))
             {
                 downloadSongs.Remove(playlistEntry);
             }

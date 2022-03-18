@@ -116,10 +116,12 @@ namespace MorePlaylists.UI
                         return;
                     }
                 }
+                
+                Loaded = true;
+                await SiraUtil.Extras.Utilities.PauseChamp;
 
                 await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
-                    Loaded = true;
                     customListTableData.tableView.ReloadData();
                 });
             }
