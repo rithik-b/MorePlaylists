@@ -87,9 +87,12 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
     {
         rectTransform.anchorMin = new Vector2(0.5f, 0);
         rectTransform.localPosition = Vector3.zero;
-        if (customListTableData != null)
+        scrollView = Accessors.ScrollViewAccessor(ref customListTableData!.tableView);
+        var filtersButton = inputFieldGrabber.GetNewFiltersButton(filterBarTransform);
+        if (filtersButton.transform is RectTransform filtersButtonTransform)
         {
-            scrollView = Accessors.ScrollViewAccessor(ref customListTableData.tableView);
+            filtersButtonTransform.SetSiblingIndex(0);
+            filtersButtonTransform.sizeDelta = new Vector2(50, 8);
         }
     }
 
@@ -176,21 +179,15 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
             PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IEntry>().ToList());
                 
             await ShowPlaylists(currentPlaylists, cancellationToken);
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
-                
-            await SiraUtil.Extras.Utilities.PauseChamp;
-                
-            await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-            {
-                customListTableData.tableView.ReloadDataKeepingPosition();
-            });
         }
         finally
         {
             Loaded = true;
+            await SiraUtil.Extras.Utilities.PauseChamp;
+            await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+            {
+                customListTableData.tableView.ReloadDataKeepingPosition();
+            });
             playlistLoadSemaphore.Release();
         }
     }

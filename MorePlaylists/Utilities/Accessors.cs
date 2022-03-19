@@ -22,6 +22,9 @@ namespace MorePlaylists.Utilities
         public static readonly FieldAccessor<LevelSearchViewController, InputFieldView>.Accessor InputFieldAccessor =
             FieldAccessor<LevelSearchViewController, InputFieldView>.GetAccessor("_searchTextInputFieldView");
         
+        public static readonly FieldAccessor<LevelSearchViewController, Button>.Accessor FiltersButtonAccessor =
+            FieldAccessor<LevelSearchViewController, Button>.GetAccessor("_searchButton");
+        
         public static readonly FieldAccessor<InputFieldView, Vector3>.Accessor KeyboardOffsetAccessor =
             FieldAccessor<InputFieldView, Vector3>.GetAccessor("_keyboardPositionOffset");
     }

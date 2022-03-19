@@ -39,7 +39,7 @@ namespace MorePlaylists.UI
         public event Action? DidClickSource;
 
         [UIComponent("filter-bar")] 
-        private readonly RectTransform filterBarTransform = null!;
+        private readonly RectTransform? filterBarTransform = null!;
         
         [UIComponent("source-button")]
         private readonly ButtonIconImage? sourceButton = null!;
@@ -80,10 +80,10 @@ namespace MorePlaylists.UI
             rectTransform.anchorMin = new Vector2(0.5f, 0);
             rectTransform.localPosition = Vector3.zero;
             
-            inputFieldView = inputFieldGrabber.GetNewInputField(filterBarTransform);
+            inputFieldView = inputFieldGrabber.GetNewInputField(filterBarTransform!);
             if (inputFieldView.transform is RectTransform inputFieldTransform)
             {
-                inputFieldView.transform.SetSiblingIndex(0);
+                inputFieldTransform.SetSiblingIndex(0);
                 inputFieldTransform.sizeDelta = new Vector2(50, 8);
             }
             inputFieldView.onValueChanged.AddListener(inputFieldView =>
@@ -179,21 +179,15 @@ namespace MorePlaylists.UI
                 PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IEntry>().ToList());
                 
                 await ShowPlaylists(cancellationToken);
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-                
-                await SiraUtil.Extras.Utilities.PauseChamp;
-                
-                await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-                {
-                    customListTableData.tableView.ReloadData();
-                });
             }
             finally
             {
                 Loaded = true;
+                await SiraUtil.Extras.Utilities.PauseChamp;
+                await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                {
+                    customListTableData.tableView.ReloadData();
+                });
                 playlistLoadSemaphore.Release();
             }
         }

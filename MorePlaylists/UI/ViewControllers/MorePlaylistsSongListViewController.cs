@@ -116,17 +116,15 @@ namespace MorePlaylists.UI
                         return;
                     }
                 }
-                
-                await SiraUtil.Extras.Utilities.PauseChamp;
-
-                await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-                {
-                    customListTableData.tableView.ReloadData();
-                });
             }
             finally
             {
                 Loaded = true;
+                await SiraUtil.Extras.Utilities.PauseChamp;
+                await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                {
+                    customListTableData.tableView.ReloadData();
+                });
                 songLoadSemaphore.Release();
             }
         }
