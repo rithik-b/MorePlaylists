@@ -117,7 +117,6 @@ namespace MorePlaylists.UI
                     }
                 }
                 
-                Loaded = true;
                 await SiraUtil.Extras.Utilities.PauseChamp;
 
                 await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
@@ -127,6 +126,7 @@ namespace MorePlaylists.UI
             }
             finally
             {
+                Loaded = true;
                 songLoadSemaphore.Release();
             }
         }

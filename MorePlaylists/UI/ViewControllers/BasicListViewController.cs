@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-using BeatSaberMarkupLanguage.Parser;
 using MorePlaylists.Sources;
 using Zenject;
 
@@ -185,7 +184,6 @@ namespace MorePlaylists.UI
                     return;
                 }
                 
-                Loaded = true;
                 await SiraUtil.Extras.Utilities.PauseChamp;
                 
                 await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
@@ -195,6 +193,7 @@ namespace MorePlaylists.UI
             }
             finally
             {
+                Loaded = true;
                 playlistLoadSemaphore.Release();
             }
         }
@@ -312,6 +311,7 @@ namespace MorePlaylists.UI
         #region Loading
 
         private bool loaded;
+        
         [UIValue("is-loading")]
         private bool IsLoading => !Loaded;
 

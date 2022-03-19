@@ -86,6 +86,10 @@
             <HintPath>$(BeatSaberDir)\Plugins\SiraUtil.dll</HintPath>
             <Private>false</Private>
         </Reference>
+        <Reference Include="Hive.Versioning">
+            <HintPath>$(BeatSaberDir)\Libs\Hive.Versioning.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup>

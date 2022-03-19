@@ -17,6 +17,7 @@ namespace MorePlaylists
             Instance = this;
             Log = logger;
             zenjector.UseHttpService();
+            zenjector.UseMetadataBinder<Plugin>();
             zenjector.Install<MorePlaylistsMenuInstaller>(Location.Menu);
         }
 
