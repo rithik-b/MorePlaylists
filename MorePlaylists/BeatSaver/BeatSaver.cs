@@ -83,12 +83,12 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
             page = await page.Next(token);
         }
 
-        if (page == null)
+        if (token.IsCancellationRequested)
         {
             return null;
         }
 
-        if (page.Empty)
+        if (page == null || page.Empty)
         {
             ExhaustedPlaylists = true;
             return null;
