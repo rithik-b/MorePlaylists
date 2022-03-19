@@ -91,11 +91,39 @@ namespace MorePlaylists.UI
 
         #region Values
 
-        [UIValue("playlist-name")]
-        public string PlaylistName => selectedPlaylistEntry?.Title ?? " ";
+        [UIValue("playlist-name")] 
+        public string PlaylistName
+        {
+            get
+            {
+                if (selectedPlaylistEntry != null)
+                {
+                    if (selectedPlaylistEntry.Title.Length > 32)
+                    {
+                        return selectedPlaylistEntry.Title.Substring(0, 28) + "...";
+                    }
+                    return selectedPlaylistEntry.Title;
+                }
+                return string.Empty;
+            }
+        }
 
         [UIValue("playlist-author")]
-        public string PlaylistAuthor => selectedPlaylistEntry?.Author ?? " ";
+        public string PlaylistAuthor
+        {
+            get
+            {
+                if (selectedPlaylistEntry != null)
+                {
+                    if (selectedPlaylistEntry.Author.Length > 32)
+                    {
+                        return selectedPlaylistEntry.Author.Substring(0, 28) + "...";
+                    }
+                    return selectedPlaylistEntry.Author;
+                }
+                return string.Empty;
+            }
+        }
 
         [UIValue("playlist-description")]
         private string PlaylistDescription => string.IsNullOrWhiteSpace(selectedPlaylistEntry?.Description) ? "No Description available for this playlist." : selectedPlaylistEntry?.Description ?? "";

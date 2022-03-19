@@ -80,7 +80,7 @@ namespace MorePlaylists.UI
             rectTransform.anchorMin = new Vector2(0.5f, 0);
             rectTransform.localPosition = Vector3.zero;
             
-            inputFieldView = inputFieldGrabber.GetNewInputField(filterBarTransform!, new Vector3(0, -30, 0));
+            inputFieldView = inputFieldGrabber.GetNewInputField(filterBarTransform!, new Vector3(0, -35, 0));
             if (inputFieldView.transform is RectTransform inputFieldTransform)
             {
                 inputFieldTransform.SetSiblingIndex(0);

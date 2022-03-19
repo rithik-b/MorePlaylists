@@ -1,8 +1,8 @@
 ﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+    <horizontal id="filter-bar" spacing='2' child-control-width="false" anchor-min-y='0.9' pad-left='10' pad-right='10'>
+        <icon-button id="source-button" horizontal-fit='PreferredSize' vertical-fit='PreferredSize' pad='0' pref-width='9' pref-height="9" on-click='source-click' />
+    </horizontal>
 	<vertical>
-		<horizontal id="filter-bar" spacing='2' child-control-width="false">
-			<icon-button id="source-button" horizontal-fit='PreferredSize' vertical-fit='PreferredSize' pad='0' pref-width='9' pref-height="9" on-click='source-click' />
-		</horizontal>
         <horizontal/>
         <loading-indicator active='~is-loading' preserve-aspect='true' pref-width='10' pref-height='10' />
         <horizontal/>
