@@ -68,6 +68,21 @@ namespace MorePlaylists.UI
             morePlaylistsSongListViewController.ClearList();
         }
 
+        private void ShowViewController(ViewController viewController, ViewController.AnimationDirection animationDirection)
+        {
+            showBackButton = false;
+            PresentViewController(viewController, animationDirection: animationDirection);
+        }
+
+        private void DismissViewController(ViewController viewController, ViewController.AnimationDirection animationDirection, Action? finishedCallback)
+        {
+            if (viewController.isInViewControllerHierarchy)
+            {
+                showBackButton = true;
+                base.DismissViewController(viewController, animationDirection, finishedCallback);
+            }
+        }
+
         private void PlaylistSelected(IEntry selectedPlaylistEntry)
         {
             if (!DetailViewController.ViewController.isInViewControllerHierarchy)
@@ -110,6 +125,9 @@ namespace MorePlaylists.UI
 
         private void SubToEvents(ISource source)
         {
+            source.ViewControllerRequested += ShowViewController;
+            source.ViewControllerDismissRequested += DismissViewController;
+            
             source.ListViewController.DidSelectPlaylist += PlaylistSelected;
             source.ListViewController.DidClickSource += SourceButtonClicked;
             
@@ -119,6 +137,8 @@ namespace MorePlaylists.UI
 
         private void UnsubFromEvents(ISource source)
         {
+            source.ViewControllerRequested -= ShowViewController;
+            
             source.ListViewController.DidSelectPlaylist -= PlaylistSelected;
             source.ListViewController.DidClickSource -= SourceButtonClicked;
             

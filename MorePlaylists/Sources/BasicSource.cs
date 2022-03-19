@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HMUI;
 using MorePlaylists.Entries;
 using MorePlaylists.UI;
 using Newtonsoft.Json;
@@ -21,6 +22,8 @@ namespace MorePlaylists.Sources
         private IHttpService SiraHttpService { get; }
         public IListViewController ListViewController { get; }
         public IDetailViewController DetailViewController { get; }
+        public event Action<ViewController, ViewController.AnimationDirection>? ViewControllerRequested;
+        public event Action<ViewController, ViewController.AnimationDirection, Action?>? ViewControllerDismissRequested;
 
         protected BasicSource(IHttpService siraHttpService, BasicListViewController listViewController, BasicDetailViewController detailViewController)
         {

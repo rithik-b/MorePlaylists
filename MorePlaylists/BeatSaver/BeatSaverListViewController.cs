@@ -1,17 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
+using BeatSaverSharp;
 using HMUI;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
 using MorePlaylists.UI;
 using MorePlaylists.Utilities;
 using UnityEngine;
+using UnityEngine.UI;
 using Zenject;
 
 namespace MorePlaylists.BeatSaver;
@@ -39,9 +42,6 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
     public event Action<IEntry>? DidSelectPlaylist;
     public event Action? DidClickSource;
 
-    [UIComponent("filter-bar")] 
-    private readonly RectTransform filterBarTransform = null!;
-    
     [UIComponent("source-button")]
     private readonly ButtonIconImage? sourceButton = null!;
     
@@ -78,6 +78,11 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
     {
         playlistLoadSemaphore.Dispose();
         loadCancellationTokenSource?.Dispose();
+        if (filtersButton != null && clearFiltersButton != null)
+        {
+            filtersButton.onClick.RemoveAllListeners();
+            clearFiltersButton.onClick.RemoveAllListeners();
+        }
     }
 
     #region Actions
@@ -88,12 +93,7 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
         rectTransform.anchorMin = new Vector2(0.5f, 0);
         rectTransform.localPosition = Vector3.zero;
         scrollView = Accessors.ScrollViewAccessor(ref customListTableData!.tableView);
-        var filtersButton = inputFieldGrabber.GetNewFiltersButton(filterBarTransform);
-        if (filtersButton.transform is RectTransform filtersButtonTransform)
-        {
-            filtersButtonTransform.SetSiblingIndex(0);
-            filtersButtonTransform.sizeDelta = new Vector2(50, 8);
-        }
+        InstantiateFilterBar();
     }
 
     [UIAction("list-select")]
@@ -133,6 +133,7 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
         if (source is BeatSaver beatSaverSource)
         {
             currentSource = beatSaverSource;
+            ClearFilters();
         }
     }
 
@@ -265,5 +266,117 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
         }
     }
     
+    #endregion
+
+    #region FilterBar
+    
+    private Button? filtersButton;
+    private Button? clearFiltersButton;
+    private GameObject? placeholderText;
+    private CurvedTextMeshPro? filterText;
+
+    public event Action? FilterViewRequested;
+    public event Action? FilterClearRequested;
+
+    [UIComponent("filter-bar")] 
+    private readonly RectTransform filterBarTransform = null!;
+    
+    private void InstantiateFilterBar()
+    {
+        filtersButton = inputFieldGrabber.GetNewFiltersButton(filterBarTransform);
+        if (filtersButton.transform is RectTransform filtersButtonTransform)
+        {
+            clearFiltersButton = filtersButtonTransform.Find("ClearButton").GetComponent<NoTransitionsButton>();
+            placeholderText = filtersButtonTransform.Find("PlaceholderText").gameObject;
+            filterText = filtersButtonTransform.Find("Text").GetComponent<CurvedTextMeshPro>();
+            filtersButton.onClick.AddListener(FilterClicked);
+            clearFiltersButton.onClick.AddListener(ClearFilters);
+            
+            filtersButtonTransform.SetSiblingIndex(0);
+            filtersButtonTransform.sizeDelta = new Vector2(50, 8);
+        }
+
+        if (currentSource != null)
+        {
+            SetActiveFilter(currentSource.CurrentFilters);
+        }
+    }
+
+    private void FilterClicked() => FilterViewRequested?.Invoke();
+
+    private void ClearFilters()
+    {
+        FilterClearRequested?.Invoke();
+
+        if (currentSource != null)
+        {
+            loadCancellationTokenSource?.Cancel();
+            loadCancellationTokenSource?.Dispose();
+            loadCancellationTokenSource = new CancellationTokenSource();
+            _ = LoadPlaylists(currentSource, CancellationToken.None, true);
+        }
+    }
+
+    public void SetActiveFilter(SearchTextPlaylistFilterOptions? filterOptions)
+    {
+        if (filterOptions == null)
+        {
+            FilterString = string.Empty;
+            return;
+        }
+
+        var sb = new StringBuilder();
+        
+        if (!string.IsNullOrWhiteSpace(filterOptions.Query))
+        {
+            sb.Append(filterOptions.Query + ", ");
+        }
+
+        if (filterOptions.IncludeEmpty)
+        {
+            sb.Append("IncludeEmpty, ");
+        }
+
+        if (filterOptions.IsCurated)
+        {
+            sb.Append("CuratedOnly, ");
+        }
+
+        if (sb.Length >= 2)
+        {
+            sb.Remove(sb.Length - 2, 2);
+        }
+        FilterString = sb.ToString();
+    }
+
+    private string filterString = string.Empty;
+    private string FilterString
+    {
+        get => filterString;
+        set
+        {
+            filterString = value;
+
+            if (clearFiltersButton == null || placeholderText == null || filterText == null)
+            {
+                return;
+            }
+            
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                filterText.gameObject.SetActive(false);
+                placeholderText.SetActive(true);
+                clearFiltersButton.gameObject.SetActive(false);
+            }
+            else
+            {
+                filterText.text = value;
+                filterText.gameObject.SetActive(true);
+                placeholderText.SetActive(false);
+                clearFiltersButton.gameObject.SetActive(true);
+            }
+        }
+    }
+
     #endregion
 }

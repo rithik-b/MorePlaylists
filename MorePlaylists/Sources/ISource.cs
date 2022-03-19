@@ -1,4 +1,6 @@
-﻿using MorePlaylists.UI;
+﻿using System;
+using HMUI;
+using MorePlaylists.UI;
 using UnityEngine;
 
 namespace MorePlaylists.Sources
@@ -8,5 +10,7 @@ namespace MorePlaylists.Sources
         Sprite Logo { get; }
         IDetailViewController DetailViewController { get; }
         IListViewController ListViewController { get; }
+        event Action<ViewController, ViewController.AnimationDirection>? ViewControllerRequested;
+        event Action<ViewController, ViewController.AnimationDirection, Action?>? ViewControllerDismissRequested;
     }
 }

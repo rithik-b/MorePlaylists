@@ -21,10 +21,10 @@ internal class InputFieldGrabber
         this.levelSearchViewController = levelSearchViewController;
     }
 
-    public InputFieldView GetNewInputField(Transform parent)
+    public InputFieldView GetNewInputField(Transform parent, Vector3 offset)
     {
         var newInputField = Object.Instantiate(InputFieldTemplate, parent, false);
-        Accessors.KeyboardOffsetAccessor(ref newInputField) = new Vector3(0, -30, 0);
+        Accessors.KeyboardOffsetAccessor(ref newInputField) = offset;
         return newInputField;
     }
 

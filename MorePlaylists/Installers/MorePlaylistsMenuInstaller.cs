@@ -10,11 +10,14 @@ namespace MorePlaylists.Installers
         public override void InstallBindings()
         {
             Container.BindInterfacesTo<BeatSaver.BeatSaver>().AsSingle();
+            Container.BindInterfacesAndSelfTo<BeatSaverListViewController>().FromNewComponentAsViewController().AsSingle();
+            Container.BindInterfacesAndSelfTo<BeatSaverFiltersViewController>().FromNewComponentAsViewController().AsSingle();
+            
+
             Container.BindInterfacesTo<Hitbloq.Hitbloq>().AsSingle();
             Container.BindInterfacesTo<AccSaber.AccSaber>().AsSingle();
 
-            Container.Bind<BasicListViewController>().FromNewComponentAsViewController().AsSingle();
-            Container.Bind<BeatSaverListViewController>().FromNewComponentAsViewController().AsSingle();
+            Container.BindInterfacesAndSelfTo<BasicListViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsSongListViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsDownloaderViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<BasicDetailViewController>().FromNewComponentAsViewController().AsSingle();
