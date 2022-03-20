@@ -138,6 +138,7 @@ namespace MorePlaylists.UI
         private void UnsubFromEvents(ISource source)
         {
             source.ViewControllerRequested -= ShowViewController;
+            source.ViewControllerDismissRequested -= DismissViewController;
             
             source.ListViewController.DidSelectPlaylist -= PlaylistSelected;
             source.ListViewController.DidClickSource -= SourceButtonClicked;
