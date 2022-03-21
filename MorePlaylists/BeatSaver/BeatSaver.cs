@@ -43,7 +43,7 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
     public event Action<ViewController, ViewController.AnimationDirection>? ViewControllerRequested;
     public event Action<ViewController, ViewController.AnimationDirection, Action?>? ViewControllerDismissRequested;
 
-    public BeatSaver(UBinder<Plugin, PluginMetadata> metadata, BeatSaverFiltersViewController filtersViewController, BeatSaverListViewController listViewController, BasicDetailViewController detailViewController)
+    public BeatSaver(UBinder<Plugin, PluginMetadata> metadata, BeatSaverFiltersViewController filtersViewController, BeatSaverListViewController listViewController, BeatSaverDetailViewController detailViewController)
     {
         var options = new BeatSaverOptions(metadata.Value.Name, metadata.Value.HVersion.ToString());
         beatSaverInstance = new BeatSaverSharp.BeatSaver(options);

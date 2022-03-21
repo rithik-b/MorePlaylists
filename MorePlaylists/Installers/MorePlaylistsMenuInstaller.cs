@@ -11,8 +11,8 @@ namespace MorePlaylists.Installers
         {
             Container.BindInterfacesTo<BeatSaver.BeatSaver>().AsSingle();
             Container.BindInterfacesAndSelfTo<BeatSaverListViewController>().FromNewComponentAsViewController().AsSingle();
+            Container.BindInterfacesAndSelfTo<BeatSaverDetailViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<BeatSaverFiltersViewController>().FromNewComponentAsViewController().AsSingle();
-            
 
             Container.BindInterfacesTo<Hitbloq.Hitbloq>().AsSingle();
             Container.BindInterfacesTo<AccSaber.AccSaber>().AsSingle();
@@ -31,6 +31,7 @@ namespace MorePlaylists.Installers
 
             Container.Bind<SpriteLoader>().AsSingle();
             Container.Bind<InputFieldGrabber>().AsSingle();
+            Container.Bind<MaterialGrabber>().AsSingle();
         }
     }
 }

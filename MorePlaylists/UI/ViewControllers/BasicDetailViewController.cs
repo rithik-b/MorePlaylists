@@ -5,6 +5,7 @@ using MorePlaylists.Entries;
 using MorePlaylists.Utilities;
 using System;
 using System.Linq;
+using System.Threading;
 using BeatSaberPlaylistsLib.Types;
 using UnityEngine;
 using Zenject;
@@ -18,7 +19,11 @@ namespace MorePlaylists.UI
         [Inject]
         private readonly SpriteLoader spriteLoader = null!;
         
+        [Inject] 
+        private readonly MaterialGrabber materialGrabber = null!;
+        
         private IEntry? selectedPlaylistEntry;
+        
         public ViewController ViewController => this;
         public event Action<IEntry, bool>? DidPressDownload;
         public event Action<IPlaylist>? DidGoToPlaylist;
@@ -35,7 +40,7 @@ namespace MorePlaylists.UI
         private void PostParse()
         {
             rectTransform.anchorMax = new Vector2(0.5f, 1);
-            playlistCoverView.material = Resources.FindObjectsOfTypeAll<Material>().First(m => m.name == "UINoGlowRoundEdge");
+            playlistCoverView.material = materialGrabber.NoGlowRoundEdge;
         }
 
         [UIAction("download-click")]
@@ -78,8 +83,8 @@ namespace MorePlaylists.UI
             NotifyPropertyChanged(nameof(PlaylistName));
             NotifyPropertyChanged(nameof(PlaylistAuthor));
             NotifyPropertyChanged(nameof(PlaylistDescription));
-            spriteLoader.GetSpriteForEntry(selectedPlaylistEntry, sprite => playlistCoverView.sprite = sprite);
             descriptionTextPage.ScrollTo(0, true);
+            _ = spriteLoader.DownloadSpriteAsync(selectedPlaylistEntry.SpriteURL, sprite => playlistCoverView.sprite = sprite);
         }
 
         public void OnPlaylistDownloaded()

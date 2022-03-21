@@ -24,8 +24,6 @@ namespace MorePlaylists.Utilities
             spriteQueue = new ConcurrentQueue<Action>();
         }
         
-        public void GetSpriteForEntry(IEntry entry, Action<Sprite> onCompletion) => _ = DownloadSpriteAsync(entry.SpriteURL, onCompletion);
-        
         public async Task DownloadSpriteAsync(string spriteURL, Action<Sprite> onCompletion, CancellationToken cancellationToken = default)
         {
             // Check Cache

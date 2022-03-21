@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using BeatSaberPlaylistsLib.Types;
+using BeatSaverSharp.Models;
 using BeatSaverSharp.Models.Pages;
 using MorePlaylists.Entries;
 using SiraUtil.Web;
@@ -27,6 +28,8 @@ public class BeatSaverEntry : IEntry
     public string SpriteURL => playlist.CoverURL;
     public IPlaylist? LocalPlaylist { get; set; }
     public bool DownloadBlocked { get; set; }
+    public User Owner => playlist.Owner;
+    
     
     public async Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken = default)
     { 

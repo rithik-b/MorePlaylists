@@ -120,7 +120,7 @@ namespace MorePlaylists.UI
             if (index >= 0 && customListTableData != null)
             {
                 customListTableData.data[index] = new CustomListTableData.CustomCellInfo($"<#7F7F7F>{playlistEntry.Title}", playlistEntry.Author);
-                spriteLoader.GetSpriteForEntry(playlistEntry, sprite =>
+                _ = spriteLoader.DownloadSpriteAsync(playlistEntry.SpriteURL, sprite =>
                 {
                     customListTableData.data[index].icon = sprite;
                     customListTableData.tableView.ReloadDataKeepingPosition();
