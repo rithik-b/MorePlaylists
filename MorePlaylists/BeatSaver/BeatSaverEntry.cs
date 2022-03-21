@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using BeatSaberPlaylistsLib.Types;
@@ -48,5 +49,16 @@ public class BeatSaverEntry : IEntry
         }
 
         return songs;
+    }
+
+    public async Task<IPlaylist?> DownloadPlaylist(IHttpService siraHttpService, CancellationToken cancellationToken = default)
+    { 
+        var playlistBytes = await playlist.DownloadPlaylist(cancellationToken);
+        if (playlistBytes != null)
+        {
+            using var playlistStream = new MemoryStream(playlistBytes);
+            return BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
+        }
+        return null;
     }
 }

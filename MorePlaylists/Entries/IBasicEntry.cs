@@ -10,5 +10,4 @@ public interface IBasicEntry : IEntry
 {
     IPlaylist? RemotePlaylist { get; }
     Task CachePlaylist(IHttpService siraHttpService, CancellationToken cancellationToken = default);
-    event Action<IBasicEntry>? FinishedCaching;
 }

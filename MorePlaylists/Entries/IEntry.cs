@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BeatSaberPlaylistsLib.Types;
@@ -17,5 +16,6 @@ namespace MorePlaylists.Entries
         IPlaylist? LocalPlaylist { get; set; }
         bool DownloadBlocked { get; set; }
         Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken = default);
+        Task<IPlaylist?> DownloadPlaylist(IHttpService siraHttpService, CancellationToken cancellationToken = default);
     }
 }

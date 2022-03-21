@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using BeatSaberPlaylistsLib.Types;
 using HMUI;
 using MorePlaylists.Entries;
@@ -40,25 +41,10 @@ namespace MorePlaylists.UI
                 this.downloadSongs.Add(entry);
             }
 
-            if (entry is IBasicEntry basicEntry)
-            {
-                if (basicEntry.RemotePlaylist != null)
-                {
-                    DownloadFinished(basicEntry);
-                }
-                else
-                {
-                    basicEntry.FinishedCaching += DownloadFinished;
-                    _ = basicEntry.CachePlaylist(siraHttpService);
-                }
-            }
+            _ = StartDownload(entry);
         }
 
-        private void DownloadFinished(IBasicEntry entry)
-        {
-            entry.FinishedCaching -= DownloadFinished;
-            DownloadFinished(entry, entry.RemotePlaylist);
-        }
+        private async Task StartDownload(IEntry entry) => DownloadFinished(entry, await entry.DownloadPlaylist(siraHttpService));
 
         private void DownloadFinished(IEntry playlistEntry, IPlaylist? playlist)
         {

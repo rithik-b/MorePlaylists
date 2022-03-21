@@ -11,42 +11,72 @@ namespace MorePlaylists.Entries
     {
         public IPlaylist? LocalPlaylist { get; set; }
         public bool DownloadBlocked { get; set; }
-        public event Action<IBasicEntry>? FinishedCaching;
         
         #region Basic Entry
-        
-        private bool isCaching;
+
+        private readonly SemaphoreSlim cacheSemaphore = new(1, 1);
         public IPlaylist? RemotePlaylist { get; private set; }
         
         public async Task CachePlaylist(IHttpService siraHttpService, CancellationToken cancellationToken)
         {
-            if (isCaching || RemotePlaylist != null)
+            if (RemotePlaylist != null)
+            {
+                return;
+            }
+
+            await cacheSemaphore.WaitAsync(cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
             {
                 return;
             }
             
-            isCaching = true;
             try
             {
                 var webResponse = await siraHttpService.GetAsync(PlaylistURL, cancellationToken: cancellationToken);
                 if (webResponse.Successful)
                 {
-                    RemotePlaylist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(await webResponse.ReadAsStreamAsync());
+                    using var playlistStream = await webResponse.ReadAsStreamAsync();
+                    RemotePlaylist = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.DefaultHandler?.Deserialize(playlistStream);
                 }
                 else if (!cancellationToken.IsCancellationRequested)
                 {
-                    Plugin.Log?.Error("An error occurred while acquiring " + PlaylistURL + $"\nError code: {webResponse.Code}");
+                    Plugin.Log?.Error("An error occurred while acquiring " + PlaylistURL +
+                                      $"\nError code: {webResponse.Code}");
                 }
             }
             catch (Exception e)
             {
                 if (e is not TaskCanceledException)
                 {
-                    Plugin.Log?.Error("An exception occurred while acquiring " + PlaylistURL + $"\nException: {e.Message}");
+                    Plugin.Log?.Error("An exception occurred while acquiring " + PlaylistURL +
+                                      $"\nException: {e.Message}");
                 }
             }
-            isCaching = false;
-            FinishedCaching?.Invoke(this);
+            finally
+            {
+                cacheSemaphore.Release();
+            }
+        }
+        
+        public async Task<IPlaylist?> DownloadPlaylist(IHttpService siraHttpService, CancellationToken cancellationToken = default)
+        {
+            if (RemotePlaylist != null)
+            {
+                return RemotePlaylist;
+            }
+            
+            await cacheSemaphore.WaitAsync(cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+            cacheSemaphore.Release();
+
+            if (RemotePlaylist == null)
+            {
+                await CachePlaylist(siraHttpService, cancellationToken);
+            }
+            return RemotePlaylist;
         }
         
         #endregion
