@@ -1,7 +1,6 @@
 ﻿using System;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
-using BeatSaverSharp;
 using HMUI;
 using MorePlaylists.Utilities;
 using UnityEngine;
@@ -11,17 +10,15 @@ namespace MorePlaylists.BeatSaver;
 
 [HotReload(RelativePathToLayout = @".\BeatSaverFiltersView.bsml")]
 [ViewDefinition("MorePlaylists.BeatSaver.BeatSaverFiltersView.bsml")]
-public class BeatSaverFiltersViewController : BSMLAutomaticViewController
+internal class BeatSaverFiltersViewController : BSMLAutomaticViewController
 {
     [Inject]
     private readonly InputFieldGrabber inputFieldGrabber = null!;
     
     private InputFieldView? inputFieldView;
-
-    public SearchTextPlaylistFilterOptions? filterOptions { get; private set; }
-    private SearchTextPlaylistFilterOptions FilterOptions => filterOptions ??= new SearchTextPlaylistFilterOptions();
-
-    public event Action<SearchTextPlaylistFilterOptions?>? FiltersSet;
+    public readonly BeatSaverFilterModel filterOptions = new();
+    
+    public event Action<BeatSaverFilterModel>? FiltersSet;
     public event Action? RequestDismiss;
     
     [UIComponent("vertical")] 
@@ -45,20 +42,20 @@ public class BeatSaverFiltersViewController : BSMLAutomaticViewController
     [UIAction("ok-click")]
     private void OkClicked()
     {
-        FilterOptions.IncludeEmpty = IncludeEmpty;
-        FilterOptions.IsCurated = CuratedOnly;
+        filterOptions.SearchFilter.IncludeEmpty = IncludeEmpty;
+        filterOptions.SearchFilter.IsCurated = CuratedOnly;
 
         if (inputFieldView != null)
         {
-            FilterOptions.Query = inputFieldView.text;
+            filterOptions.SearchFilter.Query = inputFieldView.text;
         }
 
-        FiltersSet?.Invoke(FilterOptions);
+        FiltersSet?.Invoke(filterOptions);
     }
 
     public void ClearFilters()
     {
-        filterOptions = null;
+        filterOptions.ClearFilters();
         IncludeEmpty = false;
         CuratedOnly = false;
         

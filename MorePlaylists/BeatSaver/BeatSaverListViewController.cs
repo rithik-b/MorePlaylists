@@ -317,36 +317,46 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
         }
     }
 
-    public void SetActiveFilter(SearchTextPlaylistFilterOptions? filterOptions)
+    public void SetActiveFilter(BeatSaverFilterModel filterOptions)
     {
-        if (filterOptions == null)
+        switch (filterOptions.FilterMode)
         {
-            FilterString = string.Empty;
-            return;
-        }
+            case FilterMode.Search:
+                if (filterOptions.NullableSearchFilter == null)
+                {
+                    FilterString = string.Empty;
+                    return;
+                }
 
-        var sb = new StringBuilder();
+                var sb = new StringBuilder();
         
-        if (!string.IsNullOrWhiteSpace(filterOptions.Query))
-        {
-            sb.Append(filterOptions.Query + ", ");
-        }
+                if (!string.IsNullOrWhiteSpace(filterOptions.SearchFilter.Query))
+                {
+                    sb.Append(filterOptions.SearchFilter.Query + ", ");
+                }
 
-        if (filterOptions.IncludeEmpty)
-        {
-            sb.Append("IncludeEmpty, ");
-        }
+                if (filterOptions.SearchFilter.IncludeEmpty)
+                {
+                    sb.Append("IncludeEmpty, ");
+                }
 
-        if (filterOptions.IsCurated)
-        {
-            sb.Append("CuratedOnly, ");
-        }
+                if (filterOptions.SearchFilter.IsCurated)
+                {
+                    sb.Append("CuratedOnly, ");
+                }
 
-        if (sb.Length >= 2)
-        {
-            sb.Remove(sb.Length - 2, 2);
+                if (sb.Length >= 2)
+                {
+                    sb.Remove(sb.Length - 2, 2);
+                }
+                
+                FilterString = sb.ToString();
+                break;
+            
+            case FilterMode.User:
+                FilterString = $"user:{filterOptions.UserName}";
+                break;
         }
-        FilterString = sb.ToString();
     }
 
     private string filterString = string.Empty;

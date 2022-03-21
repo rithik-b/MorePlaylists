@@ -36,7 +36,7 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
         }
     }
 
-    public SearchTextPlaylistFilterOptions? CurrentFilters => filtersViewController.filterOptions;
+    public BeatSaverFilterModel CurrentFilters => filtersViewController.filterOptions;
     public IListViewController ListViewController => listViewController;
     public IDetailViewController DetailViewController { get; }
     
@@ -75,7 +75,24 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
     {
         if (refreshRequested || page == null)
         {
-            page = await beatSaverInstance.SearchPlaylists(CurrentFilters, token: token);
+            switch (CurrentFilters.FilterMode)
+            {
+                case FilterMode.Search:
+                    page = await beatSaverInstance.SearchPlaylists(CurrentFilters.NullableSearchFilter, token: token);
+                    break;
+                
+                case FilterMode.User:
+                    page = null;
+                    if (CurrentFilters.UserName != null)
+                    {
+                        var user = await beatSaverInstance.User(CurrentFilters.UserName, token);
+                        if (user != null)
+                        {
+                            page = await beatSaverInstance.UserPlaylists(user.ID, token: token);
+                        }
+                    }
+                    break;
+            }
             ExhaustedPlaylists = false;
         }
         else
@@ -107,7 +124,7 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
 
     private void ClearFilters() => filtersViewController.ClearFilters();
 
-    private void OnFiltersSet(SearchTextPlaylistFilterOptions? filterOptions)
+    private void OnFiltersSet(BeatSaverFilterModel filterOptions)
     {
         listViewController.SetActiveFilter(filterOptions);
         RequestFilterViewDismiss();
