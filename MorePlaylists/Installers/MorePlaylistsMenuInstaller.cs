@@ -32,6 +32,7 @@ namespace MorePlaylists.Installers
             Container.Bind<SpriteLoader>().AsSingle();
             Container.Bind<InputFieldGrabber>().AsSingle();
             Container.Bind<MaterialGrabber>().AsSingle();
+            Container.Bind<AnimationGrabber>().AsSingle();
         }
     }
 }
