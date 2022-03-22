@@ -92,7 +92,10 @@ internal class BeatSaverFiltersViewController : BSMLAutomaticViewController
         }
 
         FiltersSet?.Invoke(filterOptions);
+        RequestDismiss?.Invoke();
     }
+
+    public void RaiseFiltersSet() => FiltersSet?.Invoke(filterOptions);
 
     public void ClearFilters()
     {

@@ -21,6 +21,9 @@ internal class BeatSaverDetailViewController : BSMLAutomaticViewController, IDet
 
     [Inject] 
     private readonly MaterialGrabber materialGrabber = null!;
+
+    [Inject] 
+    private readonly BeatSaverFiltersViewController beatSaverFiltersViewController = null!;
     
     private BeatSaverEntry? selectedPlaylistEntry;
     private CancellationTokenSource? spriteLoadTokenSource;
@@ -46,6 +49,14 @@ internal class BeatSaverDetailViewController : BSMLAutomaticViewController, IDet
         rectTransform.anchorMax = new Vector2(0.5f, 1);
         playlistCoverView.material = materialGrabber.NoGlowRoundEdge;
         userImageView.material = materialGrabber.NoGlowRoundEdge;
+    }
+
+    [UIAction("author-click")]
+    private void AuthorPressed()
+    {
+        beatSaverFiltersViewController.filterOptions.FilterMode = FilterMode.User;
+        beatSaverFiltersViewController.filterOptions.UserName = PlaylistAuthor;
+        beatSaverFiltersViewController.RaiseFiltersSet();
     }
 
     [UIAction("download-click")]

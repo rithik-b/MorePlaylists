@@ -357,6 +357,14 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
                 FilterString = $"user:{filterOptions.UserName}";
                 break;
         }
+
+        if (isActiveAndEnabled && currentSource != null)
+        {
+            loadCancellationTokenSource?.Cancel();
+            loadCancellationTokenSource?.Dispose();
+            loadCancellationTokenSource = new CancellationTokenSource();
+            _ = LoadPlaylists(currentSource, loadCancellationTokenSource.Token, true);
+        }
     }
 
     private string filterString = string.Empty;

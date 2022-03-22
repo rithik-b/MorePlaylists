@@ -124,11 +124,7 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
 
     private void ClearFilters() => filtersViewController.ClearFilters();
 
-    private void OnFiltersSet(BeatSaverFilterModel filterOptions)
-    {
-        listViewController.SetActiveFilter(filterOptions);
-        RequestFilterViewDismiss();
-    }
+    private void OnFiltersSet(BeatSaverFilterModel filterOptions) => listViewController.SetActiveFilter(filterOptions);
 
     private void RequestFilterViewDismiss() => ViewControllerDismissRequested?.Invoke(filtersViewController, ViewController.AnimationDirection.Vertical, null);
 }

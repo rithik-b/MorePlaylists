@@ -7,7 +7,7 @@
             <text text='~playlist-name' text-align="left" word-wrapping='true' />
             <horizontal child-control-height="false" child-control-width="false" spacing="0.5">
                 <image id='user-image' preserve-aspect='true' size-delta-x="3" size-delta-y="3" />
-                <clickable-text text='~playlist-author' font-size="3.5" font-align="MidlineLeft" word-wrapping='true' color="#FFFFFFBF" size-delta-x="45" size-delta-y="3" />
+                <clickable-text text='~playlist-author' hover-hint="Show playlists by this user." on-click="author-click" font-size="3.5" font-align="MidlineLeft" word-wrapping='true' color="#FFFFFFBF" size-delta-x="45" size-delta-y="3" />
             </horizontal>
         </vertical>
     </horizontal>
