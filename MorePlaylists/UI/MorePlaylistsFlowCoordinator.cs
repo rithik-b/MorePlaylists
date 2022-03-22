@@ -65,6 +65,7 @@ namespace MorePlaylists.UI
             SubToEvents(source);
             source.ListViewController.ShowPlaylistsForSource(source);
             SetViewControllersToNavigationController(morePlaylistsNavigationController, source.ListViewController.ViewController);
+            SetRightScreenViewController(null, ViewController.AnimationType.Out);
         }
 
         private void ShowViewController(ViewController viewController, ViewController.AnimationDirection animationDirection)

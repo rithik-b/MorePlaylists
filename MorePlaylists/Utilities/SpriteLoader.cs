@@ -95,7 +95,7 @@ namespace MorePlaylists.Utilities
             while (spriteQueue.TryDequeue(out var loader))
             {
                 yield return LoadWait;
-                loader?.Invoke();
+                IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() => loader?.Invoke());
             }
         }
     }
