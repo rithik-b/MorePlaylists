@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using BeatSaberPlaylistsLib;
 using UnityEngine;
 
 namespace MorePlaylists.Utilities
@@ -41,8 +42,13 @@ namespace MorePlaylists.Utilities
                 var webResponse = await siraHttpService.GetAsync(spriteURL, cancellationToken: cancellationToken).ConfigureAwait(false);
                 if (webResponse.Successful)
                 {
-                    var imageBytes = await webResponse.ReadAsByteArrayAsync();
-                    QueueLoadSprite(spriteURL, imageBytes, onCompletion, cancellationToken);
+                    using var responseStream = await webResponse.ReadAsStreamAsync();
+                    using var downscaledStream = await Task.Run(() => BeatSaberPlaylistsLib.Utilities.DownscaleImage(responseStream, 128), cancellationToken);
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        var imageBytes = downscaledStream.ToArray();
+                        QueueLoadSprite(spriteURL, imageBytes, onCompletion, cancellationToken);
+                    }
                 }
                 else if (!cancellationToken.IsCancellationRequested)
                 {
