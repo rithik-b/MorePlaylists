@@ -37,6 +37,7 @@ namespace MorePlaylists.UI
         public ViewController ViewController => this;
         public event Action<IEntry>? DidSelectPlaylist;
         public event Action? DidClickSource;
+        public event Action? DetailDismissRequested;
 
         [UIComponent("filter-bar")] 
         private readonly RectTransform? filterBarTransform = null!;
@@ -69,6 +70,7 @@ namespace MorePlaylists.UI
             if (inputFieldView != null)
             {
                 inputFieldView.onValueChanged.RemoveAllListeners();
+                inputFieldView.selectionStateDidChangeEvent -= InputFieldSelectionChanged;
             }
         }
 
@@ -93,6 +95,7 @@ namespace MorePlaylists.UI
                 searchCancellationTokenSource = new CancellationTokenSource();
                 _ = SearchAsync(searchCancellationTokenSource.Token);
             });
+            inputFieldView.selectionStateDidChangeEvent += InputFieldSelectionChanged;
         }
 
         [UIAction("list-select")]
@@ -125,6 +128,15 @@ namespace MorePlaylists.UI
                     customListTableData.data[index].icon = sprite;
                     customListTableData.tableView.ReloadDataKeepingPosition();
                 });
+            }
+        }
+        
+        private void InputFieldSelectionChanged(InputFieldView.SelectionState selectionState)
+        {
+            if (selectionState == InputFieldView.SelectionState.Pressed)
+            {
+                customListTableData!.tableView.ClearSelection();
+                DetailDismissRequested?.Invoke();
             }
         }
 

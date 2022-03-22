@@ -40,6 +40,7 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
     public ViewController ViewController => this;
     public event Action<IEntry>? DidSelectPlaylist;
     public event Action? DidClickSource;
+    public event Action? DetailDismissRequested;
 
     [UIComponent("source-button")]
     private readonly ButtonIconImage? sourceButton = null!;
@@ -301,7 +302,11 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
         }
     }
 
-    private void FilterClicked() => FilterViewRequested?.Invoke();
+    private void FilterClicked()
+    {
+        DetailDismissRequested?.Invoke();
+        FilterViewRequested?.Invoke();
+    }
 
     private void ClearFilters()
     {
@@ -359,6 +364,7 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
 
         if (isActiveAndEnabled && currentSource != null)
         {
+            DetailDismissRequested?.Invoke();
             loadCancellationTokenSource?.Cancel();
             loadCancellationTokenSource?.Dispose();
             loadCancellationTokenSource = new CancellationTokenSource();

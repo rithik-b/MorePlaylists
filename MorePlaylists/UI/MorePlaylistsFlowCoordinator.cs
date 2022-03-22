@@ -95,6 +95,19 @@ namespace MorePlaylists.UI
 
         private void SourceButtonClicked() => sourceModalController.ShowModal(ListViewController.ViewController.transform);
         
+        private void DismissDetailView()
+        {
+            if (DetailViewController.ViewController.isInViewControllerHierarchy)
+            {
+                PopViewControllerFromNavigationController(morePlaylistsNavigationController, immediately: true);
+            }
+
+            if (morePlaylistsSongListViewController.isInViewControllerHierarchy)
+            {
+                SetRightScreenViewController(null, ViewController.AnimationType.Out);
+            }
+        }
+        
         private void OnPlaylistDownloaded(IEntry playlistEntry)
         {
             if (playlistEntry.DownloadBlocked)
@@ -129,6 +142,7 @@ namespace MorePlaylists.UI
             
             source.ListViewController.DidSelectPlaylist += PlaylistSelected;
             source.ListViewController.DidClickSource += SourceButtonClicked;
+            source.ListViewController.DetailDismissRequested += DismissDetailView;
             
             source.DetailViewController.DidPressDownload += morePlaylistsDownloaderViewController.DownloadPlaylist;
             source.DetailViewController.DidGoToPlaylist += GoToPlaylistClicked;
@@ -141,6 +155,7 @@ namespace MorePlaylists.UI
             
             source.ListViewController.DidSelectPlaylist -= PlaylistSelected;
             source.ListViewController.DidClickSource -= SourceButtonClicked;
+            source.ListViewController.DetailDismissRequested -= DismissDetailView;
             
             source.DetailViewController.DidPressDownload -= morePlaylistsDownloaderViewController.DownloadPlaylist;
             source.DetailViewController.DidGoToPlaylist -= GoToPlaylistClicked;

@@ -10,6 +10,7 @@ internal interface IListViewController
     ViewController ViewController { get; }
     event Action<IEntry>? DidSelectPlaylist;
     event Action? DidClickSource;
+    event Action? DetailDismissRequested;
     void ShowPlaylistsForSource(ISource source);
     void SetEntryAsOwned(IEntry entry);
     void AbortLoading();
