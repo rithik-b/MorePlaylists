@@ -135,14 +135,11 @@ namespace MorePlaylists.UI
                     var customCellInfo = new CustomListTableData.CustomCellInfo(song.Name, song.SubName,
                         BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite);
                 
-                    await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                    _ = spriteLoader.DownloadSpriteAsync(song.CoverURL, sprite =>
                     {
-                        _ = spriteLoader.DownloadSpriteAsync(song.CoverURL, sprite =>
-                        {
-                            customCellInfo.icon = sprite;
-                            customListTableData.tableView.ReloadDataKeepingPosition();
-                        }, cancellationToken);
-                    });
+                        customCellInfo.icon = sprite;
+                        customListTableData.tableView.ReloadDataKeepingPosition();
+                    }, cancellationToken);
                 
                     customListTableData.data.Add(customCellInfo);
                                 

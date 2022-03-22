@@ -29,7 +29,7 @@ namespace MorePlaylists.Installers
             Container.BindInterfacesAndSelfTo<MorePlaylistsFlowCoordinator>().FromNewComponentOnNewGameObject().AsSingle();
             Container.BindInterfacesTo<MenuButtonUI>().AsSingle();
 
-            Container.Bind<SpriteLoader>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SpriteLoader>().AsSingle();
             Container.Bind<InputFieldGrabber>().AsSingle();
             Container.Bind<MaterialGrabber>().AsSingle();
             Container.Bind<AnimationGrabber>().AsSingle();

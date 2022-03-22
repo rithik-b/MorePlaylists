@@ -190,7 +190,7 @@ namespace MorePlaylists.UI
                 currentPlaylists.AddRange(allPlaylists);
                 PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IEntry>().ToList());
                 
-                await ShowPlaylists(cancellationToken);
+                ShowPlaylists(cancellationToken);
             }
             finally
             {
@@ -204,7 +204,7 @@ namespace MorePlaylists.UI
             }
         }
 
-        private async Task ShowPlaylists(CancellationToken cancellationToken)
+        private void ShowPlaylists(CancellationToken cancellationToken)
         {
             if (customListTableData == null)
             {
@@ -218,14 +218,11 @@ namespace MorePlaylists.UI
                         : playlistEntry.Title,
                     playlistEntry.Author);
 
-                await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                _ = spriteLoader.DownloadSpriteAsync(playlistEntry.SpriteURL, sprite =>
                 {
-                    _ = spriteLoader.DownloadSpriteAsync(playlistEntry.SpriteURL, sprite =>
-                    {
-                        customCellInfo.icon = sprite;
-                        customListTableData.tableView.ReloadDataKeepingPosition();
-                    }, cancellationToken);
-                });
+                    customCellInfo.icon = sprite;
+                    customListTableData.tableView.ReloadDataKeepingPosition();
+                }, cancellationToken);
 
                 customListTableData.data.Add(customCellInfo);
 
@@ -290,7 +287,7 @@ namespace MorePlaylists.UI
                     }, cancellationToken);
                 }
                 
-                await ShowPlaylists(cancellationToken);
+                ShowPlaylists(cancellationToken);
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return;

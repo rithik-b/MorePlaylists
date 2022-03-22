@@ -179,7 +179,7 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
             
             PlaylistLibUtils.UpdatePlaylistsOwned(currentPlaylists.Cast<IEntry>().ToList());
                 
-            await ShowPlaylists(currentPlaylists, cancellationToken);
+            ShowPlaylists(currentPlaylists, cancellationToken);
         }
         finally
         {
@@ -193,7 +193,7 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
         }
     }
 
-    private async Task ShowPlaylists(List<IBeatSaverEntry> currentPlaylists, CancellationToken cancellationToken)
+    private void ShowPlaylists(List<IBeatSaverEntry> currentPlaylists, CancellationToken cancellationToken)
     {
         if (customListTableData == null)
         {
@@ -207,14 +207,11 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
                     : playlistEntry.Title,
                 playlistEntry.Author);
 
-            await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+            _ = spriteLoader.DownloadSpriteAsync(playlistEntry.SpriteURL, sprite =>
             {
-                _ = spriteLoader.DownloadSpriteAsync(playlistEntry.SpriteURL, sprite =>
-                {
-                    customCellInfo.icon = sprite;
-                    customListTableData.tableView.ReloadDataKeepingPosition();
-                }, cancellationToken);
-            });
+                customCellInfo.icon = sprite;
+                customListTableData.tableView.ReloadDataKeepingPosition();
+            }, cancellationToken);
 
             customListTableData.data.Add(customCellInfo);
             allPlaylists.Add(playlistEntry);

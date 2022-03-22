@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace MorePlaylists.Sources
 {
-    internal abstract class BasicSource<T> : IBasicSource where T : IBasicEntry
+    internal abstract class BasicSource<T> : IBasicSource, ICachable where T : IBasicEntry
     {
         protected abstract string Website { get; }
         protected abstract string Endpoint { get; }
@@ -55,5 +55,7 @@ namespace MorePlaylists.Sources
             }
             return cachedResult?.Cast<IBasicEntry>().ToList();
         }
+
+        public void ClearCache() => cachedResult = null;
     }
 }

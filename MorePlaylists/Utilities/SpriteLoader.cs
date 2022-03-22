@@ -5,24 +5,29 @@ using SiraUtil.Web;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BeatSaberPlaylistsLib;
+using MorePlaylists.Sources;
 using UnityEngine;
 
 namespace MorePlaylists.Utilities
 {
-    internal class SpriteLoader
+    internal class SpriteLoader : ICachable
     {
         private readonly IHttpService siraHttpService;
-        private readonly Dictionary<string, Sprite> cachedSprites;
-        private readonly ConcurrentQueue<Action> spriteQueue;
+        private readonly ConcurrentDictionary<string, Sprite> cachedSprites;
+        private readonly Queue<Action> spriteQueue;
+        private readonly object queueLock;
+        private bool coroutineRunning;
 
         public SpriteLoader(IHttpService siraHttpService)
         {
             this.siraHttpService = siraHttpService;
-            cachedSprites = new Dictionary<string, Sprite>();
-            spriteQueue = new ConcurrentQueue<Action>();
+            cachedSprites = new ConcurrentDictionary<string, Sprite>();
+            spriteQueue = new Queue<Action>();
+            queueLock = new object();
         }
         
         public async Task DownloadSpriteAsync(string spriteURL, Action<Sprite> onCompletion, CancellationToken cancellationToken = default)
@@ -72,7 +77,7 @@ namespace MorePlaylists.Utilities
                 {
                     var sprite = BeatSaberMarkupLanguage.Utilities.LoadSpriteRaw(imageBytes);
                     sprite.texture.wrapMode = TextureWrapMode.Clamp;
-                    cachedSprites[key] = sprite;
+                    cachedSprites.TryAdd(key, sprite);
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         onCompletion?.Invoke(sprite);
@@ -86,16 +91,44 @@ namespace MorePlaylists.Utilities
                     }
                 }
             });
-            SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
+            if (!coroutineRunning)
+            {
+                SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
+            }
         }
-        
+
         private static readonly YieldInstruction LoadWait = new WaitForEndOfFrame();
         private IEnumerator<YieldInstruction> SpriteLoadCoroutine()
         {
-            while (spriteQueue.TryDequeue(out var loader))
+            lock (queueLock)
+            {
+                if (coroutineRunning)
+                    yield break;
+                coroutineRunning = true;
+            }
+            while (spriteQueue.Count > 0)
             {
                 yield return LoadWait;
-                IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() => loader?.Invoke());
+                if (spriteQueue.Count == 0)
+                {
+                    break;
+                }
+                var loader = spriteQueue.Dequeue();
+                _ = IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() => loader?.Invoke());
+            }
+            coroutineRunning = false;
+            if (spriteQueue.Count > 0)
+            {
+                SharedCoroutineStarter.instance.StartCoroutine(SpriteLoadCoroutine());
+            }
+        }
+
+        public void ClearCache()
+        {
+            cachedSprites.Clear();
+            lock (queueLock)
+            {
+                spriteQueue.Clear();
             }
         }
     }

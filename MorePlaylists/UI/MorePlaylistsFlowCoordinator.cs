@@ -2,6 +2,7 @@
 using Zenject;
 using BeatSaberMarkupLanguage;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;
@@ -35,6 +36,9 @@ namespace MorePlaylists.UI
         [Inject]
         private readonly MorePlaylistsSongListViewController morePlaylistsSongListViewController = null!;
 
+        [Inject] 
+        private readonly List<ICachable> cachables = null!;
+
         private IListViewController ListViewController => sourceModalController.SelectedSource.ListViewController;
         private IDetailViewController DetailViewController => sourceModalController.SelectedSource.DetailViewController;
 
@@ -57,6 +61,15 @@ namespace MorePlaylists.UI
             showBackButton = true;
             SourceSelected(sourceModalController.SelectedSource);
             ProvideInitialViewControllers(morePlaylistsNavigationController, morePlaylistsDownloaderViewController);
+        }
+
+        protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
+        {
+            base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
+            foreach (var cachable in cachables)
+            {
+                cachable.ClearCache();
+            }
         }
 
         private void SourceSelected(ISource source)
