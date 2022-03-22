@@ -57,9 +57,13 @@ namespace MorePlaylists.UI
                     downloadSongs.Remove(playlistEntry);
                 }
             }
-            else if (downloadSongs.Contains(playlistEntry))
+            else
             {
-                downloadSongs.Remove(playlistEntry);
+                playlistEntry.DownloadBlocked = false;
+                if (downloadSongs.Contains(playlistEntry))
+                {
+                    downloadSongs.Remove(playlistEntry);
+                }   
             }
             PlaylistDownloaded?.Invoke(playlistEntry);
         }

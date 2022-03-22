@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
-using BeatSaverSharp;
 using HMUI;
 using MorePlaylists.Entries;
 using MorePlaylists.Sources;

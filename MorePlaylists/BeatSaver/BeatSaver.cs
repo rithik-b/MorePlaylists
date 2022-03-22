@@ -97,12 +97,12 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
         }
         else
         {
-            page = await page.Next(token);
-        }
-
-        if (token.IsCancellationRequested)
-        {
-            return null;
+            var newPage = await page.Next(token);
+            if (token.IsCancellationRequested)
+            {
+                return null;
+            }
+            page = newPage;
         }
 
         if (page == null || page.Empty)

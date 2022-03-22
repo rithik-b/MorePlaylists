@@ -28,29 +28,38 @@ public class BeatSaverEntry : IEntry
     public string SpriteURL => playlist.CoverURL;
     public IPlaylist? LocalPlaylist { get; set; }
     public bool DownloadBlocked { get; set; }
+    public bool ExhaustedPages { get; private set; }
     public User Owner => playlist.Owner;
     
     
-    public async Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken = default)
-    { 
-        playlistDetail = await playlist.GetPlaylistDetail(cancellationToken);
-
-        if (playlistDetail == null)
+    public async Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken = default, bool firstPage = false)
+    {
+        if (playlistDetail == null || firstPage)
         {
+            playlistDetail = await playlist.GetPlaylistDetail(cancellationToken);
+            ExhaustedPages = false;
+        }
+        else
+        {
+            var newDetail = await playlistDetail.Next(cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+            playlistDetail = newDetail;
+        }
+
+        if (playlistDetail == null || playlistDetail.Empty)
+        {
+            ExhaustedPages = true;
             return null;
         }
 
         var songs = new List<Song>();
-        
-        while (playlistDetail is {Empty: false})
+        foreach (var beatmap in playlistDetail.Beatmaps)
         {
-            foreach (var beatmap in playlistDetail.Beatmaps)
-            {
-                songs.Add(new Song(beatmap.Map.Name, $"{beatmap.Map.Metadata.SongAuthorName} [{beatmap.Map.Metadata.LevelAuthorName}]", beatmap.Map.LatestVersion.CoverURL));
-            }
-            playlistDetail = await playlistDetail.Next(cancellationToken);
+            songs.Add(new Song(beatmap.Map.Name, $"{beatmap.Map.Metadata.SongAuthorName} [{beatmap.Map.Metadata.LevelAuthorName}]", beatmap.Map.LatestVersion.CoverURL));
         }
-
         return songs;
     }
 

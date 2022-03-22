@@ -11,12 +11,13 @@ namespace MorePlaylists.Entries
     {
         public IPlaylist? LocalPlaylist { get; set; }
         public bool DownloadBlocked { get; set; }
+        public bool ExhaustedPages => true;
         
         #region Basic Entry
 
         private readonly SemaphoreSlim cacheSemaphore = new(1, 1);
         public IPlaylist? RemotePlaylist { get; private set; }
-        
+
         public async Task CachePlaylist(IHttpService siraHttpService, CancellationToken cancellationToken)
         {
             if (RemotePlaylist != null)
@@ -88,7 +89,7 @@ namespace MorePlaylists.Entries
         public abstract string Description { get; protected set; }
         public abstract string PlaylistURL { get; protected set; }
         public abstract string SpriteURL { get; protected set; }
-        public abstract Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken);
+        public abstract Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken, bool firstPage = false);
 
         #endregion
     }

@@ -15,7 +15,8 @@ namespace MorePlaylists.Entries
         string SpriteURL { get; }
         IPlaylist? LocalPlaylist { get; set; }
         bool DownloadBlocked { get; set; }
-        Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken = default);
+        bool ExhaustedPages { get; }
+        Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken = default, bool firstPage = false);
         Task<IPlaylist?> DownloadPlaylist(IHttpService siraHttpService, CancellationToken cancellationToken = default);
     }
 }

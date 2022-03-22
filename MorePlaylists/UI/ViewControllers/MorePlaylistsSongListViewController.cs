@@ -23,17 +23,30 @@ namespace MorePlaylists.UI
         
         [UIComponent("list")]
         private readonly CustomListTableData? customListTableData = null!;
-
+        
+        private IEntry? currentEntry;
         private CancellationTokenSource? cancellationTokenSource;
+        
+        private ScrollView? scrollView;
+        private float? currentScrollPosition;
         
         private readonly SemaphoreSlim songLoadSemaphore = new(1, 1);
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            if (!firstActivation)
+            if (scrollView != null)
             {
-                ClearList();
+                scrollView.scrollPositionChangedEvent += OnScrollPositionChanged;
+            }
+        }
+
+        protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
+        {
+            base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
+            if (scrollView != null)
+            {
+                scrollView.scrollPositionChangedEvent -= OnScrollPositionChanged;
             }
         }
 
@@ -43,27 +56,42 @@ namespace MorePlaylists.UI
             {
                 return;
             }
+
+            currentEntry = entry;
             
             cancellationTokenSource?.Cancel();
             cancellationTokenSource?.Dispose();
             cancellationTokenSource = new CancellationTokenSource();
 
-            _ = InitSongList(entry, cancellationTokenSource.Token);
+            _ = InitSongList(entry, cancellationTokenSource.Token, true);
         }
 
-        public void ClearList()
+        private void OnScrollPositionChanged(float newPos)
         {
-            if (customListTableData != null)
+            if (scrollView == null || currentEntry == null || currentEntry.ExhaustedPages || currentScrollPosition == newPos)
             {
-                customListTableData.data.Clear();
-                customListTableData.tableView.ReloadData();
+                return;
+            }
+            
+            currentScrollPosition = newPos;
+            scrollView.RefreshButtons();
+
+            if (!Accessors.PageDownAccessor(ref scrollView).interactable)
+            {
+                cancellationTokenSource?.Cancel();
+                cancellationTokenSource?.Dispose();
+                cancellationTokenSource = new CancellationTokenSource();
+                _ = InitSongList(currentEntry, cancellationTokenSource.Token, false);
             }
         }
+        
+        [UIAction("#post-parse")]
+        private void PostParse() => scrollView = Accessors.ScrollViewAccessor(ref customListTableData!.tableView);
 
         [UIAction("list-select")]
         private void Select(TableView _, int __) => customListTableData!.tableView.ClearSelection();
 
-        private async Task InitSongList(IEntry entry, CancellationToken cancellationToken)
+        private async Task InitSongList(IEntry entry, CancellationToken cancellationToken, bool firstPage)
         {
             if (customListTableData == null)
             {
@@ -78,7 +106,15 @@ namespace MorePlaylists.UI
             
             try
             {
-                await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(ClearList);
+                if (firstPage)
+                {
+                    await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                    {
+                        customListTableData.data.Clear();
+                        customListTableData.tableView.ReloadData();
+                        Loaded = false;
+                    });   
+                }
 
                 // We check the cancellationtoken at each interval instead of running everything with a single token
                 // due to unity not liking it
@@ -87,8 +123,7 @@ namespace MorePlaylists.UI
                     return;
                 }
             
-                Loaded = false;
-                var songs = await entry.GetSongs(siraHttpService, cancellationToken);
+                var songs = await entry.GetSongs(siraHttpService, cancellationToken, firstPage);
             
                 if (cancellationToken.IsCancellationRequested || songs == null)
                 {
@@ -123,7 +158,7 @@ namespace MorePlaylists.UI
                 await SiraUtil.Extras.Utilities.PauseChamp;
                 await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
-                    customListTableData.tableView.ReloadData();
+                    customListTableData.tableView.ReloadDataKeepingPosition();
                 });
                 songLoadSemaphore.Release();
             }

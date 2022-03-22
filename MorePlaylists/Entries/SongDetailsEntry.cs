@@ -12,7 +12,7 @@ namespace MorePlaylists.Entries
     internal abstract class SongDetailsEntry : BasicEntry
     {
         private List<Song>? songs;
-        public override async Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken)
+        public override async Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken, bool firstPage = false)
         {
             if (songs == null)
             {
