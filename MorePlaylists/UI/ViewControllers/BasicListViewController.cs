@@ -255,7 +255,6 @@ namespace MorePlaylists.UI
 
                 await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
-                    customListTableData.tableView.ClearSelection();
                     customListTableData.data.Clear();
                     Loaded = false;
                 });
@@ -266,6 +265,7 @@ namespace MorePlaylists.UI
                 }
                 
                 var searchQuery = inputFieldView != null ? inputFieldView.text : "";
+                var searchTerms = searchQuery.Split(' ');
                 currentPlaylists.Clear();
                 if (string.IsNullOrWhiteSpace(searchQuery))
                 {
@@ -277,9 +277,35 @@ namespace MorePlaylists.UI
                     {
                         foreach (var playlist in allPlaylists)
                         {
-                            if (playlist.Title.IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                playlist.Author.IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                playlist.Description.IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase) >= 0)
+                            var words = 0;
+                            var matches = 0;
+
+                            var title = $" {playlist.Title.RemoveSpecialCharacters()} ";
+                            var author = $" {playlist.Author.RemoveSpecialCharacters()} ";
+                            var description = $" {playlist.Description.RemoveSpecialCharacters()} ";
+                            
+                            for (int i = 0; i < searchTerms.Length; i++)
+                            {
+                                if (!string.IsNullOrWhiteSpace(searchTerms[i]))
+                                {
+                                    words++;
+
+                                    var searchTerm = $" {searchTerms[i]} ";
+                                    if (i == searchTerms.Length - 1)
+                                    {
+                                        searchTerm = searchTerm.Substring(0, searchTerm.Length - 1);
+                                    }
+
+                                    if (title.IndexOf(searchTerm, 0, StringComparison.OrdinalIgnoreCase) != -1 ||
+                                        author.IndexOf(searchTerm, 0, StringComparison.OrdinalIgnoreCase) != -1 ||
+                                        description.IndexOf(searchTerm, 0, StringComparison.OrdinalIgnoreCase) != -1)
+                                    {
+                                        matches++;
+                                    }
+                                }
+                            }
+
+                            if (matches == words)
                             {
                                 currentPlaylists.Add(playlist);
                             }
