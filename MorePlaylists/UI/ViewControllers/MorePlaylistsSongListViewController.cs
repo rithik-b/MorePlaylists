@@ -68,7 +68,7 @@ namespace MorePlaylists.UI
 
         private void OnScrollPositionChanged(float newPos)
         {
-            if (scrollView == null || currentEntry == null || currentEntry.ExhaustedPages || currentScrollPosition == newPos)
+            if (scrollView == null || currentEntry == null || currentEntry.ExhaustedPages || currentScrollPosition == newPos || songLoadSemaphore.CurrentCount == 0)
             {
                 return;
             }
