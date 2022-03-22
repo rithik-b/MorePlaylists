@@ -1,5 +1,5 @@
 ﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
-	<modal id='source-modal' show-event='open-source-modal' hide-event='close-source-modal,close-all-modals' move-to-center='true' size-delta-y='40' size-delta-x='50' clickerino-offerino-closerino='true'>
+	<modal id='source-modal' show-event='open-source-modal' hide-event='close-source-modal,close-all-modals' move-to-center='true' size-delta-y='30' size-delta-x='50' clickerino-offerino-closerino='true'>
 		<vertical anchor-pos-y='-3'>
 			<list id='list' expand-cell='false' anchor-pos-x='-10' list-width='50' select-cell='list-select' />
 		</vertical>
