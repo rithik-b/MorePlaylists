@@ -108,16 +108,19 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
             page = newPage;
         }
 
-        if (page == null || page.Empty)
+        if (entries == null && (page == null || page.Empty))
         {
             ExhaustedPlaylists = true;
             return null;
         }
 
         entries ??= new List<IBeatSaverEntry>();
-        foreach (var playlist in page.Playlists)
+        if (page != null)
         {
-            entries.Add(new BeatSaverPlaylistEntry(playlist));
+            foreach (var playlist in page.Playlists)
+            {
+                entries.Add(new BeatSaverPlaylistEntry(playlist));
+            }   
         }
         return entries;
     }
