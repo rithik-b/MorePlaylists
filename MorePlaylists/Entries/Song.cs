@@ -1,6 +1,6 @@
 ﻿namespace MorePlaylists.Entries
 {
-    public class Song
+    internal class Song
     {
         public string Name { get; }
         public string SubName { get; }

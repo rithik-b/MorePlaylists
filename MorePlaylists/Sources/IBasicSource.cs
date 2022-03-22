@@ -5,7 +5,7 @@ using MorePlaylists.Entries;
 
 namespace MorePlaylists.Sources
 {
-    public interface IBasicSource : ISource
+    internal interface IBasicSource : ISource
     {
         Task<List<IBasicEntry>?> GetEndpointResult(bool refreshRequested, CancellationToken token);
     }

@@ -7,7 +7,7 @@ using BeatSaberPlaylistsLib.Types;
 
 namespace MorePlaylists.Entries
 {
-    public abstract class BasicEntry : IBasicEntry
+    internal abstract class BasicEntry : IBasicEntry
     {
         public IPlaylist? LocalPlaylist { get; set; }
         public bool DownloadBlocked { get; set; }

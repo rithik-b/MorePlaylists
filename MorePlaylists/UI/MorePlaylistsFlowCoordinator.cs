@@ -147,7 +147,7 @@ namespace MorePlaylists.UI
         }
     }
 
-    public class MorePlaylistsNavigationController : NavigationController
+    internal class MorePlaylistsNavigationController : NavigationController
     {
     }
 }

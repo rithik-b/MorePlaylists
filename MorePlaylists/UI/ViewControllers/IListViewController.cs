@@ -5,7 +5,7 @@ using MorePlaylists.Sources;
 
 namespace MorePlaylists.UI;
 
-public interface IListViewController
+internal interface IListViewController
 {
     ViewController ViewController { get; }
     event Action<IEntry>? DidSelectPlaylist;

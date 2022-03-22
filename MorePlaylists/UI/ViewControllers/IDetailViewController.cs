@@ -4,7 +4,7 @@ using MorePlaylists.Entries;
 
 namespace MorePlaylists.UI;
 
-public interface IDetailViewController
+internal interface IDetailViewController
 {
     ViewController ViewController { get; }
     event Action<IEntry, bool> DidPressDownload;

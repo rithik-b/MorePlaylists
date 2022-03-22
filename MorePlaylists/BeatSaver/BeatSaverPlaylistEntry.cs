@@ -11,7 +11,7 @@ using Playlist = BeatSaverSharp.Models.Playlist;
 
 namespace MorePlaylists.BeatSaver;
 
-public class BeatSaverPlaylistEntry : IBeatSaverEntry
+internal class BeatSaverPlaylistEntry : IBeatSaverEntry
 {
     private readonly Playlist playlist;
     private PlaylistDetail? playlistDetail;

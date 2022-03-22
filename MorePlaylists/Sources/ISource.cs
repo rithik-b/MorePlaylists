@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace MorePlaylists.Sources
 {
-    public interface ISource
+    internal interface ISource
     {
         Sprite Logo { get; }
         IDetailViewController DetailViewController { get; }

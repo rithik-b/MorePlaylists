@@ -5,7 +5,7 @@ using Zenject;
 
 namespace MorePlaylists.Installers
 {
-    public class MorePlaylistsMenuInstaller : Installer
+    internal class MorePlaylistsMenuInstaller : Installer
     {
         public override void InstallBindings()
         {

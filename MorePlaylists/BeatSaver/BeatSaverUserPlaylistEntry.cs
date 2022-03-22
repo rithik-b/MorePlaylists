@@ -10,7 +10,7 @@ using SiraUtil.Web;
 
 namespace MorePlaylists.BeatSaver;
 
-public class BeatSaverUserPlaylistEntry : IBeatSaverEntry
+internal class BeatSaverUserPlaylistEntry : IBeatSaverEntry
 {
     public string Title => $"Maps by {Owner.Name}";
     public string Author => Owner.Name;

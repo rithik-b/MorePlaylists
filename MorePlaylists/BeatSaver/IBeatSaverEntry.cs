@@ -3,7 +3,7 @@ using MorePlaylists.Entries;
 
 namespace MorePlaylists.BeatSaver;
 
-public interface IBeatSaverEntry : IEntry
+internal interface IBeatSaverEntry : IEntry
 {
     User Owner { get; }
 }

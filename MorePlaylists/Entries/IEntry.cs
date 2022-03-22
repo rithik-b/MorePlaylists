@@ -6,7 +6,7 @@ using SiraUtil.Web;
 
 namespace MorePlaylists.Entries
 {
-    public interface IEntry
+    internal interface IEntry
     {
         string Title { get; }
         string Author { get; }
