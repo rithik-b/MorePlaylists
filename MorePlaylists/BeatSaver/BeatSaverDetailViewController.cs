@@ -25,7 +25,7 @@ internal class BeatSaverDetailViewController : BSMLAutomaticViewController, IDet
     [Inject] 
     private readonly BeatSaverFiltersViewController beatSaverFiltersViewController = null!;
     
-    private BeatSaverEntry? selectedPlaylistEntry;
+    private IBeatSaverEntry? selectedPlaylistEntry;
     private CancellationTokenSource? spriteLoadTokenSource;
     
     public ViewController ViewController => this;
@@ -92,7 +92,7 @@ internal class BeatSaverDetailViewController : BSMLAutomaticViewController, IDet
 
     public void ShowDetail(IEntry selectedPlaylistEntry)
     {
-        if (selectedPlaylistEntry is BeatSaverEntry beatSaverEntry)
+        if (selectedPlaylistEntry is IBeatSaverEntry beatSaverEntry)
         {
             this.selectedPlaylistEntry = beatSaverEntry;
             NotifyPropertyChanged(nameof(DownloadInteractable));

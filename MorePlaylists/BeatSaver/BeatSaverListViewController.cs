@@ -31,7 +31,7 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
     private readonly SemaphoreSlim playlistLoadSemaphore = new(1, 1);
 
     private CancellationTokenSource? loadCancellationTokenSource;
-    private List<BeatSaverEntry> allPlaylists = new();
+    private List<IBeatSaverEntry> allPlaylists = new();
     private BeatSaver? currentSource;
     
     private ScrollView? scrollView;
@@ -192,7 +192,7 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
         }
     }
 
-    private async Task ShowPlaylists(List<BeatSaverEntry> currentPlaylists, CancellationToken cancellationToken)
+    private async Task ShowPlaylists(List<IBeatSaverEntry> currentPlaylists, CancellationToken cancellationToken)
     {
         if (customListTableData == null)
         {

@@ -71,8 +71,10 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
         filtersViewController.RequestDismiss -= RequestFilterViewDismiss;
     }
 
-    public async Task<List<BeatSaverEntry>?> GetPage(bool refreshRequested, CancellationToken token)
+    public async Task<List<IBeatSaverEntry>?> GetPage(bool refreshRequested, CancellationToken token)
     {
+        List<IBeatSaverEntry>? entries = null;
+        
         if (refreshRequested || page == null)
         {
             switch (CurrentFilters.FilterMode)
@@ -89,6 +91,7 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
                         if (user != null)
                         {
                             page = await beatSaverInstance.UserPlaylists(user.ID, token: token);
+                            entries = new List<IBeatSaverEntry> {new BeatSaverUserPlaylistEntry(user)};
                         }
                     }
                     break;
@@ -111,10 +114,10 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
             return null;
         }
 
-        var entries = new List<BeatSaverEntry>();
+        entries ??= new List<IBeatSaverEntry>();
         foreach (var playlist in page.Playlists)
         {
-            entries.Add(new BeatSaverEntry(playlist));
+            entries.Add(new BeatSaverPlaylistEntry(playlist));
         }
         return entries;
     }

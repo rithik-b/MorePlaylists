@@ -11,12 +11,12 @@ using Playlist = BeatSaverSharp.Models.Playlist;
 
 namespace MorePlaylists.BeatSaver;
 
-public class BeatSaverEntry : IEntry
+public class BeatSaverPlaylistEntry : IBeatSaverEntry
 {
     private readonly Playlist playlist;
     private PlaylistDetail? playlistDetail;
 
-    public BeatSaverEntry(Playlist playlist)
+    public BeatSaverPlaylistEntry(Playlist playlist)
     {
         this.playlist = playlist;
     }
@@ -30,8 +30,7 @@ public class BeatSaverEntry : IEntry
     public bool DownloadBlocked { get; set; }
     public bool ExhaustedPages { get; private set; }
     public User Owner => playlist.Owner;
-    
-    
+
     public async Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken = default, bool firstPage = false)
     {
         if (playlistDetail == null || firstPage)
