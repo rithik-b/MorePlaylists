@@ -87,12 +87,12 @@ namespace MorePlaylists.UI
             PresentViewController(viewController, animationDirection: animationDirection);
         }
 
-        private void DismissViewController(ViewController viewController, ViewController.AnimationDirection animationDirection, Action? finishedCallback)
+        private void DismissViewController(ViewController viewController, ViewController.AnimationDirection animationDirection)
         {
             if (viewController.isInViewControllerHierarchy)
             {
                 showBackButton = true;
-                base.DismissViewController(viewController, animationDirection, finishedCallback);
+                base.DismissViewController(viewController, animationDirection, null);
             }
         }
 

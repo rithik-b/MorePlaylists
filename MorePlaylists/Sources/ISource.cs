@@ -11,6 +11,6 @@ namespace MorePlaylists.Sources
         IDetailViewController DetailViewController { get; }
         IListViewController ListViewController { get; }
         event Action<ViewController, ViewController.AnimationDirection>? ViewControllerRequested;
-        event Action<ViewController, ViewController.AnimationDirection, Action?>? ViewControllerDismissRequested;
+        event Action<ViewController, ViewController.AnimationDirection>? ViewControllerDismissRequested;
     }
 }

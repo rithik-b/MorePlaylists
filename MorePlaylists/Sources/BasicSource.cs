@@ -23,7 +23,7 @@ namespace MorePlaylists.Sources
         public IListViewController ListViewController { get; }
         public IDetailViewController DetailViewController { get; }
         public event Action<ViewController, ViewController.AnimationDirection>? ViewControllerRequested;
-        public event Action<ViewController, ViewController.AnimationDirection, Action?>? ViewControllerDismissRequested;
+        public event Action<ViewController, ViewController.AnimationDirection>? ViewControllerDismissRequested;
 
         protected BasicSource(IHttpService siraHttpService, BasicListViewController listViewController, BasicDetailViewController detailViewController)
         {

@@ -270,6 +270,11 @@ namespace MorePlaylists.UI
                 if (string.IsNullOrWhiteSpace(searchQuery))
                 {
                     currentPlaylists.AddRange(allPlaylists);
+                    await IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                    {
+                        customListTableData!.tableView.ClearSelection();
+                        DetailDismissRequested?.Invoke();
+                    });
                 }
                 else
                 {

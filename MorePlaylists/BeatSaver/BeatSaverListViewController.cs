@@ -307,6 +307,7 @@ internal class BeatSaverListViewController : BSMLAutomaticViewController, IListV
 
     private void ClearFilters()
     {
+        DetailDismissRequested?.Invoke();
         FilterClearRequested?.Invoke();
 
         if (currentSource != null)

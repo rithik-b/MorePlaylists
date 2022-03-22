@@ -41,7 +41,7 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
     public IDetailViewController DetailViewController { get; }
     
     public event Action<ViewController, ViewController.AnimationDirection>? ViewControllerRequested;
-    public event Action<ViewController, ViewController.AnimationDirection, Action?>? ViewControllerDismissRequested;
+    public event Action<ViewController, ViewController.AnimationDirection>? ViewControllerDismissRequested;
 
     public BeatSaver(UBinder<Plugin, PluginMetadata> metadata, BeatSaverFiltersViewController filtersViewController, BeatSaverListViewController listViewController, BeatSaverDetailViewController detailViewController)
     {
@@ -132,5 +132,5 @@ internal class BeatSaver : ISource, IInitializable, IDisposable
 
     private void OnFiltersSet(BeatSaverFilterModel filterOptions) => listViewController.SetActiveFilter(filterOptions);
 
-    private void RequestFilterViewDismiss() => ViewControllerDismissRequested?.Invoke(filtersViewController, ViewController.AnimationDirection.Vertical, null);
+    private void RequestFilterViewDismiss() => ViewControllerDismissRequested?.Invoke(filtersViewController, ViewController.AnimationDirection.Vertical);
 }
