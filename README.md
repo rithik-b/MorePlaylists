@@ -10,7 +10,7 @@ Discover and download new playlists in Beat Saber.
 - Navigate directly to the playlist and start playing once the download has completed
 
 ## Download
-Download the latest version of the mod (v1.3.0) [here](https://github.com/rithik-b/MorePlaylists/releases/tag/2.0.0 "here").
+Download the latest version of the mod (v2.0.0) [here](https://github.com/rithik-b/MorePlaylists/releases/tag/2.0.0 "here").
 To install, move the dll to your Plugins folder.
 
 **SongCore**, **BeatSaverSharp**, **BeatSaberMarkupLanguage (BSML)**, **SiraUtil**, **SongDetailsCache**, **BeatSaberPlaylistsLib** and **PlaylistManager** are required for this mod, so please download the latest version from ModAssistant.
