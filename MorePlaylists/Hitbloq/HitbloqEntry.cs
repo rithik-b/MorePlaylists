@@ -19,5 +19,7 @@ namespace MorePlaylists.Hitbloq
 
         [JsonProperty("image")]
         public override string SpriteURL { get; protected set; } = null!;
+        
+        public override string FolderName => "Hitbloq";
     }
 }

@@ -17,6 +17,7 @@ internal class BeatSaverUserPlaylistEntry : IBeatSaverEntry
     public string Description => $"All maps by {Owner.Name}";
     public string PlaylistURL => $"https://api.beatsaver.com/users/id/{Owner.ID}/playlist";
     public string SpriteURL => Owner.Avatar;
+    public string FolderName => "BeatSaver";
     public IPlaylist? LocalPlaylist { get; set; }
     public bool DownloadBlocked { get; set; }
     public bool ExhaustedPages { get; private set; }

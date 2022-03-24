@@ -13,6 +13,7 @@ namespace MorePlaylists.Entries
         string Description { get; }
         string PlaylistURL { get; }
         string SpriteURL { get; }
+        string FolderName { get; }
         IPlaylist? LocalPlaylist { get; set; }
         bool DownloadBlocked { get; set; }
         bool ExhaustedPages { get; }

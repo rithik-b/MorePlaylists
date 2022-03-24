@@ -18,5 +18,6 @@ namespace MorePlaylists.AccSaber
         
         [JsonProperty("imageUrl")]
         public override string SpriteURL { get; protected set; } = null!;
+        public override string FolderName => "AccSaber";
     }
 }

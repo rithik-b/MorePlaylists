@@ -9,7 +9,7 @@ namespace MorePlaylists.Utilities
     {
         public static void SavePlaylist(IEntry entry, IPlaylist playlist)
         {
-            var playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(entry.GetType().Name.Replace("Entry", ""));
+            var playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(entry.FolderName);
             playlistManager.StorePlaylist(playlist);
             entry.LocalPlaylist = playlist;
         }

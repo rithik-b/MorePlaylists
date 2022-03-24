@@ -26,6 +26,7 @@ internal class BeatSaverPlaylistEntry : IBeatSaverEntry
     public string Description => playlist.Description;
     public string PlaylistURL => playlist.DownloadURL;
     public string SpriteURL => playlist.CoverURL;
+    public string FolderName => "BeatSaver";
     public IPlaylist? LocalPlaylist { get; set; }
     public bool DownloadBlocked { get; set; }
     public bool ExhaustedPages { get; private set; }

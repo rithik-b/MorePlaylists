@@ -9,6 +9,7 @@ namespace MorePlaylists.Entries
 {
     internal abstract class BasicEntry : IBasicEntry
     {
+        public abstract string FolderName { get; }
         public IPlaylist? LocalPlaylist { get; set; }
         public bool DownloadBlocked { get; set; }
         public bool ExhaustedPages => true;
