@@ -1,16 +1,16 @@
-﻿using MorePlaylists.Entries;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System;
+using HMUI;
+using MorePlaylists.UI;
 using UnityEngine;
 
 namespace MorePlaylists.Sources
 {
-    public interface ISource
+    internal interface ISource
     {
         Sprite Logo { get; }
-        bool PagingSupport { get; }
-        Task<List<GenericEntry>> GetEndpointResult(bool refreshRequested, bool resetPage, IProgress<float> progress, CancellationToken token, string searchQuery);
+        IDetailViewController DetailViewController { get; }
+        IListViewController ListViewController { get; }
+        event Action<ViewController, ViewController.AnimationDirection>? ViewControllerRequested;
+        event Action<ViewController, ViewController.AnimationDirection>? ViewControllerDismissRequested;
     }
 }

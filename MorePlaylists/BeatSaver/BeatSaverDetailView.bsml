@@ -1,0 +1,22 @@
+﻿<vertical horizontal-fit='PreferredSize' vertical-fit='PreferredSize' pref-width='70'>
+    <horizontal horizontal-fit='PreferredSize' pref-width='60' pref-height="15" spacing="1" bg="panel-top" pad-left="2" child-control-width="false">
+        <vertical vertical-fit='PreferredSize' pref-width='10' pref-height='10'>
+            <image id='playlist-cover' preserve-aspect='false' />
+        </vertical>
+        <vertical vertical-fit='PreferredSize' pref-width="45" spacing="-1" pref-height="10">
+            <text text='~playlist-name' text-align="left" word-wrapping='true' />
+            <horizontal child-control-height="false" child-control-width="false" spacing="0.5">
+                <image id='user-image' preserve-aspect='true' size-delta-x="3" size-delta-y="3" />
+                <clickable-text text='~playlist-author' hover-hint="Show playlists by this user." on-click="author-click" font-size="3.5" font-align="MidlineLeft" word-wrapping='true' color="#FFFFFFBF" size-delta-x="45" size-delta-y="3" />
+            </horizontal>
+        </vertical>
+    </horizontal>
+    <horizontal horizontal-fit='PreferredSize' vertical-fit='PreferredSize' pref-width='65' pref-height='35' spacing='2'>
+        <text-page id='text-page' text='~playlist-description' />
+    </horizontal>
+    <primary-button text='Go To Playlist!' on-click='go-to-playlist' active='~go-to-active' pref-height='10' pref-width='50' anchor-pos-y='25' />
+    <horizontal pref-width='60' horizontal-fit='PreferredSize' vertical-fit='PreferredSize' spacing='2' active='~download-active'>
+        <button text='⏬ Playlist' on-click='download-click' interactable='~download-interactable' pad='0' pref-height='8' pref-width='25' anchor-pos-y='25' />
+        <button text='⏬ Playlist + Songs' on-click='download-all-click' interactable='~download-interactable' pad='0' pref-height='8' pref-width='35' anchor-pos-y='25' />
+    </horizontal>
+</vertical>

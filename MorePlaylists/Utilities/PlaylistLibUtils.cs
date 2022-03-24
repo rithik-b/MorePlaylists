@@ -1,36 +1,35 @@
 ﻿using MorePlaylists.Entries;
 using System.Collections.Generic;
 using System.Linq;
+using BeatSaberPlaylistsLib.Types;
 
 namespace MorePlaylists.Utilities
 {
-    public class PlaylistLibUtils
+    internal static class PlaylistLibUtils
     {
-        internal static BeatSaberPlaylistsLib.Types.IPlaylist SavePlaylist(IGenericEntry playlistEntry)
+        public static void SavePlaylist(IEntry entry, IPlaylist playlist)
         {
-            BeatSaberPlaylistsLib.Types.IPlaylist playlist = playlistEntry.RemotePlaylist;
-            BeatSaberPlaylistsLib.PlaylistManager playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(playlistEntry.GetType().Name.Replace("Entry", ""));
-
+            var playlistManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager(entry.FolderName);
             playlistManager.StorePlaylist(playlist);
-            playlistEntry.LocalPlaylist = playlist;
-            return playlist;
+            entry.LocalPlaylist = playlist;
         }
 
-        internal static void UpdatePlaylistsOwned(List<IGenericEntry> playlistEntries)
+        public static void UpdatePlaylistsOwned(List<IEntry> entries)
         {
-            List<BeatSaberPlaylistsLib.Types.IPlaylist> playlists = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetAllPlaylists(true).ToList();
-            Dictionary<string, BeatSaberPlaylistsLib.Types.IPlaylist> syncURLs = new Dictionary<string, BeatSaberPlaylistsLib.Types.IPlaylist>();
+            var playlists = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetAllPlaylists(true).ToList();
+            var syncURLs = new Dictionary<string, IPlaylist>();
+            
             foreach (var playlist in playlists)
             {
-                if (playlist.TryGetCustomData("syncURL", out object url) && url is string urlString)
+                if (playlist.TryGetCustomData("syncURL", out var url) && url is string urlString)
                 {
                     syncURLs[urlString] = playlist;
                 }
             }
 
-            foreach (var playlistEntry in playlistEntries)
+            foreach (var playlistEntry in entries)
             {
-                if (syncURLs.TryGetValue(playlistEntry.PlaylistURL, out BeatSaberPlaylistsLib.Types.IPlaylist playlist))
+                if (syncURLs.TryGetValue(playlistEntry.PlaylistURL, out var playlist))
                 {
                     playlistEntry.DownloadBlocked = true;
                     playlistEntry.LocalPlaylist = playlist;

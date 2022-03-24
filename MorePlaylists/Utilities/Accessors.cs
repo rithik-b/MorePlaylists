@@ -1,5 +1,6 @@
 ﻿using HMUI;
 using IPA.Utilities;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace MorePlaylists.Utilities
@@ -17,5 +18,23 @@ namespace MorePlaylists.Utilities
 
         public static readonly FieldAccessor<LevelSelectionFlowCoordinator.State, SelectLevelCategoryViewController.LevelCategory?>.Accessor LevelCategoryAccessor =
             FieldAccessor<LevelSelectionFlowCoordinator.State, SelectLevelCategoryViewController.LevelCategory?>.GetAccessor("levelCategory");
+        
+        public static readonly FieldAccessor<LevelSearchViewController, InputFieldView>.Accessor InputFieldAccessor =
+            FieldAccessor<LevelSearchViewController, InputFieldView>.GetAccessor("_searchTextInputFieldView");
+        
+        public static readonly FieldAccessor<LevelSearchViewController, Button>.Accessor FiltersButtonAccessor =
+            FieldAccessor<LevelSearchViewController, Button>.GetAccessor("_searchButton");
+        
+        public static readonly FieldAccessor<InputFieldView, Vector3>.Accessor KeyboardOffsetAccessor =
+            FieldAccessor<InputFieldView, Vector3>.GetAccessor("_keyboardPositionOffset");
+        
+        public static readonly FieldAccessor<GameplaySetupViewController, ColorsOverrideSettingsPanelController>.Accessor ColorsPanelAccessor =
+            FieldAccessor<GameplaySetupViewController, ColorsOverrideSettingsPanelController>.GetAccessor("_colorsOverrideSettingsPanelController");
+
+        public static readonly FieldAccessor<ColorsOverrideSettingsPanelController, PanelAnimationSO>.Accessor PresentAnimationAccessor =
+            FieldAccessor<ColorsOverrideSettingsPanelController, PanelAnimationSO>.GetAccessor("_presentPanelAnimation");
+
+        public static readonly FieldAccessor<ColorsOverrideSettingsPanelController, PanelAnimationSO>.Accessor DismissAnimationAccessor =
+            FieldAccessor<ColorsOverrideSettingsPanelController, PanelAnimationSO>.GetAccessor("_dismissPanelAnimation");
     }
 }

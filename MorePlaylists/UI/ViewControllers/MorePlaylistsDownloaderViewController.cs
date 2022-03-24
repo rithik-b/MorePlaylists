@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using BeatSaberPlaylistsLib.Types;
 using HMUI;
 using MorePlaylists.Entries;
 using PlaylistManager.UI;
@@ -12,20 +14,17 @@ namespace MorePlaylists.UI
 {
     internal class MorePlaylistsDownloaderViewController : ViewController
     {
-        private IHttpService siraHttpService;
-        private PlaylistDownloader playlistDownloader;
-        private PlaylistDownloaderViewController playlistDownloaderViewController;
-        private HashSet<IGenericEntry> DownloadSongs;
-        public Action<IGenericEntry> PlaylistDownloaded;
-
+        [Inject] 
+        private readonly IHttpService siraHttpService = null!;
+        
         [Inject]
-        public void Construct(IHttpService siraHttpService, PlaylistDownloader playlistDownloader, PlaylistDownloaderViewController playlistDownloaderViewController)
-        {
-            this.siraHttpService = siraHttpService;
-            this.playlistDownloader = playlistDownloader;
-            this.playlistDownloaderViewController = playlistDownloaderViewController;
-            DownloadSongs = new HashSet<IGenericEntry>();
-        }
+        private readonly PlaylistDownloader playlistDownloader = null!;
+        
+        [Inject]
+        private readonly PlaylistDownloaderViewController playlistDownloaderViewController = null!;
+
+        private readonly HashSet<IEntry> downloadSongs = new();
+        public event Action<IEntry>? PlaylistDownloaded;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -33,45 +32,38 @@ namespace MorePlaylists.UI
             playlistDownloaderViewController.SetParent(transform);
         }
 
-        public void DownloadPlaylist(IGenericEntry playlistEntry, bool downloadSongs)
+        public void DownloadPlaylist(IEntry entry, bool downloadSongs)
         {
-            playlistEntry.DownloadBlocked = true;
+            entry.DownloadBlocked = true;
 
             if (downloadSongs)
             {
-                DownloadSongs.Add(playlistEntry);
+                this.downloadSongs.Add(entry);
             }
 
-            if (playlistEntry.DownloadState == DownloadState.Downloaded)
+            _ = StartDownload(entry);
+        }
+
+        private async Task StartDownload(IEntry entry) => DownloadFinished(entry, await entry.DownloadPlaylist(siraHttpService));
+
+        private void DownloadFinished(IEntry playlistEntry, IPlaylist? playlist)
+        {
+            if (playlist != null)
             {
-                DownloadFinished(playlistEntry);
+                PlaylistLibUtils.SavePlaylist(playlistEntry, playlist);
+                if (downloadSongs.Contains(playlistEntry))
+                {
+                    playlistDownloader.QueuePlaylist(new PlaylistManager.Types.DownloadQueueEntry(playlist, BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetManagerForPlaylist(playlist)));
+                    downloadSongs.Remove(playlistEntry);
+                }
             }
             else
             {
-                playlistEntry.FinishedDownload += DownloadFinished;
-                if (playlistEntry.DownloadState == DownloadState.None)
+                playlistEntry.DownloadBlocked = false;
+                if (downloadSongs.Contains(playlistEntry))
                 {
-                    playlistEntry.DownloadPlaylist(siraHttpService);
-                }
-            }
-        }
-
-        private void DownloadFinished(IGenericEntry playlistEntry)
-        {
-            playlistEntry.FinishedDownload -= DownloadFinished;
-
-            if (playlistEntry.DownloadState == DownloadState.Downloaded)
-            {
-                PlaylistLibUtils.SavePlaylist(playlistEntry);
-                if (DownloadSongs.Contains(playlistEntry))
-                {
-                    playlistDownloader.QueuePlaylist(new PlaylistManager.Types.DownloadQueueEntry(playlistEntry.LocalPlaylist, BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.GetManagerForPlaylist(playlistEntry.LocalPlaylist)));
-                }
-            }
-
-            if (DownloadSongs.Contains(playlistEntry))
-            {
-                DownloadSongs.Remove(playlistEntry);
+                    downloadSongs.Remove(playlistEntry);
+                }   
             }
             PlaylistDownloaded?.Invoke(playlistEntry);
         }

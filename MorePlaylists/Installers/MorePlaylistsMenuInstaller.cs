@@ -1,23 +1,26 @@
-﻿using MorePlaylists.Sources;
+﻿using MorePlaylists.BeatSaver;
 using MorePlaylists.UI;
 using MorePlaylists.Utilities;
 using Zenject;
 
 namespace MorePlaylists.Installers
 {
-    public class MorePlaylistsMenuInstaller : Installer
+    internal class MorePlaylistsMenuInstaller : Installer
     {
         public override void InstallBindings()
         {
-            Container.BindInterfacesTo<BeatSaver>().AsSingle();
-            Container.BindInterfacesTo<BeastSaber>().AsSingle();
-            Container.BindInterfacesTo<Hitbloq>().AsSingle();
-            Container.BindInterfacesTo<AccSaber>().AsSingle();
+            Container.BindInterfacesTo<BeatSaver.BeatSaver>().AsSingle();
+            Container.BindInterfacesAndSelfTo<BeatSaverListViewController>().FromNewComponentAsViewController().AsSingle();
+            Container.BindInterfacesAndSelfTo<BeatSaverDetailViewController>().FromNewComponentAsViewController().AsSingle();
+            Container.BindInterfacesAndSelfTo<BeatSaverFiltersViewController>().FromNewComponentAsViewController().AsSingle();
 
-            Container.Bind<MorePlaylistsListViewController>().FromNewComponentAsViewController().AsSingle();
+            Container.BindInterfacesTo<Hitbloq.Hitbloq>().AsSingle();
+            Container.BindInterfacesTo<AccSaber.AccSaber>().AsSingle();
+
+            Container.BindInterfacesAndSelfTo<BasicListViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsSongListViewController>().FromNewComponentAsViewController().AsSingle();
             Container.BindInterfacesAndSelfTo<MorePlaylistsDownloaderViewController>().FromNewComponentAsViewController().AsSingle();
-            Container.BindInterfacesAndSelfTo<MorePlaylistsDetailViewController>().FromNewComponentAsViewController().AsSingle();
+            Container.BindInterfacesAndSelfTo<BasicDetailViewController>().FromNewComponentAsViewController().AsSingle();
             Container.Bind<MorePlaylistsNavigationController>().FromNewComponentAsViewController().AsSingle();
 
             Container.BindInterfacesAndSelfTo<PopupModalsController>().AsSingle();
@@ -26,7 +29,10 @@ namespace MorePlaylists.Installers
             Container.BindInterfacesAndSelfTo<MorePlaylistsFlowCoordinator>().FromNewComponentOnNewGameObject().AsSingle();
             Container.BindInterfacesTo<MenuButtonUI>().AsSingle();
 
-            Container.Bind<SpriteLoader>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SpriteLoader>().AsSingle();
+            Container.Bind<InputFieldGrabber>().AsSingle();
+            Container.Bind<MaterialGrabber>().AsSingle();
+            Container.Bind<AnimationGrabber>().AsSingle();
         }
     }
 }

@@ -7,41 +7,39 @@ using IPA.Utilities;
 using MorePlaylists.Sources;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using MorePlaylists.Utilities;
 using UnityEngine;
 using Zenject;
 
 namespace MorePlaylists.UI
 {
-    internal class SourceModalController : IInitializable
+    internal class SourceModalController
     {
-        private List<ISource> sources;
+        private readonly List<ISource> sources; 
         private bool parsed;
-        internal event Action<ISource> DidSelectSource;
-
+        public ISource SelectedSource { get; private set; }
+        public event Action<ISource>? DidSelectSource;
+        
         [UIComponent("list")]
-        private CustomListTableData customListTableData;
+        private readonly CustomListTableData customListTableData = null!;
 
         [UIComponent("source-modal")]
-        private ModalView sourceModalView;
+        private ModalView sourceModalView = null!;
 
         [UIComponent("source-modal")]
-        private readonly RectTransform sourceModalTransform;
+        private readonly RectTransform sourceModalTransform = null!;
 
         private Vector3 sourceModalPosition;
 
         [UIParams]
-        private readonly BSMLParserParams parserParams;
-
-        [Inject]
-        public void Construct(List<ISource> sources)
+        private readonly BSMLParserParams parserParams = null!;
+        
+        public SourceModalController(List<ISource> sources)
         {
             this.sources = sources;
-        }
-
-        public void Initialize()
-        {
-            parsed = false;
+            SelectedSource = sources.First();
         }
 
         private void Parse(Transform parent)
@@ -54,14 +52,14 @@ namespace MorePlaylists.UI
             }
             sourceModalTransform.SetParent(parent);
             sourceModalTransform.localPosition = sourceModalPosition;
-            FieldAccessor<ModalView, bool>.Set(ref sourceModalView, "_animateParentCanvas", true);
+            Accessors.AnimateCanvasAccessor(ref sourceModalView) = true;
         }
 
         [UIAction("#post-parse")]
         private void PostParse()
         {
             customListTableData.data.Clear();
-            foreach (ISource source in sources)
+            foreach (var source in sources)
             {
                 customListTableData.data.Add(new CustomListTableData.CustomCellInfo(source.GetType().Name, "", source.Logo));
             }
@@ -80,6 +78,7 @@ namespace MorePlaylists.UI
         private void Select(TableView tableView, int row)
         {
             DidSelectSource?.Invoke(sources[row]);
+            SelectedSource = sources[row];
             parserParams.EmitEvent("close-source-modal");
         }
     }

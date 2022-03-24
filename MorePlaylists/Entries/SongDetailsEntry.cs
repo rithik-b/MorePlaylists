@@ -9,32 +9,30 @@ using SongDetailsCache;
 
 namespace MorePlaylists.Entries
 {
-    internal abstract class SongDetailsEntry : GenericEntry
+    internal abstract class SongDetailsEntry : BasicEntry
     {
-        private List<Song> songs;
-
-        public override async Task<List<Song>> GetSongs(IHttpService siraHttpService)
+        private List<Song>? songs;
+        public override async Task<List<Song>?> GetSongs(IHttpService siraHttpService, CancellationToken cancellationToken, bool firstPage = false)
         {
             if (songs == null)
             {
-                songs = new List<Song>();
-
-                if (DownloadState == DownloadState.None)
+                if (RemotePlaylist == null)
                 {
-                    await DownloadPlaylist(siraHttpService);
+                    await CachePlaylist(siraHttpService, cancellationToken);
                 }
 
-                if (DownloadState == DownloadState.Downloaded && RemotePlaylist is LegacyPlaylist playlist)
+                if (RemotePlaylist != null && !cancellationToken.IsCancellationRequested)
                 {
-                    SongDetails songDetails = await SongDetails.Init();
-                    List<IPlaylistSong> playlistSongs = playlist.Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
-                    for (int i = 0; i < playlistSongs.Count; i++)
+                    songs = new List<Song>();
+                    var songDetails = await SongDetails.Init();
+                    var playlistSongs = RemotePlaylist.Distinct(IPlaylistSongComparer<LegacyPlaylistSong>.Default).ToList();
+                    for (var i = 0; i < playlistSongs.Count; i++)
                     {
-                        if (songDetails.songs.FindByHash(playlistSongs[i].Hash, out SongDetailsCache.Structs.Song song))
+                        if (songDetails.songs.FindByHash(playlistSongs[i].Hash, out var song))
                         {
                             songs.Add(new Song(song.songName, $"{song.songAuthorName} [{song.levelAuthorName}]", song.coverURL));
                         }
-                    }
+                    }   
                 }
             }
             return songs;
