@@ -1,6 +1,7 @@
-﻿namespace MorePlaylists.Sources;
-
-internal interface ICachable
+﻿namespace MorePlaylists.Sources
 {
-    void ClearCache();
+    internal interface ICachable
+    {
+        void ClearCache();
+    }
 }

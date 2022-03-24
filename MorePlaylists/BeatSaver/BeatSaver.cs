@@ -12,125 +12,126 @@ using SiraUtil.Zenject;
 using UnityEngine;
 using Zenject;
 
-namespace MorePlaylists.BeatSaver;
-
-internal class BeatSaver : ISource, IInitializable, IDisposable
+namespace MorePlaylists.BeatSaver
 {
-    private readonly BeatSaverSharp.BeatSaver beatSaverInstance;
-    private readonly BeatSaverFiltersViewController filtersViewController;
-    private readonly BeatSaverListViewController listViewController;
-    
-    private PlaylistPage? page;
-    public bool ExhaustedPlaylists { get; private set; }
-
-    private Sprite? logo;
-    public Sprite Logo
+    internal class BeatSaver : ISource, IInitializable, IDisposable
     {
-        get
+        private readonly BeatSaverSharp.BeatSaver beatSaverInstance;
+        private readonly BeatSaverFiltersViewController filtersViewController;
+        private readonly BeatSaverListViewController listViewController;
+        
+        private PlaylistPage? page;
+        public bool ExhaustedPlaylists { get; private set; }
+
+        private Sprite? logo;
+        public Sprite Logo
         {
-            if (logo == null)
+            get
             {
-                logo = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("MorePlaylists.Images.BeatSaver.png");
+                if (logo == null)
+                {
+                    logo = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("MorePlaylists.Images.BeatSaver.png");
+                }
+                return logo;
             }
-            return logo;
         }
-    }
 
-    public BeatSaverFilterModel CurrentFilters => filtersViewController.filterOptions;
-    public IListViewController ListViewController => listViewController;
-    public IDetailViewController DetailViewController { get; }
-    
-    public event Action<ViewController, ViewController.AnimationDirection>? ViewControllerRequested;
-    public event Action<ViewController, ViewController.AnimationDirection>? ViewControllerDismissRequested;
-
-    public BeatSaver(UBinder<Plugin, PluginMetadata> metadata, BeatSaverFiltersViewController filtersViewController, BeatSaverListViewController listViewController, BeatSaverDetailViewController detailViewController)
-    {
-        var options = new BeatSaverOptions(metadata.Value.Name, metadata.Value.HVersion.ToString());
-        beatSaverInstance = new BeatSaverSharp.BeatSaver(options);
-
-        this.filtersViewController = filtersViewController;
-        this.listViewController = listViewController;
-        DetailViewController = detailViewController;
-    }
-    
-    public void Initialize()
-    {
-        listViewController.FilterViewRequested += RequestFilterView;
-        listViewController.FilterClearRequested += ClearFilters;
+        public BeatSaverFilterModel CurrentFilters => filtersViewController.filterOptions;
+        public IListViewController ListViewController => listViewController;
+        public IDetailViewController DetailViewController { get; }
         
-        filtersViewController.FiltersSet += OnFiltersSet;
-        filtersViewController.RequestDismiss += RequestFilterViewDismiss;
-    }
+        public event Action<ViewController, ViewController.AnimationDirection>? ViewControllerRequested;
+        public event Action<ViewController, ViewController.AnimationDirection>? ViewControllerDismissRequested;
 
-    public void Dispose()
-    {
-        listViewController.FilterViewRequested -= RequestFilterView;
-        listViewController.FilterClearRequested -= ClearFilters;
-        
-        filtersViewController.FiltersSet -= OnFiltersSet;
-        filtersViewController.RequestDismiss -= RequestFilterViewDismiss;
-    }
-
-    public async Task<List<IBeatSaverEntry>?> GetPage(bool refreshRequested, CancellationToken token)
-    {
-        List<IBeatSaverEntry>? entries = null;
-        
-        if (refreshRequested || page == null)
+        public BeatSaver(UBinder<Plugin, PluginMetadata> metadata, BeatSaverFiltersViewController filtersViewController, BeatSaverListViewController listViewController, BeatSaverDetailViewController detailViewController)
         {
-            switch (CurrentFilters.FilterMode)
+            var options = new BeatSaverOptions(metadata.Value.Name, metadata.Value.HVersion.ToString());
+            beatSaverInstance = new BeatSaverSharp.BeatSaver(options);
+
+            this.filtersViewController = filtersViewController;
+            this.listViewController = listViewController;
+            DetailViewController = detailViewController;
+        }
+        
+        public void Initialize()
+        {
+            listViewController.FilterViewRequested += RequestFilterView;
+            listViewController.FilterClearRequested += ClearFilters;
+            
+            filtersViewController.FiltersSet += OnFiltersSet;
+            filtersViewController.RequestDismiss += RequestFilterViewDismiss;
+        }
+
+        public void Dispose()
+        {
+            listViewController.FilterViewRequested -= RequestFilterView;
+            listViewController.FilterClearRequested -= ClearFilters;
+            
+            filtersViewController.FiltersSet -= OnFiltersSet;
+            filtersViewController.RequestDismiss -= RequestFilterViewDismiss;
+        }
+
+        public async Task<List<IBeatSaverEntry>?> GetPage(bool refreshRequested, CancellationToken token)
+        {
+            List<IBeatSaverEntry>? entries = null;
+            
+            if (refreshRequested || page == null)
             {
-                case FilterMode.Search:
-                    page = await beatSaverInstance.SearchPlaylists(CurrentFilters.NullableSearchFilter, token: token);
-                    break;
-                
-                case FilterMode.User:
-                    page = null;
-                    if (CurrentFilters.UserName != null)
-                    {
-                        var user = await beatSaverInstance.User(CurrentFilters.UserName, token);
-                        if (user != null)
+                switch (CurrentFilters.FilterMode)
+                {
+                    case FilterMode.Search:
+                        page = await beatSaverInstance.SearchPlaylists(CurrentFilters.NullableSearchFilter, token: token);
+                        break;
+                    
+                    case FilterMode.User:
+                        page = null;
+                        if (CurrentFilters.UserName != null)
                         {
-                            page = await beatSaverInstance.UserPlaylists(user.ID, token: token);
-                            entries = new List<IBeatSaverEntry> {new BeatSaverUserPlaylistEntry(user)};
+                            var user = await beatSaverInstance.User(CurrentFilters.UserName, token);
+                            if (user != null)
+                            {
+                                page = await beatSaverInstance.UserPlaylists(user.ID, token: token);
+                                entries = new List<IBeatSaverEntry> {new BeatSaverUserPlaylistEntry(user)};
+                            }
                         }
-                    }
-                    break;
+                        break;
+                }
+                ExhaustedPlaylists = false;
             }
-            ExhaustedPlaylists = false;
-        }
-        else
-        {
-            var newPage = await page.Next(token);
-            if (token.IsCancellationRequested)
+            else
             {
+                var newPage = await page.Next(token);
+                if (token.IsCancellationRequested)
+                {
+                    return null;
+                }
+                page = newPage;
+            }
+
+            if (entries == null && (page == null || page.Empty))
+            {
+                ExhaustedPlaylists = true;
                 return null;
             }
-            page = newPage;
-        }
 
-        if (entries == null && (page == null || page.Empty))
-        {
-            ExhaustedPlaylists = true;
-            return null;
-        }
-
-        entries ??= new List<IBeatSaverEntry>();
-        if (page != null)
-        {
-            foreach (var playlist in page.Playlists)
+            entries ??= new List<IBeatSaverEntry>();
+            if (page != null)
             {
-                entries.Add(new BeatSaverPlaylistEntry(playlist));
-            }   
+                foreach (var playlist in page.Playlists)
+                {
+                    entries.Add(new BeatSaverPlaylistEntry(playlist));
+                }   
+            }
+            return entries;
         }
-        return entries;
+
+        private void RequestFilterView() =>
+            ViewControllerRequested?.Invoke(filtersViewController, ViewController.AnimationDirection.Vertical);
+
+        private void ClearFilters() => filtersViewController.ClearFilters();
+
+        private void OnFiltersSet(BeatSaverFilterModel filterOptions) => listViewController.SetActiveFilter(filterOptions);
+
+        private void RequestFilterViewDismiss() => ViewControllerDismissRequested?.Invoke(filtersViewController, ViewController.AnimationDirection.Vertical);
     }
-
-    private void RequestFilterView() =>
-        ViewControllerRequested?.Invoke(filtersViewController, ViewController.AnimationDirection.Vertical);
-
-    private void ClearFilters() => filtersViewController.ClearFilters();
-
-    private void OnFiltersSet(BeatSaverFilterModel filterOptions) => listViewController.SetActiveFilter(filterOptions);
-
-    private void RequestFilterViewDismiss() => ViewControllerDismissRequested?.Invoke(filtersViewController, ViewController.AnimationDirection.Vertical);
 }

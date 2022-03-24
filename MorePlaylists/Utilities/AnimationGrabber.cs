@@ -1,19 +1,20 @@
 ﻿using HMUI;
 
-namespace MorePlaylists.Utilities;
-
-internal class AnimationGrabber
+namespace MorePlaylists.Utilities
 {
-    private ColorsOverrideSettingsPanelController colorsPanel;
-    
-    private PanelAnimationSO? presentPanelAnimation;
-    public PanelAnimationSO PresentPanelAnimation => presentPanelAnimation ??= Accessors.PresentAnimationAccessor(ref colorsPanel);
-    
-    private PanelAnimationSO? dismissPanelAnimation;
-    public PanelAnimationSO DismissPanelAnimation => dismissPanelAnimation ??= Accessors.DismissAnimationAccessor(ref colorsPanel);
-    
-    public AnimationGrabber(GameplaySetupViewController gameplaySetupViewController)
+    internal class AnimationGrabber
     {
-        colorsPanel = Accessors.ColorsPanelAccessor(ref gameplaySetupViewController);
+        private ColorsOverrideSettingsPanelController colorsPanel;
+    
+        private PanelAnimationSO? presentPanelAnimation;
+        public PanelAnimationSO PresentPanelAnimation => presentPanelAnimation ??= Accessors.PresentAnimationAccessor(ref colorsPanel);
+    
+        private PanelAnimationSO? dismissPanelAnimation;
+        public PanelAnimationSO DismissPanelAnimation => dismissPanelAnimation ??= Accessors.DismissAnimationAccessor(ref colorsPanel);
+    
+        public AnimationGrabber(GameplaySetupViewController gameplaySetupViewController)
+        {
+            colorsPanel = Accessors.ColorsPanelAccessor(ref gameplaySetupViewController);
+        }
     }
 }

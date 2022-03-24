@@ -1,24 +1,26 @@
 ﻿using BeatSaverSharp;
 
-namespace MorePlaylists.BeatSaver;
-
-internal class BeatSaverFilterModel
+namespace MorePlaylists.BeatSaver
 {
-    public SearchTextPlaylistFilterOptions? NullableSearchFilter { get; private set; }
-    public SearchTextPlaylistFilterOptions SearchFilter => NullableSearchFilter ??= new SearchTextPlaylistFilterOptions();
-    public string? UserName { get; set; }
-    public FilterMode FilterMode { get; set; } = FilterMode.Search;
-
-    public void ClearFilters()
+    internal class BeatSaverFilterModel
     {
-        NullableSearchFilter = null;
-        UserName = null;
-        FilterMode = FilterMode.Search;
-    }
-}
+        public SearchTextPlaylistFilterOptions? NullableSearchFilter { get; private set; }
+        public SearchTextPlaylistFilterOptions SearchFilter => NullableSearchFilter ??= new SearchTextPlaylistFilterOptions();
+        public string? UserName { get; set; }
+        public FilterMode FilterMode { get; set; } = FilterMode.Search;
 
-internal enum FilterMode
-{
-    Search,
-    User
+        public void ClearFilters()
+        {
+            NullableSearchFilter = null;
+            UserName = null;
+            FilterMode = FilterMode.Search;
+        }
+    }
+
+    internal enum FilterMode
+    {
+        Search,
+        User
+    }
+   
 }

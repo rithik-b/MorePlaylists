@@ -1,9 +1,10 @@
 ﻿using BeatSaverSharp.Models;
 using MorePlaylists.Entries;
 
-namespace MorePlaylists.BeatSaver;
-
-internal interface IBeatSaverEntry : IEntry
+namespace MorePlaylists.BeatSaver
 {
-    User Owner { get; }
+    internal interface IBeatSaverEntry : IEntry
+    {
+        User Owner { get; }
+    }
 }
